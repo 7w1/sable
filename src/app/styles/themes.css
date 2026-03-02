@@ -532,3 +532,92 @@
   --sable-shadow: rgba(0, 0, 0, 1);
   --sable-overlay: rgba(0, 0, 0, 0.8);
 }
+
+/* --- Gruvdark --- */
+.gruvdark-theme {
+  /* Background */
+  --sable-bg-container: #282828;
+  --sable-bg-container-hover: #3c3836;
+  --sable-bg-container-active: #504945;
+  --sable-bg-container-line: #665c54;
+  --sable-bg-on-container: #fbf1c7;
+
+  /* Surface */
+  --sable-surface-container: #3c3836;
+  --sable-surface-container-hover: #32302f;
+  --sable-surface-container-active: #504945;
+  --sable-surface-container-line: #665c54;
+  --sable-surface-on-container: #fbf1c7;
+
+  /* Surface Variant */
+  --sable-surface-var-container: #282828;
+  --sable-surface-var-container-hover: #1d2021;
+  --sable-surface-var-container-active: #3c3836;
+  --sable-surface-var-container-line: #a89984;
+  --sable-surface-var-on-container: #ebdbb2;
+
+  /* Primary */
+  --sable-primary-main: #fbf1c7;
+  --sable-primary-main-hover: #ebdbb2;
+  --sable-primary-main-active: #d5c4a1;
+  --sable-primary-main-line: #bdae93;
+  --sable-primary-on-main: #1d2021;
+  --sable-primary-container: #fe8019;
+  --sable-primary-container-hover: #d65d0e;
+  --sable-primary-container-active: #e67111;
+  --sable-primary-container-line: #fbf1c7;
+  --sable-primary-on-container: #fbf1c7;
+
+  /* Secondary */
+  --sable-sec-main: #fbf1c7;
+  --sable-sec-main-hover: #ebdbb2;
+  --sable-sec-main-active: #d5c4a1;
+  --sable-sec-main-line: #bdae93;
+  --sable-sec-on-main: #1d2021;
+  --sable-sec-container: #282828;
+  --sable-sec-container-hover: #3c3836;
+  --sable-sec-container-active: #4d483d;
+  --sable-sec-container-line: #a89984;
+  --sable-sec-on-container: #fbf1c7;
+
+  /* Success */
+  --sable-success-main: #6e981a;
+  --sable-success-main-hover: #6e981a;
+  --sable-success-main-active: #6e981a;
+  --sable-success-main-line: #6e981a;
+  --sable-success-on-main: #c2c455;
+  --sable-success-container: #c2c455;
+  --sable-success-container-hover: #c2c455;
+  --sable-success-container-active: #c2c455;
+  --sable-success-container-line: #c2c455;
+  --sable-success-on-container: #fbf1c7;
+
+  /* Warning */
+  --sable-warn-main: #fe8019;
+  --sable-warn-main-hover: #fe8019;
+  --sable-warn-main-active: #fe8019;
+  --sable-warn-main-line: #fe8019;
+  --sable-warn-on-main: #d65d0e;
+  --sable-warn-container: #d65d0e;
+  --sable-warn-container-hover: #d65d0e;
+  --sable-warn-container-active: #d65d0e;
+  --sable-warn-container-line: #d65d0e;
+  --sable-warn-on-container: #fbf1c7;
+
+  /* Critical */
+  --sable-crit-main: #fb4834;
+  --sable-crit-main-hover: #fb4834;
+  --sable-crit-main-active: #fb4834;
+  --sable-crit-main-line: #fb4834;
+  --sable-crit-on-main: #cc241d;
+  --sable-crit-container: #4c1a18;
+  --sable-crit-container-hover: #4c1a18;
+  --sable-crit-container-active: #763333;
+  --sable-crit-container-line: #803737;
+  --sable-crit-on-container: #fbf1c7;
+
+  /* Other */
+  --sable-focus-ring: rgba(227, 186, 145, 0.5);
+  --sable-shadow: rgba(0, 0, 0, 0.6);
+  --sable-overlay: rgba(15, 14, 12, 0.9);
+}
