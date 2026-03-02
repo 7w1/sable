@@ -38,6 +38,7 @@ import {
 } from '$hooks/useTheme';
 import { stopPropagation } from '$appUtils/keyboard';
 import { SequenceCardStyle } from '../styles.css';
+import { CustomThemeManager } from './CustomThemeManager';
 
 type ThemeSelectorProps = {
   themeNames: Record<string, string>;
@@ -336,6 +337,7 @@ export function Appearance() {
   return (
     <Box direction="Column" gap="700">
       <ThemeSettings />
+      <CustomThemeManager />
 
       <Box direction="Column" gap="100">
         <Text size="L400">Visual Tweaks</Text>

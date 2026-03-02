@@ -10,6 +10,9 @@ import {
 } from '../../colors.css';
 import { settingsAtom } from '../state/settings';
 import { useSetting } from '../state/hooks/settings';
+import { useAtomValue } from 'jotai';
+import { customThemesAtom } from '../state/customThemes';
+import { CustomThemeData, injectCustomThemeStyle } from '../utils/customTheme';
 
 export enum ThemeKind {
   Light = 'light',
@@ -54,27 +57,45 @@ export const CinnyDarkTheme: Theme = {
   classNames: ['cinny-dark-theme', cinnyDarkTheme, onDarkFontWeight, 'prism-dark'],
 };
 
-export const useThemes = (): Theme[] => {
-  const themes: Theme[] = useMemo(
-    () => [LightTheme, SilverTheme, DarkTheme, ButterTheme, RosePineTheme, CinnyDarkTheme],
-    []
-  );
+const BUILTIN_THEMES: Theme[] = [LightTheme, SilverTheme, DarkTheme, ButterTheme, RosePineTheme];
 
-  return themes;
+const BUILTIN_THEME_NAMES: Record<string, string> = {
+  [LightTheme.id]: 'Light',
+  [SilverTheme.id]: 'Silver',
+  [DarkTheme.id]: 'Dark',
+  [ButterTheme.id]: 'Butter',
+  [RosePineTheme.id]: 'Rose Pine',
 };
 
-export const useThemeNames = (): Record<string, string> =>
-  useMemo(
-    () => ({
-      [LightTheme.id]: 'Light',
-      [SilverTheme.id]: 'Silver',
-      [DarkTheme.id]: 'Dark',
-      [ButterTheme.id]: 'Butter',
-      [CinnyDarkTheme.id]: 'Cinny Dark',
-      [RosePineTheme.id]: 'Rose Pine',
-    }),
-    []
+function customThemeDataToTheme(data: CustomThemeData): Theme {
+  const className = injectCustomThemeStyle(data);
+  const fontWeight = data.kind === ThemeKind.Light ? onLightFontWeight : onDarkFontWeight;
+  const prism = data.kind === ThemeKind.Light ? 'prism-light' : 'prism-dark';
+  return {
+    id: data.id,
+    kind: data.kind,
+    classNames: [className, fontWeight, prism],
+  };
+}
+
+export const useThemes = (): Theme[] => {
+  const customThemes = useAtomValue(customThemesAtom);
+  return useMemo(
+    () => [...BUILTIN_THEMES, ...customThemes.map(customThemeDataToTheme)],
+    [customThemes]
   );
+};
+
+export const useThemeNames = (): Record<string, string> => {
+  const customThemes = useAtomValue(customThemesAtom);
+  return useMemo(() => {
+    const names: Record<string, string> = { ...BUILTIN_THEME_NAMES };
+    customThemes.forEach((t) => {
+      names[t.id] = t.name;
+    });
+    return names;
+  }, [customThemes]);
+};
 
 export const useSystemThemeKind = (): ThemeKind => {
   const darkModeQueryList = useMemo(() => window.matchMedia('(prefers-color-scheme: dark)'), []);
