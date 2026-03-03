@@ -50,6 +50,7 @@ export const UserHeroStatusContainer = style({
   transform: 'translateY(-50%)',
   textAlign: 'justify',
   display: 'grid',
+  width: '100%',
 });
 export const UserHeroAvatar = style({
   outline: `${config.borderWidth.B600} solid ${color.Surface.Container}`,

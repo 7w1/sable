@@ -39,8 +39,6 @@ export function PresenceBadge({ presence, status, size }: PresenceBadgeProps) {
         <Tooltip id={badgeLabelId}>
           <Box style={{ maxWidth: toRem(250) }} alignItems="Baseline" gap="100">
             <Text size="L400">{label[presence]}</Text>
-            {status && <Text size="T200">•</Text>}
-            {status && <Text size="T200">{status}</Text>}
           </Box>
         </Tooltip>
       }

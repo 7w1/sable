@@ -63,9 +63,7 @@ export function UserHero({ userId, avatarUrl, bannerUrl, presence }: UserHeroPro
         <div className={css.UserHeroAvatarContainer}>
           <AvatarPresence
             className={css.UserAvatarContainer}
-            badge={
-              presence && <PresenceBadge presence={presence.presence} status={presence.status} />
-            }
+            badge={presence && <PresenceBadge presence={presence.presence} />}
           >
             <Avatar
               as={avatarUrl ? 'button' : 'div'}
