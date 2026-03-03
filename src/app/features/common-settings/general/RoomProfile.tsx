@@ -11,7 +11,7 @@ import {
   Text,
   TextArea,
 } from 'folds';
-import React, { FormEventHandler, useCallback, useMemo, useState } from 'react';
+import { FormEventHandler, useCallback, useMemo, useState } from 'react';
 import { useAtomValue } from 'jotai';
 import Linkify from 'linkify-react';
 import classNames from 'classnames';
@@ -24,7 +24,7 @@ import { mDirectAtom } from '$state/mDirectList';
 import { BreakWord, LineClamp3 } from '$styles/Text.css';
 import { LINKIFY_OPTS } from '$plugins/react-custom-html-parser';
 import { RoomAvatar, RoomIcon } from '$components/room-avatar';
-import { mxcUrlToHttp } from '$appUtils/matrix';
+import { mxcUrlToHttp } from '$utils/matrix';
 import { useMatrixClient } from '$hooks/useMatrixClient';
 import { useMediaAuthentication } from '$hooks/useMediaAuthentication';
 import { StateEvent } from '$types/matrix/room';

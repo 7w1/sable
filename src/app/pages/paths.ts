@@ -19,51 +19,51 @@ export type ResetPasswordPathSearchParams = {
 };
 export const RESET_PASSWORD_PATH = '/reset-password/:server?/';
 
-export const _CREATE_PATH = 'create/';
-export const _JOIN_PATH = 'join/';
-export const _LOBBY_PATH = 'lobby/';
+export const CREATE_PATH_SEGMENT = 'create/';
+export const JOIN_PATH_SEGMENT = 'join/';
+export const LOBBY_PATH_SEGMENT = 'lobby/';
 /**
  * array of rooms and senders mxId assigned
  * to search param as string should be "," separated
  * Like: url?rooms=!one:server,!two:server
  */
-export type _SearchPathSearchParams = {
+export type SearchPathSearchParams = {
   global?: string;
   term?: string;
   order?: string;
   rooms?: string;
   senders?: string;
 };
-export const _SEARCH_PATH = 'search/';
+export const SEARCH_PATH_SEGMENT = 'search/';
 
-export type _RoomSearchParams = {
+export type RoomSearchParams = {
   /* comma separated string of servers */
   viaServers?: string;
 };
-export const _ROOM_PATH = ':roomIdOrAlias/:eventId?/';
+export const ROOM_PATH_SEGMENT = ':roomIdOrAlias/:eventId?/';
 
 export const HOME_PATH = '/home/';
-export const HOME_CREATE_PATH = `/home/${_CREATE_PATH}`;
-export const HOME_JOIN_PATH = `/home/${_JOIN_PATH}`;
-export const HOME_SEARCH_PATH = `/home/${_SEARCH_PATH}`;
-export const HOME_ROOM_PATH = `/home/${_ROOM_PATH}`;
+export const HOME_CREATE_PATH = `/home/${CREATE_PATH_SEGMENT}`;
+export const HOME_JOIN_PATH = `/home/${JOIN_PATH_SEGMENT}`;
+export const HOME_SEARCH_PATH = `/home/${SEARCH_PATH_SEGMENT}`;
+export const HOME_ROOM_PATH = `/home/${ROOM_PATH_SEGMENT}`;
 
 export const DIRECT_PATH = '/direct/';
 export type DirectCreateSearchParams = {
   userId?: string;
 };
-export const DIRECT_CREATE_PATH = `/direct/${_CREATE_PATH}`;
-export const DIRECT_ROOM_PATH = `/direct/${_ROOM_PATH}`;
+export const DIRECT_CREATE_PATH = `/direct/${CREATE_PATH_SEGMENT}`;
+export const DIRECT_ROOM_PATH = `/direct/${ROOM_PATH_SEGMENT}`;
 
 export const SPACE_PATH = '/:spaceIdOrAlias/';
-export const SPACE_LOBBY_PATH = `/:spaceIdOrAlias/${_LOBBY_PATH}`;
-export const SPACE_SEARCH_PATH = `/:spaceIdOrAlias/${_SEARCH_PATH}`;
-export const SPACE_ROOM_PATH = `/:spaceIdOrAlias/${_ROOM_PATH}`;
+export const SPACE_LOBBY_PATH = `/:spaceIdOrAlias/${LOBBY_PATH_SEGMENT}`;
+export const SPACE_SEARCH_PATH = `/:spaceIdOrAlias/${SEARCH_PATH_SEGMENT}`;
+export const SPACE_ROOM_PATH = `/:spaceIdOrAlias/${ROOM_PATH_SEGMENT}`;
 
-export const _FEATURED_PATH = 'featured/';
-export const _SERVER_PATH = ':server/';
+export const FEATURED_PATH_SEGMENT = 'featured/';
+export const SERVER_PATH_SEGMENT = ':server/';
 export const EXPLORE_PATH = '/explore/';
-export const EXPLORE_FEATURED_PATH = `/explore/${_FEATURED_PATH}`;
+export const EXPLORE_FEATURED_PATH = `/explore/${FEATURED_PATH_SEGMENT}`;
 
 export type ExploreServerPathSearchParams = {
   limit?: string;
@@ -72,18 +72,21 @@ export type ExploreServerPathSearchParams = {
   type?: string;
   instance?: string;
 };
-export const EXPLORE_SERVER_PATH = `/explore/${_SERVER_PATH}`;
+export const EXPLORE_SERVER_PATH = `/explore/${SERVER_PATH_SEGMENT}`;
 
 export const CREATE_PATH = '/create';
 
-export const _NOTIFICATIONS_PATH = 'notifications/';
-export const _INVITES_PATH = 'invites/';
+export const NOTIFICATIONS_PATH_SEGMENT = 'notifications/';
+export const INVITES_PATH_SEGMENT = 'invites/';
 export const INBOX_PATH = '/inbox/';
 export type InboxNotificationsPathSearchParams = {
   only?: string;
 };
-export const INBOX_NOTIFICATIONS_PATH = `/inbox/${_NOTIFICATIONS_PATH}`;
-export const INBOX_INVITES_PATH = `/inbox/${_INVITES_PATH}`;
+export const INBOX_NOTIFICATIONS_PATH = `/inbox/${NOTIFICATIONS_PATH_SEGMENT}`;
+export const INBOX_INVITES_PATH = `/inbox/${INVITES_PATH_SEGMENT}`;
+
+export const TO_PATH = '/to';
+export const TO_ROOM_EVENT_PATH = `${TO_PATH}/:room_id/:event_id?`;
 
 export const SPACE_SETTINGS_PATH = '/space-settings/';
 

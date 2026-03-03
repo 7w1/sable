@@ -1,13 +1,13 @@
 import { Box, config, Icon, Menu, MenuItem, PopOut, RectCords, Text } from 'folds';
-import React, { MouseEventHandler, ReactNode, useMemo, useState } from 'react';
+import { MouseEventHandler, ReactNode, useMemo, useState } from 'react';
 import FocusTrap from 'focus-trap-react';
-import { stopPropagation } from '../utils/keyboard';
+import { stopPropagation } from '$utils/keyboard';
 import {
   getRoomNotificationModeIcon,
   RoomNotificationMode,
   useSetRoomNotificationPreference,
-} from '../hooks/useRoomsNotificationPreferences';
-import { AsyncStatus } from '../hooks/useAsyncCallback';
+} from '$hooks/useRoomsNotificationPreferences';
+import { AsyncStatus } from '$hooks/useAsyncCallback';
 
 const useRoomNotificationModes = (): RoomNotificationMode[] =>
   useMemo(

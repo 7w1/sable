@@ -1,8 +1,8 @@
 import { useMemo, useCallback, KeyboardEventHandler, MutableRefObject } from 'react';
 import { isKeyHotkey } from 'is-hotkey';
-import { TextArea, Intent, TextAreaOperations, Cursor } from '../plugins/text-area';
+import { TextArea, Intent, TextAreaOperations, Cursor } from '$plugins/text-area';
+import { GetTarget } from '$plugins/text-area/type';
 import { useTextAreaIntentHandler } from './useTextAreaIntent';
-import { GetTarget } from '../plugins/text-area/type';
 
 export const useTextAreaCodeEditor = (
   textAreaRef: MutableRefObject<HTMLTextAreaElement | null>,

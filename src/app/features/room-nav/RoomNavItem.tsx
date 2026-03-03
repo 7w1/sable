@@ -1,4 +1,4 @@
-import React, { MouseEventHandler, forwardRef, useState, MouseEvent } from 'react';
+import { MouseEventHandler, forwardRef, useState, MouseEvent } from 'react';
 import { EventType, Room } from '$types/matrix-sdk';
 import {
   Avatar,
@@ -25,21 +25,21 @@ import { useNavigate } from 'react-router-dom';
 import { NavButton, NavItem, NavItemContent, NavItemOptions } from '$components/nav';
 import { UnreadBadge, UnreadBadgeCenter } from '$components/unread-badge';
 import { RoomAvatar, RoomIcon } from '$components/room-avatar';
-import { getDirectRoomAvatarUrl, getRoomAvatarUrl } from '$appUtils/room';
-import { nameInitials } from '$appUtils/common';
+import { getDirectRoomAvatarUrl, getRoomAvatarUrl } from '$utils/room';
+import { nameInitials } from '$utils/common';
 import { useMatrixClient } from '$hooks/useMatrixClient';
 import { useRoomUnread } from '$state/hooks/unread';
 import { roomToUnreadAtom } from '$state/room/roomToUnread';
 import { usePowerLevels } from '$hooks/usePowerLevels';
-import { copyToClipboard } from '$appUtils/dom';
-import { markAsRead } from '$appUtils/notifications';
+import { copyToClipboard } from '$utils/dom';
+import { markAsRead } from '$utils/notifications';
 import { UseStateProvider } from '$components/UseStateProvider';
 import { LeaveRoomPrompt } from '$components/leave-room-prompt';
 import { useRoomTypingMember } from '$hooks/useRoomTypingMembers';
 import { TypingIndicator } from '$components/typing-indicator';
-import { stopPropagation } from '$appUtils/keyboard';
+import { stopPropagation } from '$utils/keyboard';
 import { getMatrixToRoom } from '$plugins/matrix-to';
-import { getCanonicalAliasOrRoomId, isRoomAlias } from '$appUtils/matrix';
+import { getCanonicalAliasOrRoomId, isRoomAlias } from '$utils/matrix';
 import { getViaServers } from '$plugins/via-servers';
 import { useMediaAuthentication } from '$hooks/useMediaAuthentication';
 import { useSetting } from '$state/hooks/settings';
@@ -58,10 +58,10 @@ import { useCallState } from '$pages/client/call/CallProvider';
 import { useCallMembers } from '$hooks/useCallMemberships';
 import { useRoomNavigate } from '$hooks/useRoomNavigate';
 import { ScreenSize, useScreenSizeContext } from '$hooks/useScreenSize';
-import { RoomNavUser } from './RoomNavUser';
 import { useRoomName } from '$hooks/useRoomMeta';
 import { useAtomValue } from 'jotai';
 import { nicknamesAtom } from '$state/nicknames';
+import { RoomNavUser } from './RoomNavUser';
 
 type RoomNavItemMenuProps = {
   room: Room;
@@ -312,7 +312,7 @@ export function RoomNavItem({
 
   const handleChatButtonClick = (evt: MouseEvent<HTMLButtonElement>) => {
     evt.stopPropagation();
-    if (!isChatOpen) toggleChat();
+    toggleChat();
     setViewedCallRoomId(room.roomId);
     navigate(linkPath);
   };
@@ -443,7 +443,7 @@ export function RoomNavItem({
                   offset={4}
                   tooltip={
                     <Tooltip>
-                      <Text>Open Chat</Text>
+                      <Text>{isChatOpen ? 'Hide Chat' : 'Show Chat'}</Text>
                     </Tooltip>
                   }
                 >

@@ -1,11 +1,11 @@
-import React, { useCallback, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Box, Text, Icon, Icons, Button, MenuItem } from 'folds';
 import { SequenceCard } from '$components/sequence-card';
-import { SequenceCardStyle } from '../styles.css';
 import { SettingTile } from '$components/setting-tile';
 import { useMatrixClient } from '$hooks/useMatrixClient';
 import { useAccountDataCallback } from '$hooks/useAccountDataCallback';
 import { CutoutCard } from '$components/cutout-card';
+import { SequenceCardStyle } from '$features/settings/styles.css';
 
 type AccountDataProps = {
   expand: boolean;
@@ -14,17 +14,16 @@ type AccountDataProps = {
 };
 export function AccountData({ expand, onExpandToggle, onSelect }: AccountDataProps) {
   const mx = useMatrixClient();
-  const [accountDataTypes, setAccountDataKeys] = useState<string[]>(
-    () =>
-      // TODO: tighten this once account data event typing is standardized.
-      Array.from(mx.store.accountData.keys()) as string[]
+  const [accountDataTypes, setAccountDataKeys] = useState<string[]>(() =>
+    // TODO: tighten this once account data event typing is standardized.
+    Array.from(mx.store.accountData.keys())
   );
 
   useAccountDataCallback(
     mx,
     useCallback(() => {
       // TODO: tighten this once account data event typing is standardized.
-      setAccountDataKeys(Array.from(mx.store.accountData.keys()) as string[]);
+      setAccountDataKeys(Array.from(mx.store.accountData.keys()));
     }, [mx])
   );
 

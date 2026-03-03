@@ -1,4 +1,3 @@
-import React from 'react';
 import { Icon, Icons } from 'folds';
 import { useNavigate } from 'react-router-dom';
 import { useAtomValue } from 'jotai';
@@ -12,7 +11,7 @@ import {
 } from '$pages/pathUtils';
 import { useClientConfig } from '$hooks/useClientConfig';
 import { useMatrixClient } from '$hooks/useMatrixClient';
-import { getMxIdServer } from '$appUtils/matrix';
+import { getMxIdServer } from '$utils/matrix';
 import { ScreenSize, useScreenSizeContext } from '$hooks/useScreenSize';
 import { useNavToActivePathAtom } from '$state/hooks/navToActivePath';
 

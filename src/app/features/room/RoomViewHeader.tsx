@@ -1,4 +1,4 @@
-import React, { MouseEventHandler, forwardRef, useCallback, useEffect, useState } from 'react';
+import { MouseEventHandler, forwardRef, useCallback, useEffect, useState } from 'react';
 import FocusTrap from 'focus-trap-react';
 import {
   Box,
@@ -37,29 +37,28 @@ import { useSetting } from '$state/hooks/settings';
 import { settingsAtom } from '$state/settings';
 import { useSpaceOptionally } from '$hooks/useSpace';
 import { getHomeSearchPath, getSpaceSearchPath, withSearchParam } from '$pages/pathUtils';
+import { createLogger } from '$utils/debug';
 import {
   getCanonicalAliasOrRoomId,
   isRoomAlias,
   mxcUrlToHttp,
   removeRoomIdFromMDirect,
-} from '$appUtils/matrix';
-import { _SearchPathSearchParams } from '$pages/paths';
-import * as css from './RoomViewHeader.css';
+} from '$utils/matrix';
+import { SearchPathSearchParams } from '$pages/paths';
 import { useRoomUnread } from '$state/hooks/unread';
 import { usePowerLevelsContext } from '$hooks/usePowerLevels';
-import { markAsRead } from '$appUtils/notifications';
+import { markAsRead } from '$utils/notifications';
 import { roomToUnreadAtom } from '$state/room/roomToUnread';
-import { copyToClipboard } from '$appUtils/dom';
+import { copyToClipboard } from '$utils/dom';
 import { LeaveRoomPrompt } from '$components/leave-room-prompt';
 import { useRoomAvatar, useRoomName, useRoomTopic } from '$hooks/useRoomMeta';
 import { ScreenSize, useScreenSizeContext } from '$hooks/useScreenSize';
-import { stopPropagation } from '$appUtils/keyboard';
+import { stopPropagation } from '$utils/keyboard';
 import { getMatrixToRoom } from '$plugins/matrix-to';
 import { getViaServers } from '$plugins/via-servers';
 import { BackRouteHandler } from '$components/BackRouteHandler';
 import { useMediaAuthentication } from '$hooks/useMediaAuthentication';
 import { useRoomPinnedEvents } from '$hooks/useRoomPinnedEvents';
-import { RoomPinMenu } from './room-pin-menu';
 import { useOpenRoomSettings } from '$state/hooks/roomSettings';
 import { RoomNotificationModeSwitcher } from '$components/RoomNotificationSwitcher';
 import {
@@ -67,7 +66,6 @@ import {
   getRoomNotificationModeIcon,
   useRoomsNotificationPreferencesContext,
 } from '$hooks/useRoomsNotificationPreferences';
-import { JumpToTime } from './jump-to-time';
 import { useRoomNavigate } from '$hooks/useRoomNavigate';
 import { useRoomCreators } from '$hooks/useRoomCreators';
 import { useRoomPermissions } from '$hooks/useRoomPermissions';
@@ -80,6 +78,11 @@ import { DirectInvitePrompt } from '$components/direct-invite-prompt';
 import { AsyncStatus, useAsyncCallback } from '$hooks/useAsyncCallback';
 import { useAtomValue } from 'jotai';
 import { mDirectAtom } from '$state/mDirectList';
+import { JumpToTime } from './jump-to-time';
+import { RoomPinMenu } from './room-pin-menu';
+import * as css from './RoomViewHeader.css';
+
+const log = createLogger('RoomViewHeader');
 
 async function getPinsHash(pinnedIds: string[]): Promise<string> {
   const sorted = [...pinnedIds].sort().join(',');
@@ -120,7 +123,7 @@ const RoomMenu = forwardRef<HTMLDivElement, RoomMenuProps>(({ room, requestClose
   const [directInvitePrompt, setDirectInvitePrompt] = useState(false);
 
   const handleMarkAsRead = () => {
-    void markAsRead(mx, room.roomId, hideActivity);
+    markAsRead(mx, room.roomId, hideActivity);
     requestClose();
   };
 
@@ -360,7 +363,11 @@ export function RoomViewHeader() {
   const [currentHash, setCurrentHash] = useState<string>('');
 
   useEffect(() => {
-    void getPinsHash(pinnedIds).then(setCurrentHash);
+    getPinsHash(pinnedIds)
+      .then(setCurrentHash)
+      .catch((err) => {
+        log.warn('Failed to compute pins hash:', err);
+      });
   }, [pinnedIds]);
 
   useEffect(() => {
@@ -388,11 +395,13 @@ export function RoomViewHeader() {
         setUnreadPinsCount(Math.max(0, newCount));
       }
     };
-    void checkUnreads();
+    checkUnreads().catch((err) => {
+      log.warn('Failed to check unread pins:', err);
+    });
   }, [pinnedIds, pinMarker]);
 
   const handleSearchClick = () => {
-    const searchParams: _SearchPathSearchParams = {
+    const searchParams: SearchPathSearchParams = {
       rooms: room.roomId,
     };
     const path = space
@@ -413,13 +422,15 @@ export function RoomViewHeader() {
 
       const hash = await getPinsHash(pinnedIds);
       await mx.setRoomAccountData(room.roomId, AccountDataEvent.SablePinStatus, {
-        hash: hash,
+        hash,
         count: pinnedIds.length,
         last_seen_id: pinnedIds[pinnedIds.length - 1],
       });
     };
 
-    void updateMarker();
+    updateMarker().catch((err) => {
+      log.warn('Failed to update pin marker:', err);
+    });
   };
 
   return (
@@ -648,12 +659,18 @@ export function RoomViewHeader() {
               offset={4}
               tooltip={
                 <Tooltip>
-                  <Text>Chat</Text>
+                  <Text>{isChatOpen ? 'Hide Chat' : 'Show Chat'}</Text>
                 </Tooltip>
               }
             >
               {(triggerRef) => (
-                <IconButton fill="None" ref={triggerRef} onClick={void toggleChat}>
+                <IconButton
+                  fill="None"
+                  ref={triggerRef}
+                  onClick={() => {
+                    toggleChat();
+                  }}
+                >
                   <Icon size="400" src={Icons.Message} filled={isChatOpen} />
                 </IconButton>
               )}

@@ -1,4 +1,4 @@
-import React, { MouseEventHandler, forwardRef, useMemo, useRef, useState } from 'react';
+import { MouseEventHandler, forwardRef, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Avatar,
@@ -18,7 +18,7 @@ import {
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useAtom, useAtomValue } from 'jotai';
 import FocusTrap from 'focus-trap-react';
-import { factoryRoomIdByActivity, factoryRoomIdByAtoZ } from '$appUtils/sort';
+import { factoryRoomIdByActivity, factoryRoomIdByAtoZ } from '$utils/sort';
 import {
   NavButton,
   NavCategory,
@@ -37,10 +37,9 @@ import {
   getHomeSearchPath,
   withSearchParam,
 } from '$pages/pathUtils';
-import { getCanonicalAliasOrRoomId } from '$appUtils/matrix';
+import { getCanonicalAliasOrRoomId } from '$utils/matrix';
 import { useSelectedRoom } from '$hooks/router/useSelectedRoom';
 import { useHomeCreateSelected, useHomeSearchSelected } from '$hooks/router/useHomeSelected';
-import { useHomeRooms } from './useHomeRooms';
 import { useMatrixClient } from '$hooks/useMatrixClient';
 import { VirtualTile } from '$components/virtualizer';
 import { RoomNavCategoryButton, RoomNavItem } from '$features/room-nav';
@@ -50,9 +49,9 @@ import { useCategoryHandler } from '$hooks/useCategoryHandler';
 import { useNavToActivePathMapper } from '$hooks/useNavToActivePathMapper';
 import { PageNav, PageNavHeader, PageNavContent } from '$components/page';
 import { useRoomsUnread } from '$state/hooks/unread';
-import { markAsRead } from '$appUtils/notifications';
+import { markAsRead } from '$utils/notifications';
 import { useClosedNavCategoriesAtom } from '$state/hooks/closedNavCategories';
-import { stopPropagation } from '$appUtils/keyboard';
+import { stopPropagation } from '$utils/keyboard';
 import { useSetting } from '$state/hooks/settings';
 import { settingsAtom } from '$state/settings';
 import {
@@ -61,8 +60,9 @@ import {
 } from '$hooks/useRoomsNotificationPreferences';
 import { UseStateProvider } from '$components/UseStateProvider';
 import { JoinAddressPrompt } from '$components/join-address-prompt';
-import { _RoomSearchParams } from '$pages/paths';
+import { RoomSearchParams } from '$pages/paths';
 import { CallNavStatus } from '$features/room-nav/RoomCallNavStatus';
+import { useHomeRooms } from './useHomeRooms';
 
 type HomeMenuProps = {
   requestClose: () => void;
@@ -282,7 +282,7 @@ export function Home() {
                           const path = getHomeRoomPath(roomIdOrAlias, eventId);
                           navigate(
                             viaServers
-                              ? withSearchParam<_RoomSearchParams>(path, {
+                              ? withSearchParam<RoomSearchParams>(path, {
                                   viaServers: encodeSearchParamValueArray(viaServers),
                                 })
                               : path

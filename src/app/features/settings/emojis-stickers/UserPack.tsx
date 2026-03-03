@@ -1,13 +1,12 @@
-import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage, Box, Button, Icon, Icons, Text } from 'folds';
 import { useUserImagePack } from '$hooks/useImagePacks';
 import { SequenceCard } from '$components/sequence-card';
-import { SequenceCardStyle } from '../styles.css';
 import { SettingTile } from '$components/setting-tile';
 import { ImagePack, ImageUsage } from '$plugins/custom-emoji';
 import { useMatrixClient } from '$hooks/useMatrixClient';
-import { mxcUrlToHttp } from '$appUtils/matrix';
+import { mxcUrlToHttp } from '$utils/matrix';
 import { useMediaAuthentication } from '$hooks/useMediaAuthentication';
+import { SequenceCardStyle } from '$features/settings/styles.css';
 
 type UserPackProps = {
   onViewPack: (imagePack: ImagePack) => void;

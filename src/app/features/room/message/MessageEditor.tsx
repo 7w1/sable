@@ -1,10 +1,4 @@
-import React, {
-  KeyboardEventHandler,
-  MouseEventHandler,
-  useCallback,
-  useEffect,
-  useState,
-} from 'react';
+import { KeyboardEventHandler, MouseEventHandler, useCallback, useEffect, useState } from 'react';
 import {
   Box,
   Chip,
@@ -60,8 +54,8 @@ import { UseStateProvider } from '$components/UseStateProvider';
 import { EmojiBoard } from '$components/emoji-board';
 import { AsyncStatus, useAsyncCallback } from '$hooks/useAsyncCallback';
 import { useMatrixClient } from '$hooks/useMatrixClient';
-import { getEditedEvent, getMentionContent, trimReplyFromFormattedBody } from '$appUtils/room';
-import { mobileOrTablet } from '$appUtils/user-agent';
+import { getEditedEvent, getMentionContent, trimReplyFromFormattedBody } from '$utils/room';
+import { mobileOrTablet } from '$utils/user-agent';
 import { useComposingCheck } from '$hooks/useComposingCheck';
 import { floatingEditor } from '$styles/overrides/Composer.css';
 

@@ -1,7 +1,6 @@
-import React from 'react';
 import { Box, Text, Icon, Icons, config, IconSrc } from 'folds';
-import { SequenceCard } from '../sequence-card';
-import { SettingTile } from '../setting-tile';
+import { SequenceCard } from '$components/sequence-card';
+import { SettingTile } from '$components/setting-tile';
 import { CreateRoomType } from './types';
 
 type CreateRoomTypeSelectorProps = {

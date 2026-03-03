@@ -16,8 +16,8 @@ import {
   RelationType,
   Room,
   RoomMember,
+  CryptoBackend,
 } from '$types/matrix-sdk';
-import { CryptoBackend } from '$types/matrix-sdk';
 import { AccountDataEvent } from '$types/matrix/accountData';
 import {
   IRoomCreateContent,
@@ -237,8 +237,8 @@ export const getUnreadInfo = (room: Room): UnreadInfo => {
   };
 };
 
-export const getUnreadInfos = (mx: MatrixClient): UnreadInfo[] => {
-  return mx.getRooms().reduce<UnreadInfo[]>((unread, room) => {
+export const getUnreadInfos = (mx: MatrixClient): UnreadInfo[] =>
+  mx.getRooms().reduce<UnreadInfo[]>((unread, room) => {
     if (room.isSpaceRoom()) return unread;
     if (room.getMyMembership() !== 'join') return unread;
     if (getNotificationType(mx, room.roomId) === NotificationType.Mute) return unread;
@@ -249,7 +249,6 @@ export const getUnreadInfos = (mx: MatrixClient): UnreadInfo[] => {
 
     return unread;
   }, []);
-};
 
 export const getRoomIconSrc = (
   icons: Record<IconName, IconSrc>,

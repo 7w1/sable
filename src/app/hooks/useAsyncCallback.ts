@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { useAlive } from './useAlive';
 
@@ -96,7 +96,7 @@ export const useAsyncCallback = <TData, TError, TArgs extends unknown[]>(
 ): [
   AsyncState<TData, TError>,
   AsyncCallback<TArgs, TData>,
-  React.Dispatch<React.SetStateAction<AsyncState<TData, TError>>>,
+  Dispatch<SetStateAction<AsyncState<TData, TError>>>,
 ] => {
   const [state, setState] = useState<AsyncState<TData, TError>>({
     status: AsyncStatus.Idle,

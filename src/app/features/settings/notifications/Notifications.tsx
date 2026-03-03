@@ -1,13 +1,12 @@
-import React from 'react';
 import { Box, Text, IconButton, Icon, Icons, Scroll } from 'folds';
 import { Page, PageContent, PageHeader } from '$components/page';
+import { SequenceCard } from '$components/sequence-card';
+import { SettingTile } from '$components/setting-tile';
+import { SequenceCardStyle } from '$features/settings/styles.css';
 import { SystemNotification } from './SystemNotification';
 import { AllMessagesNotifications } from './AllMessages';
 import { SpecialMessagesNotifications } from './SpecialMessages';
 import { KeywordMessagesNotifications } from './KeywordMessages';
-import { SequenceCard } from '$components/sequence-card';
-import { SequenceCardStyle } from '../styles.css';
-import { SettingTile } from '$components/setting-tile';
 
 type NotificationsProps = {
   requestClose: () => void;
@@ -45,9 +44,7 @@ export function Notifications({ requestClose }: NotificationsProps) {
                   direction="Column"
                   gap="400"
                 >
-                  <SettingTile
-                    description={'This option has been moved to "Account > Block Users" section.'}
-                  />
+                  <SettingTile description='This option has been moved to "Account > Block Users" section.' />
                 </SequenceCard>
               </Box>
             </Box>

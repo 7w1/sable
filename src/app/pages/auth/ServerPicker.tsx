@@ -1,4 +1,4 @@
-import React, {
+import {
   ChangeEventHandler,
   KeyboardEventHandler,
   MouseEventHandler,
@@ -22,7 +22,7 @@ import {
 import FocusTrap from 'focus-trap-react';
 
 import { useDebounce } from '$hooks/useDebounce';
-import { stopPropagation } from '$appUtils/keyboard';
+import { stopPropagation } from '$utils/keyboard';
 
 export function ServerPicker({
   server,

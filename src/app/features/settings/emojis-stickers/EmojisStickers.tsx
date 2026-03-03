@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Box, Text, IconButton, Icon, Icons, Scroll } from 'folds';
 import { Page, PageContent, PageHeader } from '$components/page';
-import { GlobalPacks } from './GlobalPacks';
-import { UserPack } from './UserPack';
 import { ImagePack } from '$plugins/custom-emoji';
 import { ImagePackView } from '$components/image-pack-view';
+import { GlobalPacks } from './GlobalPacks';
+import { UserPack } from './UserPack';
 
 type EmojisStickersProps = {
   requestClose: () => void;

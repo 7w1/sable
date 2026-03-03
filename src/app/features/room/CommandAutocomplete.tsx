@@ -1,4 +1,4 @@
-import React, { KeyboardEvent as ReactKeyboardEvent, useCallback, useEffect, useMemo } from 'react';
+import { KeyboardEvent as ReactKeyboardEvent, useCallback, useEffect, useMemo } from 'react';
 import { Editor } from 'slate';
 import { Box, config, MenuItem, Text } from 'folds';
 import { Room } from '$types/matrix-sdk';
@@ -13,7 +13,7 @@ import {
 import { UseAsyncSearchOptions, useAsyncSearch } from '$hooks/useAsyncSearch';
 import { useMatrixClient } from '$hooks/useMatrixClient';
 import { useKeyDown } from '$hooks/useKeyDown';
-import { onTabPress } from '$appUtils/keyboard';
+import { onTabPress } from '$utils/keyboard';
 
 type CommandAutoCompleteHandler = (commandName: string) => void;
 

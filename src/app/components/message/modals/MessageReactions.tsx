@@ -1,6 +1,5 @@
-import React from 'react';
-import { Room } from '$types/matrix-sdk';
-import { Relations } from '$types/matrix-sdk';
+import { MouseEvent } from 'react';
+import { Room, Relations } from '$types/matrix-sdk';
 import { useSetAtom } from 'jotai';
 import { Icon, Icons, Text, MenuItem } from 'folds';
 import { modalAtom, ModalType } from '$state/modal';
@@ -15,7 +14,7 @@ export function MessageAllReactionItem({ room, relations }: { room: Room; relati
       size="300"
       after={<Icon size="100" src={Icons.Smile} />}
       radii="300"
-      onClick={(e: React.MouseEvent) => {
+      onClick={(e: MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
         setModal({

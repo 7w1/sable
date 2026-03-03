@@ -1,4 +1,4 @@
-import React, { MouseEventHandler, forwardRef, useMemo, useRef, useState } from 'react';
+import { MouseEventHandler, forwardRef, useMemo, useRef, useState } from 'react';
 import { useAtom, useAtomValue } from 'jotai';
 import {
   Avatar,
@@ -19,7 +19,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import FocusTrap from 'focus-trap-react';
 import { useNavigate } from 'react-router-dom';
 import { useMatrixClient } from '$hooks/useMatrixClient';
-import { factoryRoomIdByActivity } from '$appUtils/sort';
+import { factoryRoomIdByActivity } from '$utils/sort';
 import {
   NavButton,
   NavCategory,
@@ -30,7 +30,7 @@ import {
   NavItemContent,
 } from '$components/nav';
 import { getDirectCreatePath, getDirectRoomPath } from '$pages/pathUtils';
-import { getCanonicalAliasOrRoomId } from '$appUtils/matrix';
+import { getCanonicalAliasOrRoomId } from '$utils/matrix';
 import { useSelectedRoom } from '$hooks/router/useSelectedRoom';
 import { VirtualTile } from '$components/virtualizer';
 import { RoomNavCategoryButton, RoomNavItem } from '$features/room-nav';
@@ -38,12 +38,11 @@ import { makeNavCategoryId } from '$state/closedNavCategories';
 import { roomToUnreadAtom } from '$state/room/roomToUnread';
 import { useCategoryHandler } from '$hooks/useCategoryHandler';
 import { useNavToActivePathMapper } from '$hooks/useNavToActivePathMapper';
-import { useDirectRooms } from './useDirectRooms';
 import { PageNav, PageNavContent, PageNavHeader } from '$components/page';
 import { useClosedNavCategoriesAtom } from '$state/hooks/closedNavCategories';
 import { useRoomsUnread } from '$state/hooks/unread';
-import { markAsRead } from '$appUtils/notifications';
-import { stopPropagation } from '$appUtils/keyboard';
+import { markAsRead } from '$utils/notifications';
+import { stopPropagation } from '$utils/keyboard';
 import { useSetting } from '$state/hooks/settings';
 import { settingsAtom } from '$state/settings';
 import {
@@ -52,6 +51,7 @@ import {
 } from '$hooks/useRoomsNotificationPreferences';
 import { useDirectCreateSelected } from '$hooks/router/useDirectSelected';
 import { CallNavStatus } from '$features/room-nav/RoomCallNavStatus';
+import { useDirectRooms } from './useDirectRooms';
 
 type DirectMenuProps = {
   requestClose: () => void;

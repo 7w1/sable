@@ -1,4 +1,3 @@
-import React from 'react';
 import { TooltipProvider, Tooltip, Box, Text, Badge, toRem } from 'folds';
 
 export function BetaNoticeBadge() {

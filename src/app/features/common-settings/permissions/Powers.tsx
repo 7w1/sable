@@ -1,5 +1,5 @@
 /* eslint-disable react/no-array-index-key */
-import React, { useState, MouseEventHandler, ReactNode } from 'react';
+import { useState, MouseEventHandler, ReactNode } from 'react';
 import FocusTrap from 'focus-trap-react';
 import {
   Box,
@@ -15,7 +15,6 @@ import {
   color,
 } from 'folds';
 import { SequenceCard } from '$components/sequence-card';
-import { SequenceCardStyle } from '../styles.css';
 import { getPowers, usePowerLevelTags } from '$hooks/usePowerLevelTags';
 import { SettingTile } from '$components/setting-tile';
 import { getPermissionPower, IPowerLevels } from '$hooks/usePowerLevels';
@@ -23,11 +22,12 @@ import { useRoom } from '$hooks/useRoom';
 import { PowerColorBadge, PowerIcon } from '$components/power';
 import { useMatrixClient } from '$hooks/useMatrixClient';
 import { useMediaAuthentication } from '$hooks/useMediaAuthentication';
-import { stopPropagation } from '$appUtils/keyboard';
-import { PermissionGroup } from './types';
+import { stopPropagation } from '$utils/keyboard';
 import { getPowerTagIconSrc } from '$hooks/useMemberPowerTag';
 import { useRoomCreatorsTag } from '$hooks/useRoomCreatorsTag';
 import { useRoomCreators } from '$hooks/useRoomCreators';
+import { SequenceCardStyle } from '$features/common-settings/styles.css';
+import { PermissionGroup } from './types';
 
 type PeekPermissionsProps = {
   powerLevels: IPowerLevels;

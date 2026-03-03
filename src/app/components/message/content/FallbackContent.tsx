@@ -1,5 +1,4 @@
 import { Box, Icon, Icons, Text, as, color, config } from 'folds';
-import React from 'react';
 
 const warningStyle = { color: color.Warning.Main, opacity: config.opacity.P300 };
 const criticalStyle = { color: color.Critical.Main, opacity: config.opacity.P300 };

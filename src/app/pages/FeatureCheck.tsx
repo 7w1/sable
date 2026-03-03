@@ -1,8 +1,8 @@
-import React, { ReactNode, useEffect } from 'react';
+import { ReactNode, useEffect } from 'react';
 import { Box, Dialog, Text, config } from 'folds';
-import { AsyncStatus, useAsyncCallback } from '../hooks/useAsyncCallback';
-import { checkIndexedDBSupport } from '../utils/featureCheck';
-import { SplashScreen } from '../components/splash-screen';
+import { AsyncStatus, useAsyncCallback } from '$hooks/useAsyncCallback';
+import { checkIndexedDBSupport } from '$utils/featureCheck';
+import { SplashScreen } from '$components/splash-screen';
 
 export function FeatureCheck({ children }: { children: ReactNode }) {
   const [idbSupportState, checkIDBSupport] = useAsyncCallback(checkIndexedDBSupport);

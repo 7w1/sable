@@ -1,4 +1,4 @@
-import React, { MouseEventHandler, useCallback, useState } from 'react';
+import { MouseEventHandler, useCallback, useState } from 'react';
 import { useAtom } from 'jotai';
 import { CryptoApi, KeyBackupInfo } from '$types/matrix-sdk';
 import {
@@ -19,17 +19,17 @@ import {
   Text,
 } from 'folds';
 import FocusTrap from 'focus-trap-react';
-import { BackupProgressStatus, backupRestoreProgressAtom } from '../state/backupRestore';
-import { InfoCard } from './info-card';
-import { AsyncStatus, useAsyncCallback } from '../hooks/useAsyncCallback';
+import { BackupProgressStatus, backupRestoreProgressAtom } from '$state/backupRestore';
+import { AsyncStatus, useAsyncCallback } from '$hooks/useAsyncCallback';
 import {
   useKeyBackupInfo,
   useKeyBackupStatus,
   useKeyBackupSync,
   useKeyBackupTrust,
-} from '../hooks/useKeyBackup';
-import { stopPropagation } from '../utils/keyboard';
-import { useRestoreBackupOnVerification } from '../hooks/useRestoreBackupOnVerification';
+} from '$hooks/useKeyBackup';
+import { stopPropagation } from '$utils/keyboard';
+import { useRestoreBackupOnVerification } from '$hooks/useRestoreBackupOnVerification';
+import { InfoCard } from './info-card';
 
 type BackupStatusProps = {
   enabled: boolean;

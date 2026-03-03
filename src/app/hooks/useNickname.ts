@@ -1,8 +1,8 @@
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect } from 'react';
-import { ClientEvent, MatrixClient, MatrixEvent } from '$types/matrix-sdk';
-import { nicknamesAtom, setNicknameAtom } from '../state/nicknames';
+import { MatrixClient } from '$types/matrix-sdk';
 import { AccountDataEvent } from '$types/matrix/accountData';
+import { nicknamesAtom, setNicknameAtom } from '$state/nicknames';
 import { useAccountDataCallback } from './useAccountDataCallback';
 import { useMatrixClient } from './useMatrixClient';
 

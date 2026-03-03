@@ -1,4 +1,4 @@
-import React, {
+import {
   ChangeEventHandler,
   MouseEventHandler,
   useCallback,
@@ -30,14 +30,13 @@ import { MatrixClient, Room, RoomMember } from '$types/matrix-sdk';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import classNames from 'classnames';
 
-import * as css from './MembersDrawer.css';
 import { useMatrixClient } from '$hooks/useMatrixClient';
 import { UseStateProvider } from '$components/UseStateProvider';
 import { SearchItemStrGetter, UseAsyncSearchOptions, useAsyncSearch } from '$hooks/useAsyncSearch';
 import { useDebounce } from '$hooks/useDebounce';
 import { TypingIndicator } from '$components/typing-indicator';
-import { getMemberDisplayName, getMemberSearchStr } from '$appUtils/room';
-import { getMxIdLocalPart } from '$appUtils/matrix';
+import { getMemberDisplayName, getMemberSearchStr } from '$utils/room';
+import { getMxIdLocalPart } from '$utils/matrix';
 import { useSetSetting, useSetting } from '$state/hooks/settings';
 import { settingsAtom } from '$state/settings';
 import { useAtomValue } from 'jotai';
@@ -58,6 +57,7 @@ import { ContainerColor } from '$styles/ContainerColor.css';
 import { useFlattenPowerTagMembers, useGetMemberPowerTag } from '$hooks/useMemberPowerTag';
 import { useRoomCreators } from '$hooks/useRoomCreators';
 import { useSableCosmetics } from '$hooks/useSableCosmetics';
+import * as css from './MembersDrawer.css';
 
 import { AvatarPresence, PresenceBadge } from '$components/presence';
 import { useUserPresence } from '$hooks/useUserPresence';

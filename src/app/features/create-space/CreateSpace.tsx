@@ -1,4 +1,4 @@
-import React, { FormEventHandler, useCallback, useEffect, useState } from 'react';
+import { FormEventHandler, useCallback, useEffect, useState } from 'react';
 import { MatrixError, Room } from '$types/matrix-sdk';
 import {
   Box,
@@ -21,13 +21,12 @@ import {
   knockRestrictedSupported,
   knockSupported,
   restrictedSupported,
-} from '$appUtils/matrix';
+} from '$utils/matrix';
 import { useMatrixClient } from '$hooks/useMatrixClient';
-import { millisecondsToMinutes, replaceSpaceWithDash } from '$appUtils/common';
+import { millisecondsToMinutes, replaceSpaceWithDash } from '$utils/common';
 import { AsyncStatus, useAsyncCallback } from '$hooks/useAsyncCallback';
 import { useCapabilities } from '$hooks/useCapabilities';
 import { useAlive } from '$hooks/useAlive';
-import { ErrorCode } from '../../cs-errorcode';
 import {
   AdditionalCreatorInput,
   createRoom,
@@ -39,6 +38,7 @@ import {
   useAdditionalCreators,
 } from '$components/create-room';
 import { RoomType } from '$types/matrix/room';
+import { ErrorCode } from '../../cs-errorcode';
 
 const getCreateSpaceAccessToIcon = (access: CreateRoomAccess) => {
   if (access === CreateRoomAccess.Private) return Icons.SpaceLock;

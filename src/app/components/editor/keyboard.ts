@@ -28,7 +28,7 @@ const isHeading3 = isKeyHotkey('mod+3');
 /**
  * @return boolean true if shortcut is toggled.
  */
-export const toggleKeyboardShortcut = (editor: Editor, event: KeyboardEvent<Element>): boolean => {
+export const toggleKeyboardShortcut = (editor: Editor, event: KeyboardEvent): boolean => {
   if (isKeyHotkey('backspace', event) && editor.selection && Range.isCollapsed(editor.selection)) {
     const startPoint = Range.start(editor.selection);
     if (startPoint.offset !== 0) return false;

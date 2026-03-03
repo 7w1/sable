@@ -1,20 +1,20 @@
-import React, { useCallback, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Box, Button, config, Menu, Spinner, Text } from 'folds';
 import { AuthDict, IMyDevice, MatrixError } from '$types/matrix-sdk';
 import { SequenceCard } from '$components/sequence-card';
-import { SequenceCardStyle } from '../styles.css';
 import { ActionUIA, ActionUIAFlowsLoader } from '$components/ActionUIA';
-import { DeviceDeleteBtn, DeviceTile } from './DeviceTile';
 import { AsyncState, AsyncStatus, useAsync } from '$hooks/useAsyncCallback';
 import { useMatrixClient } from '$hooks/useMatrixClient';
 import { useUIAMatrixError } from '$hooks/useUIAFlows';
 import { DeviceVerificationStatus } from '$components/DeviceVerificationStatus';
-import { VerifyOtherDeviceTile } from './Verification';
 import { VerificationStatus } from '$hooks/useDeviceVerificationStatus';
 import { useAuthMetadata } from '$hooks/useAuthMetadata';
 import { withSearchParam } from '$pages/pathUtils';
 import { useAccountManagementActions } from '$hooks/useAccountManagement';
 import { SettingTile } from '$components/setting-tile';
+import { SequenceCardStyle } from '$features/settings/styles.css';
+import { VerifyOtherDeviceTile } from './Verification';
+import { DeviceDeleteBtn, DeviceTile } from './DeviceTile';
 
 type OtherDevicesProps = {
   devices: IMyDevice[];

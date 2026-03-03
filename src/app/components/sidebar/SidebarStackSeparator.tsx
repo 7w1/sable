@@ -1,4 +1,3 @@
-import React from 'react';
 import { Line, toRem } from 'folds';
 
 export function SidebarStackSeparator() {

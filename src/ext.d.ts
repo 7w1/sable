@@ -11,9 +11,7 @@ declare module 'browser-encrypt-attachment' {
       ext: boolean;
     };
     iv: string;
-    hashes: {
-      [alg: string]: string;
-    };
+    hashes: Record<string, string>;
   }
 
   export interface EncryptedAttachment {

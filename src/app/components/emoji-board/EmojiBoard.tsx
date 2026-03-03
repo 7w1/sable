@@ -1,4 +1,4 @@
-import React, {
+import {
   ChangeEventHandler,
   FocusEventHandler,
   MouseEventHandler,
@@ -16,14 +16,12 @@ import { Room } from '$types/matrix-sdk';
 import { atom, PrimitiveAtom, useAtom, useSetAtom } from 'jotai';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { IEmoji, emojiGroups, emojis } from '$plugins/emoji';
-import { useEmojiGroupLabels } from './useEmojiGroupLabels';
-import { useEmojiGroupIcons } from './useEmojiGroupIcons';
-import { preventScrollWithArrowKey, stopPropagation } from '$appUtils/keyboard';
+import { preventScrollWithArrowKey, stopPropagation } from '$utils/keyboard';
 import { useRelevantImagePacks } from '$hooks/useImagePacks';
 import { useMatrixClient } from '$hooks/useMatrixClient';
 import { useRecentEmoji } from '$hooks/useRecentEmoji';
-import { isUserId, mxcUrlToHttp } from '$appUtils/matrix';
-import { editableActiveElement, targetFromEvent } from '$appUtils/dom';
+import { isUserId, mxcUrlToHttp } from '$utils/matrix';
+import { editableActiveElement, targetFromEvent } from '$utils/dom';
 import { useAsyncSearch, UseAsyncSearchOptions } from '$hooks/useAsyncSearch';
 import { useDebounce } from '$hooks/useDebounce';
 import { useThrottle } from '$hooks/useThrottle';
@@ -31,6 +29,9 @@ import { addRecentEmoji } from '$plugins/recent-emoji';
 import { useMediaAuthentication } from '$hooks/useMediaAuthentication';
 import { ImagePack, ImageUsage, PackImageReader } from '$plugins/custom-emoji';
 import { getEmoticonSearchStr } from '$plugins/utils';
+import { VirtualTile } from '$components/virtualizer';
+import { useEmojiGroupIcons } from './useEmojiGroupIcons';
+import { useEmojiGroupLabels } from './useEmojiGroupLabels';
 import {
   SearchInput,
   EmojiBoardTabs,
@@ -51,7 +52,6 @@ import {
   EmojiBoardLayout,
 } from './components';
 import { EmojiBoardTab, EmojiType } from './types';
-import { VirtualTile } from '../virtualizer';
 
 const RECENT_GROUP_ID = 'recent_group';
 const SEARCH_GROUP_ID = 'search_group';

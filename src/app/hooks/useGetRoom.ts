@@ -1,7 +1,7 @@
 import { Room } from '$types/matrix-sdk';
 import { useAtomValue } from 'jotai';
 import { useCallback, useMemo } from 'react';
-import { allRoomsAtom } from '../state/room-list/roomList';
+import { allRoomsAtom } from '$state/room-list/roomList';
 import { useMatrixClient } from './useMatrixClient';
 
 export const useAllJoinedRoomsSet = () => {

@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { selectFile } from '../utils/dom';
+import { selectFile } from '$utils/dom';
 
 export const useFilePicker = <M extends boolean | undefined = undefined>(
   onSelect: (file: M extends true ? File[] : File) => void,

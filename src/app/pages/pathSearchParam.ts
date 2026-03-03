@@ -1,8 +1,8 @@
-import { _RoomSearchParams, DirectCreateSearchParams } from './paths';
+import { RoomSearchParams, DirectCreateSearchParams } from './paths';
 
 type SearchParamsGetter<T> = (searchParams: URLSearchParams) => T;
 
-export const getRoomSearchParams: SearchParamsGetter<_RoomSearchParams> = (searchParams) => ({
+export const getRoomSearchParams: SearchParamsGetter<RoomSearchParams> = (searchParams) => ({
   viaServers: searchParams.get('viaServers') ?? undefined,
 });
 

@@ -1,22 +1,22 @@
-import React, { KeyboardEvent as ReactKeyboardEvent, useEffect, useMemo } from 'react';
+import { KeyboardEvent as ReactKeyboardEvent, useEffect, useMemo } from 'react';
 import { Editor } from 'slate';
 import { Box, MenuItem, Text, toRem } from 'folds';
 import { Room } from '$types/matrix-sdk';
 
-import { AutocompleteQuery } from './autocompleteQuery';
-import { AutocompleteMenu } from './AutocompleteMenu';
 import { useMatrixClient } from '$hooks/useMatrixClient';
 import { UseAsyncSearchOptions, useAsyncSearch } from '$hooks/useAsyncSearch';
-import { onTabPress } from '$appUtils/keyboard';
-import { createEmoticonElement, moveCursor, replaceWithElement } from '../utils';
+import { onTabPress } from '$utils/keyboard';
 import { useRecentEmoji } from '$hooks/useRecentEmoji';
 import { useRelevantImagePacks } from '$hooks/useImagePacks';
 import { IEmoji, emojis } from '$plugins/emoji';
 import { useKeyDown } from '$hooks/useKeyDown';
-import { mxcUrlToHttp } from '$appUtils/matrix';
+import { mxcUrlToHttp } from '$utils/matrix';
 import { useMediaAuthentication } from '$hooks/useMediaAuthentication';
 import { ImageUsage, PackImageReader } from '$plugins/custom-emoji';
 import { getEmoticonSearchStr } from '$plugins/utils';
+import { createEmoticonElement, moveCursor, replaceWithElement } from '$components/editor/utils';
+import { AutocompleteMenu } from './AutocompleteMenu';
+import { AutocompleteQuery } from './autocompleteQuery';
 
 type EmoticonCompleteHandler = (key: string, shortcode: string) => void;
 

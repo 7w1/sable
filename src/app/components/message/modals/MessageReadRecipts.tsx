@@ -1,4 +1,4 @@
-import React from 'react';
+import { MouseEvent } from 'react';
 import { Room } from '$types/matrix-sdk';
 import { useSetAtom } from 'jotai';
 import { MenuItem, Icon, Icons, Text } from 'folds';
@@ -14,7 +14,7 @@ export function MessageReadReceiptItem({ room, eventId }: { room: Room; eventId:
       size="300"
       after={<Icon size="100" src={Icons.CheckTwice} />}
       radii="300"
-      onClick={(e: React.MouseEvent) => {
+      onClick={(e: MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
         setModal({

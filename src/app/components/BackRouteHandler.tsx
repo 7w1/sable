@@ -7,7 +7,7 @@ import {
   getHomePath,
   getInboxPath,
   getSpacePath,
-} from '../pages/pathUtils';
+} from '$pages/pathUtils';
 import {
   DIRECT_PATH,
   EXPLORE_PATH,
@@ -17,8 +17,8 @@ import {
   HOME_ROOM_PATH,
   DIRECT_ROOM_PATH,
   SPACE_ROOM_PATH,
-} from '../pages/paths';
-import { lastVisitedRoomIdAtom } from '../state/room/lastRoom';
+} from '$pages/paths';
+import { lastVisitedRoomIdAtom } from '$state/room/lastRoom';
 
 type BackRouteHandlerProps = {
   children: (onBack: () => void) => ReactNode;
@@ -107,7 +107,7 @@ export function BackRouteHandler({ children }: BackRouteHandlerProps) {
     ) {
       navigate(getInboxPath());
     }
-  }, [navigate, location]);
+  }, [navigate, location, setLastRoomId]);
 
   return children(goBack);
 }

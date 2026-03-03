@@ -1,11 +1,11 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { Chip, Icon, IconButton, Icons, Text, color } from 'folds';
-import { UploadCard, UploadCardError, CompactUploadCardProgress } from './UploadCard';
 import { TUploadAtom, UploadStatus, UploadSuccess, useBindUploadAtom } from '$state/upload';
 import { useMatrixClient } from '$hooks/useMatrixClient';
-import { TUploadContent } from '$appUtils/matrix';
-import { bytesToSize, getFileTypeIcon } from '$appUtils/common';
+import { TUploadContent } from '$utils/matrix';
+import { bytesToSize, getFileTypeIcon } from '$utils/common';
 import { useMediaConfig } from '$hooks/useMediaConfig';
+import { UploadCard, UploadCardError, CompactUploadCardProgress } from './UploadCard';
 
 type CompactUploadCardRendererProps = {
   isEncrypted?: boolean;

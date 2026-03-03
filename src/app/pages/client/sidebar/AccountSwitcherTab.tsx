@@ -1,4 +1,4 @@
-import React, { MouseEventHandler, useCallback, useState } from 'react';
+import { MouseEvent, MouseEventHandler, useCallback, useState } from 'react';
 import {
   Box,
   Icon,
@@ -20,9 +20,9 @@ import { useNavigate } from 'react-router-dom';
 import { sessionsAtom, activeSessionIdAtom, Session } from '$state/sessions';
 import { SidebarItem, SidebarItemTooltip, SidebarAvatar } from '$components/sidebar';
 import { UserAvatar } from '$components/user-avatar';
-import { nameInitials } from '$appUtils/common';
-import { getMxIdLocalPart, mxcUrlToHttp } from '$appUtils/matrix';
-import { stopPropagation } from '$appUtils/keyboard';
+import { nameInitials } from '$utils/common';
+import { getMxIdLocalPart, mxcUrlToHttp } from '$utils/matrix';
+import { stopPropagation } from '$utils/keyboard';
 import { getHomePath, getLoginPath, withSearchParam } from '$pages/pathUtils';
 import { logoutClient, initClient } from '$client/initMatrix';
 import { useMatrixClient } from '$hooks/useMatrixClient';
@@ -31,7 +31,7 @@ import { useMediaAuthentication } from '$hooks/useMediaAuthentication';
 import { useSessionProfiles } from '$hooks/useSessionProfiles';
 import { Settings } from '$features/settings';
 import { Modal500 } from '$components/Modal500';
-import { createLogger } from '$appUtils/debug';
+import { createLogger } from '$utils/debug';
 import { useClientConfig } from '$hooks/useClientConfig';
 
 const log = createLogger('AccountSwitcherTab');
@@ -88,7 +88,7 @@ function AccountRow({
               fill="None"
               size="400"
               radii="300"
-              onClick={(e: React.MouseEvent) => {
+              onClick={(e: MouseEvent) => {
                 e.stopPropagation();
                 onSignOut(session);
               }}

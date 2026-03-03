@@ -1,4 +1,6 @@
-import React, {
+/* eslint-disable react/destructuring-assignment */
+import {
+  Fragment,
   Dispatch,
   MouseEventHandler,
   RefObject,
@@ -47,11 +49,11 @@ import {
 import { isKeyHotkey } from 'is-hotkey';
 import { Opts as LinkifyOpts } from 'linkifyjs';
 import { useTranslation } from 'react-i18next';
-import { eventWithShortcode, factoryEventSentBy, getMxIdLocalPart } from '$appUtils/matrix';
+import { eventWithShortcode, factoryEventSentBy, getMxIdLocalPart } from '$utils/matrix';
 import { useMatrixClient } from '$hooks/useMatrixClient';
 import { ItemRange, useVirtualPaginator } from '$hooks/useVirtualPaginator';
 import { useAlive } from '$hooks/useAlive';
-import { editableActiveElement, scrollToBottom } from '$appUtils/dom';
+import { editableActiveElement, scrollToBottom } from '$utils/dom';
 import {
   CompactPlaceholder,
   DefaultPlaceholder,
@@ -82,12 +84,11 @@ import {
   getReactionContent,
   isMembershipChanged,
   reactionOrEditEvent,
-} from '$appUtils/room';
+} from '$utils/room';
 import { useSetting } from '$state/hooks/settings';
 import { MessageLayout, settingsAtom } from '$state/settings';
 import { nicknamesAtom } from '$state/nicknames';
 import { useMatrixEventRenderer } from '$hooks/useMatrixEventRenderer';
-import { EncryptedContent, Event, Message, Reactions } from './message';
 import { useMemberEventParser } from '$hooks/useMemberEventParser';
 import * as customHtmlCss from '$styles/CustomHtml.css';
 import { RoomIntro } from '$components/room-intro';
@@ -95,11 +96,10 @@ import {
   getIntersectionObserverEntry,
   useIntersectionObserver,
 } from '$hooks/useIntersectionObserver';
-import { markAsRead } from '$appUtils/notifications';
+import { markAsRead } from '$utils/notifications';
 import { useDebounce } from '$hooks/useDebounce';
 import { getResizeObserverEntry, useResizeObserver } from '$hooks/useResizeObserver';
-import * as css from './RoomTimeline.css';
-import { inSameDay, minuteDifference, timeDayMonthYear, today, yesterday } from '$appUtils/time';
+import { inSameDay, minuteDifference, timeDayMonthYear, today, yesterday } from '$utils/time';
 import { createMentionElement, isEmptyEditor, moveCursor } from '$components/editor';
 import { roomIdToReplyDraftAtomFamily } from '$state/room/roomInputDrafts';
 import { usePowerLevelsContext } from '$hooks/usePowerLevels';
@@ -118,16 +118,14 @@ import { useRoomNavigate } from '$hooks/useRoomNavigate';
 import { useMediaAuthentication } from '$hooks/useMediaAuthentication';
 import { useIgnoredUsers } from '$hooks/useIgnoredUsers';
 import { useImagePackRooms } from '$hooks/useImagePackRooms';
-import { useIsDirectRoom } from '$hooks/useRoom';
 import { useOpenUserRoomProfile } from '$state/hooks/userRoomProfile';
 import { useSpaceOptionally } from '$hooks/useSpace';
 import { useRoomCreators } from '$hooks/useRoomCreators';
 import { useRoomPermissions } from '$hooks/useRoomPermissions';
-import { useAccessiblePowerTagColors, useGetMemberPowerTag } from '$hooks/useMemberPowerTag';
-import { useTheme } from '$hooks/useTheme';
-import { useRoomCreatorsTag } from '$hooks/useRoomCreatorsTag';
-import { usePowerLevelTags } from '$hooks/usePowerLevelTags';
+import { useGetMemberPowerTag } from '$hooks/useMemberPowerTag';
 import { profilesCacheAtom } from '$state/userRoomProfile';
+import * as css from './RoomTimeline.css';
+import { EncryptedContent, Event, Message, Reactions } from './message';
 
 const TimelineFloat = as<'div', css.TimelineFloatVariants>(
   ({ position, className, ...props }, ref) => (
@@ -272,9 +270,13 @@ const useEventTimelineLoader = (
   room: Room,
   onLoad: (eventId: string, linkedTimelines: EventTimeline[], evtAbsIndex: number) => void,
   onError: (err: Error | null) => void
-) => {
-  return useCallback(
+) =>
+  useCallback(
     async (eventId: string) => {
+      if (!room.getUnfilteredTimelineSet().getTimelineForEvent(eventId)) {
+        await mx.roomInitialSync(room.roomId, PAGINATION_LIMIT);
+        await mx.getLatestTimeline(room.getUnfilteredTimelineSet());
+      }
       const [err, replyEvtTimeline] = await to(
         mx.getEventTimeline(room.getUnfilteredTimelineSet(), eventId)
       );
@@ -294,7 +296,6 @@ const useEventTimelineLoader = (
     },
     [mx, room, onLoad, onError]
   );
-};
 
 const useTimelinePagination = (
   mx: MatrixClient,
@@ -848,10 +849,9 @@ export function RoomTimeline({
 
   useEffect(() => {
     if (eventId) {
-      setTimeline(getEmptyTimeline());
-      loadEventTimeline(eventId);
+      handleOpenEvent(eventId);
     }
-  }, [eventId, loadEventTimeline]);
+  }, [eventId, handleOpenEvent]);
 
   // Scroll to bottom on initial timeline load
   useLayoutEffect(() => {
@@ -1028,8 +1028,8 @@ export function RoomTimeline({
         delete cleanExtended['m.tz'];
         delete cleanExtended['chat.commet.profile_banner'];
         delete cleanExtended['moe.sable.app.name_color'];
-        delete cleanExtended['avatar_url'];
-        delete cleanExtended['displayname'];
+        delete cleanExtended.avatar_url;
+        delete cleanExtended.displayname;
       }
 
       openUserRoomProfile(
@@ -1122,7 +1122,7 @@ export function RoomTimeline({
       const myReaction = reactions.find(factoryEventSentBy(mx.getUserId()!));
 
       if (myReaction && !!(myReaction as any)?.isRelation()) {
-        mx.redactEvent(room.roomId, (myReaction as any).getId()!);
+        mx.redactEvent(room.roomId, (myReaction as any).getId());
         return;
       }
       const rShortcode =
@@ -1817,11 +1817,11 @@ export function RoomTimeline({
       if (dayDividerJSX) dayDivider = false;
 
       return (
-        <React.Fragment key={mEventId}>
+        <Fragment key={mEventId}>
           {newDividerJSX}
           {dayDividerJSX}
           {eventJSX}
-        </React.Fragment>
+        </Fragment>
       );
     }
 

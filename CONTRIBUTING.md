@@ -37,6 +37,13 @@ It is not always possible to phrase every change in such a manner, but it is des
 
 Also, we use [ESLint](https://eslint.org/) for clean and stylistically consistent code syntax, so make sure your pull request follow it.
 
+**Pull requests are not merged unless all quality checks are passing.** At minimum, `format`, `lint`, `typecheck`, and `knip` must all be green before a pull request can be merged. Run these locally before opening or updating a pull request:
+
+- `npm run fmt:check`
+- `npm run lint`
+- `npm run typecheck`
+- `npm run knip`
+
 **For any query or design discussion, join our [Matrix room](https://matrix.to/#/#sable:sable.moe).**
 
 ## Helpful links

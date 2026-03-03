@@ -5,18 +5,18 @@ import {
   IndexedDBCryptoStore,
 } from '$types/matrix-sdk';
 
-import { cryptoCallbacks } from './secretStorageKeys';
-import { clearNavToActivePathStore } from '../app/state/navToActivePath';
-import { pushSessionToSW } from '../sw-session';
+import { clearNavToActivePathStore } from '$state/navToActivePath';
 import {
   Session,
   Sessions,
   SessionStoreName,
   getSessionStoreName,
   MATRIX_SESSIONS_KEY,
-} from '../app/state/sessions';
-import { getLocalStorageItem } from '../app/state/utils/atomWithLocalStorage';
-import { createLogger } from '../app/utils/debug';
+} from '$state/sessions';
+import { getLocalStorageItem } from '$state/utils/atomWithLocalStorage';
+import { createLogger } from '$utils/debug';
+import { pushSessionToSW } from '../sw-session';
+import { cryptoCallbacks } from './secretStorageKeys';
 
 const log = createLogger('initMatrix');
 
@@ -27,6 +27,22 @@ const deleteDatabase = (name: string): Promise<void> =>
     req.onerror = () => resolve(); // resolve anyway — we tried
     req.onblocked = () => resolve();
   });
+
+const deleteSyncStoreGroup = async (syncStoreName: string): Promise<void> => {
+  await Promise.all([
+    deleteDatabase(syncStoreName),
+    deleteDatabase(syncStoreName.replace(/^sync/, 'crypto')),
+    deleteDatabase(`${syncStoreName}::matrix-sdk-crypto`),
+  ]);
+};
+
+const deleteSessionStores = async (storeName: SessionStoreName): Promise<void> => {
+  await Promise.all([
+    deleteDatabase(storeName.sync),
+    deleteDatabase(storeName.crypto),
+    deleteDatabase(`${storeName.rustCryptoPrefix}::matrix-sdk-crypto`),
+  ]);
+};
 
 /**
  * Reads the account stored in an IndexedDB sync store without opening a full MatrixClient.
@@ -41,26 +57,30 @@ const readStoredAccount = (dbName: string): Promise<string | undefined> =>
       try {
         if (!db.objectStoreNames.contains('account')) {
           db.close();
-          return resolve(undefined);
-        }
-        const tx = db.transaction('account', 'readonly');
-        const store = tx.objectStore('account');
-        const getReq = store.get('account');
-        getReq.onsuccess = () => {
-          db.close();
-          const record = getReq.result;
-          if (!record?.account_data) return resolve(undefined);
-          try {
-            const data = JSON.parse(record.account_data);
-            resolve(data?.user_id ?? undefined);
-          } catch {
-            resolve(undefined);
-          }
-        };
-        getReq.onerror = () => {
-          db.close();
           resolve(undefined);
-        };
+        } else {
+          const tx = db.transaction('account', 'readonly');
+          const store = tx.objectStore('account');
+          const getReq = store.get('account');
+          getReq.onsuccess = () => {
+            db.close();
+            const record = getReq.result;
+            if (!record?.account_data) {
+              resolve(undefined);
+            } else {
+              try {
+                const data = JSON.parse(record.account_data);
+                resolve(data?.user_id ?? undefined);
+              } catch {
+                resolve(undefined);
+              }
+            }
+          };
+          getReq.onerror = () => {
+            db.close();
+            resolve(undefined);
+          };
+        }
       } catch {
         try {
           db.close();
@@ -95,53 +115,49 @@ export const clearMismatchedStores = async (): Promise<void> => {
     // databases() not supported in all browsers
   }
 
-  for (const dbInfo of allDbs) {
-    const name = dbInfo.name;
-    if (!name) continue;
+  await Promise.all(
+    allDbs.map(async ({ name }) => {
+      if (!name) return;
 
-    const containsKnownUser = Array.from(knownUserIds).some((uid) => name.includes(uid));
-    const looksLikeUserDb = name.includes('@');
-    if (looksLikeUserDb && !containsKnownUser && !knownStoreNames.has(name)) {
-      log.warn(`clearMismatchedStores: "${name}" has unknown user — deleting`);
-      await deleteDatabase(name);
-      continue;
-    }
-
-    if (name.startsWith('sync')) {
-      const storedUserId = await readStoredAccount(name);
-      if (storedUserId) {
-        if (!knownUserIds.has(storedUserId)) {
-          log.warn(`clearMismatchedStores: "${name}" has unknown user ${storedUserId} — deleting`);
-          await deleteDatabase(name);
-          await deleteDatabase(name.replace(/^sync/, 'crypto'));
-          await deleteDatabase(`${name}::matrix-sdk-crypto`);
-        } else {
-          const expectedStore = `sync${storedUserId}`;
-          if (name !== expectedStore && !knownStoreNames.has(name)) {
-            log.warn(
-              `clearMismatchedStores: "${name}" is misplaced for ${storedUserId} — deleting`
-            );
-            await deleteDatabase(name);
-            await deleteDatabase(name.replace(/^sync/, 'crypto'));
-            await deleteDatabase(`${name}::matrix-sdk-crypto`);
-          }
-        }
+      const containsKnownUser = Array.from(knownUserIds).some((uid) => name.includes(uid));
+      const looksLikeUserDb = name.includes('@');
+      if (looksLikeUserDb && !containsKnownUser && !knownStoreNames.has(name)) {
+        log.warn(`clearMismatchedStores: "${name}" has unknown user — deleting`);
+        await deleteDatabase(name);
+        return;
       }
-    }
-  }
 
-  for (const session of sessions) {
-    const sn = getSessionStoreName(session);
-    const storedUserId = await readStoredAccount(sn.sync);
-    if (storedUserId && storedUserId !== session.userId) {
-      log.warn(
-        `clearMismatchedStores: "${sn.sync}" has ${storedUserId} but session is ${session.userId} — deleting`
-      );
-      await deleteDatabase(sn.sync);
-      await deleteDatabase(sn.crypto);
-      await deleteDatabase(`${sn.rustCryptoPrefix}::matrix-sdk-crypto`);
-    }
-  }
+      if (!name.startsWith('sync')) return;
+
+      const storedUserId = await readStoredAccount(name);
+      if (!storedUserId) return;
+
+      if (!knownUserIds.has(storedUserId)) {
+        log.warn(`clearMismatchedStores: "${name}" has unknown user ${storedUserId} — deleting`);
+        await deleteSyncStoreGroup(name);
+        return;
+      }
+
+      const expectedStore = `sync${storedUserId}`;
+      if (name !== expectedStore && !knownStoreNames.has(name)) {
+        log.warn(`clearMismatchedStores: "${name}" is misplaced for ${storedUserId} — deleting`);
+        await deleteSyncStoreGroup(name);
+      }
+    })
+  );
+
+  await Promise.all(
+    sessions.map(async (session) => {
+      const sn = getSessionStoreName(session);
+      const storedUserId = await readStoredAccount(sn.sync);
+      if (storedUserId && storedUserId !== session.userId) {
+        log.warn(
+          `clearMismatchedStores: "${sn.sync}" has ${storedUserId} but session is ${session.userId} — deleting`
+        );
+        await deleteSessionStores(sn);
+      }
+    })
+  );
 };
 
 const buildClient = async (session: Session): Promise<MatrixClient> => {
@@ -187,17 +203,17 @@ export const initClient = async (session: Session): Promise<MatrixClient> => {
 
   const wipeAllStores = async () => {
     log.warn('initClient: wiping all stores for', session.userId);
-    await deleteDatabase(storeName.sync);
-    await deleteDatabase(storeName.crypto);
-    await deleteDatabase(`${storeName.rustCryptoPrefix}::matrix-sdk-crypto`);
+    await deleteSessionStores(storeName);
     try {
       const allDbs = await window.indexedDB.databases();
-      for (const db of allDbs) {
-        if (db.name && db.name.includes(session.userId)) {
-          log.warn('initClient: also wiping db', db.name);
-          await deleteDatabase(db.name);
-        }
-      }
+      await Promise.all(
+        allDbs.map(async ({ name }) => {
+          if (name && name.includes(session.userId)) {
+            log.warn('initClient: also wiping db', name);
+            await deleteDatabase(name);
+          }
+        })
+      );
     } catch {
       // databases() not available in all browsers
     }

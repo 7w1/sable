@@ -1,5 +1,5 @@
 /* eslint-disable jsx-a11y/alt-text */
-import React, {
+import {
   ComponentPropsWithoutRef,
   lazy,
   ReactEventHandler,
@@ -21,27 +21,27 @@ import { IntermediateRepresentation, OptFn, Opts as LinkifyOpts } from 'linkifyj
 import Linkify from 'linkify-react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { ChildNode } from 'domhandler';
-import * as css from '../styles/CustomHtml.css';
+import * as css from '$styles/CustomHtml.css';
 import {
   getCanonicalAliasRoomId,
   getMxIdLocalPart,
   isRoomAlias,
   mxcUrlToHttp,
-} from '../utils/matrix';
-import { getMemberDisplayName } from '../utils/room';
-import { Nicknames } from '../state/nicknames';
-import { EMOJI_PATTERN, sanitizeForRegex, URL_NEG_LB } from '../utils/regex';
-import { getHexcodeForEmoji, getShortcodeFor } from './emoji';
-import { findAndReplace } from '../utils/findAndReplace';
+} from '$utils/matrix';
+import { getMemberDisplayName } from '$utils/room';
+import { Nicknames } from '$state/nicknames';
+import { EMOJI_PATTERN, sanitizeForRegex, URL_NEG_LB } from '$utils/regex';
+import { findAndReplace } from '$utils/findAndReplace';
+import { onEnterOrSpace } from '$utils/keyboard';
+import { copyToClipboard } from '$utils/dom';
+import { useTimeoutToggle } from '$hooks/useTimeoutToggle';
 import {
   parseMatrixToRoom,
   parseMatrixToRoomEvent,
   parseMatrixToUser,
   testMatrixTo,
 } from './matrix-to';
-import { onEnterOrSpace } from '../utils/keyboard';
-import { copyToClipboard } from '../utils/dom';
-import { useTimeoutToggle } from '../hooks/useTimeoutToggle';
+import { getHexcodeForEmoji, getShortcodeFor } from './emoji';
 
 const ReactPrism = lazy(() => import('./react-prism/ReactPrism'));
 

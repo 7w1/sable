@@ -1,4 +1,4 @@
-import React, { ReactNode, useMemo } from 'react';
+import { ReactNode, useMemo } from 'react';
 import { useMatrixClient } from '$hooks/useMatrixClient';
 import { makeClosedNavCategoriesAtom } from '$state/closedNavCategories';
 import { ClosedNavCategoriesProvider } from '$state/hooks/closedNavCategories';

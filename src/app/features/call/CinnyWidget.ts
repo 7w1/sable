@@ -1,5 +1,5 @@
 import { Widget } from 'matrix-widget-api';
-import { IApp } from './SmallWidget';
+import type { IApp } from './SmallWidget';
 
 // Wrapper class for the widget definition
 export class CinnyWidget extends Widget {

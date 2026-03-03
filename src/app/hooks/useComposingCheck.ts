@@ -1,6 +1,6 @@
 import { useCallback, useEffect } from 'react';
 import { useAtomValue, useSetAtom } from 'jotai';
-import { lastCompositionEndAtom } from '../state/lastCompositionEnd';
+import { lastCompositionEndAtom } from '$state/lastCompositionEnd';
 
 interface TimeStamped {
   readonly timeStamp: number;

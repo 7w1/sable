@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable no-console */
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -37,23 +38,18 @@ function toPosix(inputPath) {
 function parseArgs(argv) {
   let write = false;
   const roots = [];
+  let index = 0;
 
-  for (let i = 0; i < argv.length; i += 1) {
-    const arg = argv[i];
+  while (index < argv.length) {
+    const arg = argv[index];
     if (arg === '--write') {
       write = true;
-      continue;
-    }
-    if (arg === '--root' && argv[i + 1]) {
-      roots.push(argv[i + 1]);
-      i += 1;
-      continue;
-    }
-    if (arg.startsWith('--root=')) {
+    } else if (arg === '--root' && argv[index + 1]) {
+      roots.push(argv[index + 1]);
+      index += 1;
+    } else if (arg.startsWith('--root=')) {
       roots.push(arg.slice('--root='.length));
-      continue;
-    }
-    if (arg === '--help' || arg === '-h') {
+    } else if (arg === '--help' || arg === '-h') {
       console.log(
         [
           'Usage: node scripts/normalize-imports.mjs [--write] [--root <dir>]',
@@ -65,6 +61,8 @@ function parseArgs(argv) {
       );
       process.exit(0);
     }
+
+    index += 1;
   }
 
   return {
@@ -149,7 +147,7 @@ function getRewrittenSpecifier(filePath, specifier, aliases, projectRoot) {
     return `$types/matrix-sdk${suffix}`;
   }
 
-  if (!bare.startsWith('.') || !/^(\.\.\/){2,}/.test(bare)) {
+  if (!/^\.\.(?:\/|$)/.test(bare)) {
     return null;
   }
 
@@ -232,13 +230,11 @@ function rewriteFileImports(filePath, sourceCode, aliases, projectRoot) {
     new Map(replacements.map((r) => [`${r.start}:${r.end}`, r])).values()
   ).sort((a, b) => b.start - a.start);
 
-  let updatedCode = sourceCode;
-  for (const replacement of uniqueReplacements) {
-    updatedCode =
-      updatedCode.slice(0, replacement.start) +
-      replacement.value +
-      updatedCode.slice(replacement.end);
-  }
+  const updatedCode = uniqueReplacements.reduce(
+    (code, replacement) =>
+      code.slice(0, replacement.start) + replacement.value + code.slice(replacement.end),
+    sourceCode
+  );
 
   return {
     changed: updatedCode !== sourceCode,
@@ -276,48 +272,51 @@ async function main() {
     )
   ).flat();
 
-  let filesChanged = 0;
-  let importRewrites = 0;
-  const displayRows = [];
+  const fileResults = await Promise.all(
+    sourceFiles.map(async (filePath) => {
+      const sourceCode = await fs.readFile(filePath, 'utf8');
+      const { changed, updatedCode, replacements, edits } = rewriteFileImports(
+        filePath,
+        sourceCode,
+        aliases,
+        projectRoot
+      );
 
-  for (const filePath of sourceFiles) {
-    const sourceCode = await fs.readFile(filePath, 'utf8');
-    const { changed, updatedCode, replacements, edits } = rewriteFileImports(
-      filePath,
-      sourceCode,
-      aliases,
-      projectRoot
-    );
+      if (!changed) return null;
 
-    if (!changed) continue;
+      if (write) {
+        await fs.writeFile(filePath, updatedCode, 'utf8');
+      }
 
-    filesChanged += 1;
-    importRewrites += replacements;
-    const relativeFilePath = toPosix(path.relative(projectRoot, filePath));
+      return {
+        file: toPosix(path.relative(projectRoot, filePath)),
+        replacements,
+        edits,
+      };
+    })
+  );
 
-    for (const edit of edits) {
-      displayRows.push({
-        file: relativeFilePath,
-        from: edit.from,
-        to: edit.to,
-      });
-    }
-
-    if (write) {
-      await fs.writeFile(filePath, updatedCode, 'utf8');
-    }
-  }
+  const changedFiles = fileResults.filter((result) => result !== null);
+  const filesChanged = changedFiles.length;
+  const importRewrites = changedFiles.reduce((total, result) => total + result.replacements, 0);
+  const displayRows = changedFiles.flatMap((result) =>
+    result.edits.map((edit) => ({
+      file: result.file,
+      from: edit.from,
+      to: edit.to,
+    }))
+  );
 
   displayRows.sort((a, b) =>
     a.file === b.file ? a.from.localeCompare(b.from) : a.file.localeCompare(b.file)
   );
-  for (const row of displayRows) {
+  displayRows.forEach((row) => {
     const fileLabel = styleText(row.file, ANSI.dim, useColor);
     const fromLabel = styleText(`"${row.from}"`, ANSI.red, useColor);
     const arrowLabel = styleText(' -> ', ANSI.dim, useColor);
     const toLabel = styleText(`"${row.to}"`, ANSI.green, useColor);
     console.log(`${fileLabel}: ${fromLabel}${arrowLabel}${toLabel}`);
-  }
+  });
 
   const mode = write ? 'Applied' : 'Dry run';
   console.log(`${mode}: ${importRewrites} imports across ${filesChanged} files.`);

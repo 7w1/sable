@@ -13,6 +13,12 @@ export type ClientConfig = {
 
   disableAccountSwitcher?: boolean;
 
+  pushNotificationDetails?: {
+    pushNotifyUrl?: string;
+    vapidPublicKey?: string;
+    webPushAppID?: string;
+  };
+
   featuredCommunities?: {
     openAsDefault?: boolean;
     spaces?: string[];

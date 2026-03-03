@@ -2,8 +2,8 @@ import { createContext, useCallback, useContext, useMemo } from 'react';
 import { ConditionKind, IPushRules, MatrixClient, PushRuleKind } from '$types/matrix-sdk';
 import { Icons, IconSrc } from 'folds';
 import { AccountDataEvent } from '$types/matrix/accountData';
+import { isRoomId } from '$utils/matrix';
 import { useAccountData } from './useAccountData';
-import { isRoomId } from '../utils/matrix';
 import {
   getNotificationMode,
   getNotificationModeActions,

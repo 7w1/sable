@@ -1,18 +1,12 @@
 import { useMotionValue, useSpring, useTransform, motion } from 'framer-motion';
 import { useDrag } from '@use-gesture/react';
-import React, { useState, useMemo } from 'react';
+import { ReactNode, useMemo, useState } from 'react';
 import { useAtomValue } from 'jotai';
 import { config, Icon, Icons } from 'folds';
-import { mobileOrTablet } from '../utils/user-agent';
-import { RightSwipeAction, settingsAtom } from '../state/settings';
+import { mobileOrTablet } from '$utils/user-agent';
+import { RightSwipeAction, settingsAtom } from '$state/settings';
 
-function ActiveSwipeWrapper({
-  children,
-  onReply,
-}: {
-  children: React.ReactNode;
-  onReply: () => void;
-}) {
+function ActiveSwipeWrapper({ children, onReply }: { children: ReactNode; onReply: () => void }) {
   const x = useMotionValue(0);
   const springX = useSpring(x, { stiffness: 300, damping: 35 });
   const [isReady, setIsReady] = useState(false);
@@ -75,7 +69,7 @@ export function SwipeableMessageWrapper({
   children,
   onReply,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
   onReply: () => void;
 }) {
   const settings = useAtomValue(settingsAtom);
@@ -89,7 +83,7 @@ export function SwipeableMessageWrapper({
   );
 
   if (!isSwipeToReplyEnabled) {
-    return <>{children}</>;
+    return children;
   }
 
   return <ActiveSwipeWrapper onReply={onReply}>{children}</ActiveSwipeWrapper>;

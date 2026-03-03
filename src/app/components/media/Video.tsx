@@ -1,4 +1,4 @@
-import React, { VideoHTMLAttributes, forwardRef } from 'react';
+import { VideoHTMLAttributes, forwardRef } from 'react';
 import classNames from 'classnames';
 import * as css from './media.css';
 

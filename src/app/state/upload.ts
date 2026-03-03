@@ -2,8 +2,8 @@ import { atom, useAtom } from 'jotai';
 import { atomFamily } from 'jotai/utils';
 import { MatrixClient, UploadResponse, UploadProgress, MatrixError } from '$types/matrix-sdk';
 import { useCallback } from 'react';
-import { useThrottle } from '../hooks/useThrottle';
-import { uploadContent, TUploadContent } from '../utils/matrix';
+import { useThrottle } from '$hooks/useThrottle';
+import { uploadContent, TUploadContent } from '$utils/matrix';
 
 export enum UploadStatus {
   Idle = 'idle',

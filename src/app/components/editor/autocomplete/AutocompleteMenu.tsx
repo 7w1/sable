@@ -1,11 +1,11 @@
-import React, { ReactNode } from 'react';
+import { ReactNode } from 'react';
 import FocusTrap from 'focus-trap-react';
 import { isKeyHotkey } from 'is-hotkey';
 import { Header, Menu, Scroll, config } from 'folds';
 
-import * as css from './AutocompleteMenu.css';
-import { preventScrollWithArrowKey, stopPropagation } from '$appUtils/keyboard';
+import { preventScrollWithArrowKey, stopPropagation } from '$utils/keyboard';
 import { useAlive } from '$hooks/useAlive';
+import * as css from './AutocompleteMenu.css';
 
 type AutocompleteMenuProps = {
   requestClose: () => void;

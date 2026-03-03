@@ -1,12 +1,11 @@
 import { as, Avatar, Box, Icon, Icons, Text } from 'folds';
-import React from 'react';
+import { MouseEventHandler } from 'react';
 import classNames from 'classnames';
-import { Room } from '$types/matrix-sdk';
-import { CallMembership } from '$types/matrix-sdk';
+import { Room, CallMembership } from '$types/matrix-sdk';
 import { UserAvatar } from '$components/user-avatar';
 import { useMatrixClient } from '$hooks/useMatrixClient';
-import { getMxIdLocalPart } from '$appUtils/matrix';
-import { getMemberAvatarMxc, getMemberDisplayName } from '$appUtils/room';
+import { getMxIdLocalPart } from '$utils/matrix';
+import { getMemberAvatarMxc, getMemberDisplayName } from '$utils/room';
 import { useAtomValue } from 'jotai';
 import { nicknamesAtom } from '$state/nicknames';
 import { useMediaAuthentication } from '$hooks/useMediaAuthentication';
@@ -48,7 +47,7 @@ export function CallViewUser({ room, callMembership }: CallViewUserProps) {
   const nicknames = useAtomValue(nicknamesAtom);
   const getName = getMemberDisplayName(room, userId, nicknames) ?? getMxIdLocalPart(userId);
 
-  const handleUserClick: React.MouseEventHandler<HTMLButtonElement> = (evt) => {
+  const handleUserClick: MouseEventHandler<HTMLButtonElement> = (evt) => {
     openProfile(room.roomId, space?.roomId, userId, evt.currentTarget.getBoundingClientRect());
   };
 

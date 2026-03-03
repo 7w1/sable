@@ -1,6 +1,6 @@
-import React, { forwardRef, MouseEventHandler, useCallback, useMemo, useRef } from 'react';
-import { MatrixEvent, Room } from '$types/matrix-sdk';
-import { RoomPinnedEventsEventContent } from '$types/matrix-sdk';
+/* eslint-disable react/no-unused-prop-types, react/destructuring-assignment */
+import { forwardRef, MouseEventHandler, ReactNode, useCallback, useMemo, useRef } from 'react';
+import { MatrixEvent, Room, RoomPinnedEventsEventContent } from '$types/matrix-sdk';
 import {
   Avatar,
   Box,
@@ -21,8 +21,8 @@ import { Opts as LinkifyOpts } from 'linkifyjs';
 import { HTMLReactParserOptions } from 'html-react-parser';
 import { useAtomValue } from 'jotai';
 import { useVirtualizer } from '@tanstack/react-virtual';
+import { createLogger } from '$utils/debug';
 import { useRoomPinnedEvents } from '$hooks/useRoomPinnedEvents';
-import * as css from './RoomPinMenu.css';
 import { SequenceCard } from '$components/sequence-card';
 import { useRoomEvent } from '$hooks/useRoomEvent';
 import { useMediaAuthentication } from '$hooks/useMediaAuthentication';
@@ -41,14 +41,14 @@ import {
   UsernameBold,
 } from '$components/message';
 import { UserAvatar } from '$components/user-avatar';
-import { getMxIdLocalPart, mxcUrlToHttp } from '$appUtils/matrix';
+import { getMxIdLocalPart, mxcUrlToHttp } from '$utils/matrix';
 import { useMatrixClient } from '$hooks/useMatrixClient';
 import {
   getEditedEvent,
   getMemberAvatarMxc,
   getMemberDisplayName,
   getStateEvent,
-} from '$appUtils/room';
+} from '$utils/room';
 import { GetContentCallback, MessageEvent, StateEvent } from '$types/matrix/room';
 import { useMentionClickHandler } from '$hooks/useMentionClickHandler';
 import { useSpoilerClickHandler } from '$hooks/useSpoilerClickHandler';
@@ -64,7 +64,6 @@ import { RenderMessageContent } from '$components/RenderMessageContent';
 import { useSetting } from '$state/hooks/settings';
 import { settingsAtom } from '$state/settings';
 import * as customHtmlCss from '$styles/CustomHtml.css';
-import { EncryptedContent } from '../message';
 import { Image } from '$components/media';
 import { ImageViewer } from '$components/image-viewer';
 import { useRoomNavigate } from '$hooks/useRoomNavigate';
@@ -87,7 +86,11 @@ import { useRoomCreatorsTag } from '$hooks/useRoomCreatorsTag';
 import { nicknamesAtom } from '$state/nicknames';
 import { AccountDataEvent } from '$types/matrix/accountData';
 import { useSableCosmetics } from '$hooks/useSableCosmetics';
-import { PinReadMarker } from '../RoomViewHeader';
+import { EncryptedContent } from '$features/room/message';
+import type { PinReadMarker } from '$features/room/RoomViewHeader';
+import * as css from './RoomPinMenu.css';
+
+const log = createLogger('RoomPinMenu');
 
 type PinnedMessageProps = {
   room: Room;
@@ -102,13 +105,13 @@ type PinnedMessageProps = {
   isNew: boolean;
 };
 
-const PinnedMessageActiveContent = (
+function PinnedMessageActiveContent(
   props: PinnedMessageProps & {
     pinnedEvent: MatrixEvent;
-    renderOptions: () => React.ReactNode;
+    renderOptions: () => ReactNode;
     handleOpenClick: MouseEventHandler;
   }
-) => {
+) {
   const {
     pinnedEvent,
     room,
@@ -186,7 +189,7 @@ const PinnedMessageActiveContent = (
       {renderContent(pinnedEvent.getType(), false, pinnedEvent, displayName, getContent)}
     </ModernLayout>
   );
-};
+}
 
 function PinnedMessage(props: PinnedMessageProps) {
   const { room, eventId, onOpen, canPinEvent } = props;
@@ -216,7 +219,9 @@ function PinnedMessage(props: PinnedMessageProps) {
   const handleUnpinClick: MouseEventHandler = useCallback(
     (evt) => {
       evt.stopPropagation();
-      void unpin();
+      unpin().catch((err) => {
+        log.warn('Failed to unpin room event:', err);
+      });
     },
     [unpin]
   );
@@ -565,7 +570,7 @@ export const RoomPinMenu = forwardRef<HTMLDivElement, RoomPinMenuProps>(
                                 ? `${config.borderWidth.B700} solid ${color.Secondary.ContainerActive}`
                                 : undefined,
                             }}
-                            variant={'Background'}
+                            variant="Background"
                             direction="Column"
                           >
                             <PinnedMessage

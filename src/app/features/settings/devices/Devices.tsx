@@ -1,11 +1,18 @@
-import React from 'react';
 import { Box, Text, IconButton, Icon, Icons, Scroll } from 'folds';
 import { Page, PageContent, PageHeader } from '$components/page';
 import { SequenceCard } from '$components/sequence-card';
-import { SequenceCardStyle } from '../styles.css';
 import { SettingTile } from '$components/setting-tile';
 import { useDeviceIds, useDeviceList, useSplitCurrentDevice } from '$hooks/useDeviceList';
 import { useMatrixClient } from '$hooks/useMatrixClient';
+import {
+  useDeviceVerificationStatus,
+  useUnverifiedDeviceCount,
+  VerificationStatus,
+} from '$hooks/useDeviceVerificationStatus';
+import { useSecretStorageDefaultKeyId, useSecretStorageKeyContent } from '$hooks/useSecretStorage';
+import { useCrossSigningActive } from '$hooks/useCrossSigning';
+import { BackupRestoreTile } from '$components/BackupRestore';
+import { SequenceCardStyle } from '$features/settings/styles.css';
 import { LocalBackup } from './LocalBackup';
 import { DeviceLogoutBtn, DeviceKeyDetails, DeviceTile, DeviceTilePlaceholder } from './DeviceTile';
 import { OtherDevices } from './OtherDevices';
@@ -15,14 +22,6 @@ import {
   VerificationStatusBadge,
   VerifyCurrentDeviceTile,
 } from './Verification';
-import {
-  useDeviceVerificationStatus,
-  useUnverifiedDeviceCount,
-  VerificationStatus,
-} from '$hooks/useDeviceVerificationStatus';
-import { useSecretStorageDefaultKeyId, useSecretStorageKeyContent } from '$hooks/useSecretStorage';
-import { useCrossSigningActive } from '$hooks/useCrossSigning';
-import { BackupRestoreTile } from '$components/BackupRestore';
 
 function DevicesPlaceholder() {
   return (

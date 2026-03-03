@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useAtomValue, useSetAtom } from 'jotai';
-import { spaceSettingsAtom, SpaceSettingsPage, SpaceSettingsState } from '../spaceSettings';
+import { spaceSettingsAtom, SpaceSettingsPage, SpaceSettingsState } from '$state/spaceSettings';
 
 export const useSpaceSettingsState = (): SpaceSettingsState | undefined => {
   const data = useAtomValue(spaceSettingsAtom);

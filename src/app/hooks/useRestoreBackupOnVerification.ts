@@ -1,6 +1,6 @@
 import { useSetAtom } from 'jotai';
 import { useCallback } from 'react';
-import { backupRestoreProgressAtom } from '../state/backupRestore';
+import { backupRestoreProgressAtom } from '$state/backupRestore';
 import { useMatrixClient } from './useMatrixClient';
 import { useKeyBackupDecryptionKeyCached } from './useKeyBackup';
 

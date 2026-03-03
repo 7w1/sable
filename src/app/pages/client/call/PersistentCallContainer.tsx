@@ -1,7 +1,14 @@
-import React, { createContext, ReactNode, useCallback, useEffect, useMemo, useRef } from 'react';
+import {
+  createContext,
+  MutableRefObject,
+  ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+} from 'react';
 import { ClientWidgetApi } from 'matrix-widget-api';
 import { Box } from 'folds';
-import { useCallState } from './CallProvider';
 import {
   createVirtualWidget,
   SmallWidget,
@@ -12,13 +19,15 @@ import { useMatrixClient } from '$hooks/useMatrixClient';
 import { useClientConfig } from '$hooks/useClientConfig';
 import { ScreenSize, useScreenSizeContext } from '$hooks/useScreenSize';
 import { ThemeKind, useTheme } from '$hooks/useTheme';
+import { useCallState } from './CallProvider';
 
 interface PersistentCallContainerProps {
   children: ReactNode;
 }
 
-export const CallRefContext =
-  createContext<React.MutableRefObject<HTMLIFrameElement | null> | null>(null);
+export const CallRefContext = createContext<MutableRefObject<HTMLIFrameElement | null> | null>(
+  null
+);
 
 export function PersistentCallContainer({ children }: PersistentCallContainerProps) {
   const callIframeRef = useRef<HTMLIFrameElement | null>(null);
@@ -43,9 +52,9 @@ export function PersistentCallContainer({ children }: PersistentCallContainerPro
 
   const setupWidget = useCallback(
     (
-      widgetApiRef: React.MutableRefObject<ClientWidgetApi | null>,
-      smallWidgetRef: React.MutableRefObject<SmallWidget | null>,
-      iframeRef: React.MutableRefObject<HTMLIFrameElement | null>,
+      widgetApiRef: MutableRefObject<ClientWidgetApi | null>,
+      smallWidgetRef: MutableRefObject<SmallWidget | null>,
+      iframeRef: MutableRefObject<HTMLIFrameElement | null>,
       skipLobby: boolean,
       themeKind: ThemeKind | null
     ) => {

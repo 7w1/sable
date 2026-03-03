@@ -1,4 +1,4 @@
-import { findAndReplace } from '$appUtils/findAndReplace';
+import { findAndReplace } from '$utils/findAndReplace';
 import { ESC_BLOCK_SEQ, UN_ESC_BLOCK_SEQ } from './block/rules';
 import { EscapeRule, CAP_INLINE_SEQ } from './inline/rules';
 import { runInlineRule } from './inline/runner';

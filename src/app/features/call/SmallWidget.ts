@@ -27,8 +27,11 @@ import {
   WidgetApiFromWidgetAction,
   WidgetKind,
 } from 'matrix-widget-api';
+import { createLogger } from '$utils/debug';
 import { CinnyWidget } from './CinnyWidget';
 import { SmallWidgetDriver } from './SmallWidgetDriver';
+
+const log = createLogger('SmallWidget');
 
 /**
  * Generates the URL for the Element Call widget.
@@ -62,7 +65,7 @@ export const getWidgetUrl = (
     userId: mx.getUserId()!,
     deviceId: mx.getDeviceId()!,
     roomId,
-    baseUrl: mx.baseUrl!,
+    baseUrl: mx.baseUrl,
     parentUrl: window.location.origin,
   });
 
@@ -96,7 +99,7 @@ export class SmallWidget extends EventEmitter {
 
   private type: string; // Type of the widget (e.g., 'm.call')
 
-  private readUpToMap: { [roomId: string]: string } = {}; // room ID to event ID
+  private readUpToMap: Record<string, string> = {}; // room ID to event ID
 
   private readonly eventsToFeed = new WeakSet<MatrixEvent>();
 
@@ -215,7 +218,9 @@ export class SmallWidget extends EventEmitter {
   private onStateUpdate = (ev: MatrixEvent): void => {
     if (this.messaging === null || !ev.isState()) return;
     const raw = ev.getEffectiveEvent();
-    this.messaging.feedStateUpdate(raw as IRoomEvent).catch(() => null);
+    this.messaging.feedStateUpdate(raw as IRoomEvent).catch((err) => {
+      log.warn('Failed to feed widget state update:', err);
+    });
   };
 
   private onToDeviceEvent = async (ev: MatrixEvent): Promise<void> => {
@@ -326,7 +331,9 @@ export class SmallWidget extends EventEmitter {
         this.eventsToFeed.add(ev);
       } else {
         const raw = ev.getEffectiveEvent();
-        this.messaging.feedEvent(raw as IRoomEvent).catch(() => null);
+        this.messaging.feedEvent(raw as IRoomEvent).catch((err) => {
+          log.warn('Failed to feed widget event:', err);
+        });
       }
     }
   }

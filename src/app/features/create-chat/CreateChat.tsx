@@ -1,17 +1,17 @@
 import { Box, Button, color, config, Icon, Icons, Input, Spinner, Switch, Text } from 'folds';
-import React, { FormEventHandler, useCallback, useState } from 'react';
+import { FormEventHandler, useCallback, useState } from 'react';
 import { ICreateRoomStateEvent, MatrixError, Preset, Visibility } from '$types/matrix-sdk';
 import { useNavigate } from 'react-router-dom';
 import { SettingTile } from '$components/setting-tile';
 import { SequenceCard } from '$components/sequence-card';
-import { addRoomIdToMDirect, isUserId } from '$appUtils/matrix';
+import { addRoomIdToMDirect, isUserId } from '$utils/matrix';
 import { useMatrixClient } from '$hooks/useMatrixClient';
 import { AsyncStatus, useAsyncCallback } from '$hooks/useAsyncCallback';
-import { ErrorCode } from '../../cs-errorcode';
-import { millisecondsToMinutes } from '$appUtils/common';
+import { millisecondsToMinutes } from '$utils/common';
 import { createRoomEncryptionState } from '$components/create-room';
 import { useAlive } from '$hooks/useAlive';
 import { getDirectRoomPath } from '$pages/pathUtils';
+import { ErrorCode } from '../../cs-errorcode';
 
 type CreateChatProps = {
   defaultUserId?: string;

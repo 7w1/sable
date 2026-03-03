@@ -1,16 +1,15 @@
-import React from 'react';
 import { Box, Icon, IconButton, Icons, Text, as } from 'folds';
 import { Room } from '$types/matrix-sdk';
 import classNames from 'classnames';
 import { useSetAtom, useAtomValue } from 'jotai';
 import { roomIdToTypingMembersAtom } from '$state/typingMembers';
 import { TypingIndicator } from '$components/typing-indicator';
-import { getMemberDisplayName } from '$appUtils/room';
-import { getMxIdLocalPart } from '$appUtils/matrix';
-import * as css from './RoomViewTyping.css';
+import { getMemberDisplayName } from '$utils/room';
+import { getMxIdLocalPart } from '$utils/matrix';
 import { useMatrixClient } from '$hooks/useMatrixClient';
 import { useRoomTypingMember } from '$hooks/useRoomTypingMembers';
 import { nicknamesAtom } from '$state/nicknames';
+import * as css from './RoomViewTyping.css';
 
 export type RoomViewTypingProps = {
   room: Room;

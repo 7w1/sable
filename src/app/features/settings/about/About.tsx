@@ -1,12 +1,11 @@
-import React from 'react';
 import { Box, Text, IconButton, Icon, Icons, Scroll, Button, config, toRem } from 'folds';
 import { Page, PageContent, PageHeader } from '$components/page';
 import { SequenceCard } from '$components/sequence-card';
-import { SequenceCardStyle } from '../styles.css';
 import { SettingTile } from '$components/setting-tile';
 import CinnySVG from '$public/res/svg/cinny.svg';
 import { clearCacheAndReload } from '$client/initMatrix';
 import { useMatrixClient } from '$hooks/useMatrixClient';
+import { SequenceCardStyle } from '$features/settings/styles.css';
 
 type AboutProps = {
   requestClose: () => void;

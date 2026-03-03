@@ -1,22 +1,22 @@
-import React, { useCallback } from 'react';
+import { useCallback } from 'react';
 import { Box, Line } from 'folds';
 import { useParams } from 'react-router-dom';
 import { isKeyHotkey } from 'is-hotkey';
-import { RoomView } from './RoomView';
-import { MembersDrawer } from './MembersDrawer';
 import { ScreenSize, useScreenSizeContext } from '$hooks/useScreenSize';
 import { useSetting } from '$state/hooks/settings';
 import { settingsAtom } from '$state/settings';
 import { PowerLevelsContextProvider, usePowerLevels } from '$hooks/usePowerLevels';
 import { useRoom } from '$hooks/useRoom';
 import { useKeyDown } from '$hooks/useKeyDown';
-import { markAsRead } from '$appUtils/notifications';
+import { markAsRead } from '$utils/notifications';
 import { useMatrixClient } from '$hooks/useMatrixClient';
 import { useRoomMembers } from '$hooks/useRoomMembers';
 import { CallView } from '$features/call/CallView';
-import { RoomViewHeader } from './RoomViewHeader';
 import { useCallState } from '$pages/client/call/CallProvider';
 import { WidgetsDrawer } from '$features/widgets/WidgetsDrawer';
+import { RoomViewHeader } from './RoomViewHeader';
+import { MembersDrawer } from './MembersDrawer';
+import { RoomView } from './RoomView';
 
 export function Room() {
   const { eventId } = useParams();

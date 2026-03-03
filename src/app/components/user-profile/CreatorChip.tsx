@@ -1,19 +1,19 @@
 import { Chip, config, Icon, Icons, Menu, MenuItem, PopOut, RectCords, Text } from 'folds';
-import React, { MouseEventHandler, useState } from 'react';
+import { MouseEventHandler, useState } from 'react';
 import FocusTrap from 'focus-trap-react';
 import { isKeyHotkey } from 'is-hotkey';
 import { useRoomCreatorsTag } from '$hooks/useRoomCreatorsTag';
-import { PowerColorBadge, PowerIcon } from '../power';
 import { getPowerTagIconSrc } from '$hooks/useMemberPowerTag';
 import { useMatrixClient } from '$hooks/useMatrixClient';
 import { useMediaAuthentication } from '$hooks/useMediaAuthentication';
-import { stopPropagation } from '$appUtils/keyboard';
+import { stopPropagation } from '$utils/keyboard';
 import { useRoom } from '$hooks/useRoom';
 import { useSpaceOptionally } from '$hooks/useSpace';
 import { useOpenRoomSettings } from '$state/hooks/roomSettings';
 import { useOpenSpaceSettings } from '$state/hooks/spaceSettings';
 import { SpaceSettingsPage } from '$state/spaceSettings';
 import { RoomSettingsPage } from '$state/roomSettings';
+import { PowerColorBadge, PowerIcon } from '$components/power';
 
 export function CreatorChip() {
   const mx = useMatrixClient();

@@ -1,13 +1,12 @@
 import { Avatar, Box, Icon, Icons, Text } from 'folds';
-import React from 'react';
-import { Room } from '$types/matrix-sdk';
-import { CallMembership } from '$types/matrix-sdk';
+import { MouseEventHandler } from 'react';
+import { Room, CallMembership } from '$types/matrix-sdk';
 import { NavButton, NavItem, NavItemContent } from '$components/nav';
 import { UserAvatar } from '$components/user-avatar';
 import { useMatrixClient } from '$hooks/useMatrixClient';
 import { useCallState } from '$pages/client/call/CallProvider';
-import { getMxIdLocalPart } from '$appUtils/matrix';
-import { getMemberAvatarMxc, getMemberDisplayName } from '$appUtils/room';
+import { getMxIdLocalPart } from '$utils/matrix';
+import { getMemberAvatarMxc, getMemberDisplayName } from '$utils/room';
 import { useMediaAuthentication } from '$hooks/useMediaAuthentication';
 import { useOpenUserRoomProfile } from '$state/hooks/userRoomProfile';
 import { useSpaceOptionally } from '$hooks/useSpace';
@@ -34,7 +33,7 @@ export function RoomNavUser({ room, callMembership }: RoomNavUserProps) {
   const name = getMemberDisplayName(room, userId, nicknames) ?? getMxIdLocalPart(userId);
   const isCallParticipant = isActiveCall && userId !== mx.getUserId();
 
-  const handleNavUserClick: React.MouseEventHandler<HTMLButtonElement> = (evt) => {
+  const handleNavUserClick: MouseEventHandler<HTMLButtonElement> = (evt) => {
     openProfile(room.roomId, space?.roomId, userId, evt.currentTarget.getBoundingClientRect());
   };
 

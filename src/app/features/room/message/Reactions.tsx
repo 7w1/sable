@@ -1,4 +1,4 @@
-import React, { MouseEventHandler, useCallback, useState } from 'react';
+import { MouseEventHandler, useCallback, useState } from 'react';
 import {
   Box,
   Modal,
@@ -16,13 +16,13 @@ import { Room } from '$types/matrix-sdk';
 import { type Relations } from '$types/matrix-sdk';
 import FocusTrap from 'focus-trap-react';
 import { useMatrixClient } from '$hooks/useMatrixClient';
-import { factoryEventSentBy } from '$appUtils/matrix';
+import { factoryEventSentBy } from '$utils/matrix';
 import { Reaction, ReactionTooltipMsg } from '$components/message';
 import { useRelations } from '$hooks/useRelations';
-import * as css from './styles.css';
-import { ReactionViewer } from '../reaction-viewer';
-import { stopPropagation } from '$appUtils/keyboard';
+import { stopPropagation } from '$utils/keyboard';
 import { useMediaAuthentication } from '$hooks/useMediaAuthentication';
+import { ReactionViewer } from '$features/room/reaction-viewer';
+import * as css from './styles.css';
 
 export type ReactionsProps = {
   room: Room;

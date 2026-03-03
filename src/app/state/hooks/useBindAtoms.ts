@@ -1,10 +1,10 @@
 import { MatrixClient } from '$types/matrix-sdk';
-import { allInvitesAtom, useBindAllInvitesAtom } from '../room-list/inviteList';
-import { allRoomsAtom, useBindAllRoomsAtom } from '../room-list/roomList';
-import { mDirectAtom, useBindMDirectAtom } from '../mDirectList';
-import { roomToUnreadAtom, useBindRoomToUnreadAtom } from '../room/roomToUnread';
-import { roomToParentsAtom, useBindRoomToParentsAtom } from '../room/roomToParents';
-import { roomIdToTypingMembersAtom, useBindRoomIdToTypingMembersAtom } from '../typingMembers';
+import { allInvitesAtom, useBindAllInvitesAtom } from '$state/room-list/inviteList';
+import { allRoomsAtom, useBindAllRoomsAtom } from '$state/room-list/roomList';
+import { mDirectAtom, useBindMDirectAtom } from '$state/mDirectList';
+import { roomToUnreadAtom, useBindRoomToUnreadAtom } from '$state/room/roomToUnread';
+import { roomToParentsAtom, useBindRoomToParentsAtom } from '$state/room/roomToParents';
+import { roomIdToTypingMembersAtom, useBindRoomIdToTypingMembersAtom } from '$state/typingMembers';
 
 export const useBindAtoms = (mx: MatrixClient) => {
   useBindMDirectAtom(mx, mDirectAtom);

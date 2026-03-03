@@ -1,5 +1,4 @@
 import { Scroll, Text } from 'folds';
-import React from 'react';
 import {
   RenderElementProps,
   RenderLeafProps,
@@ -10,13 +9,13 @@ import {
 import { useAtomValue } from 'jotai';
 
 import * as css from '$styles/CustomHtml.css';
-import { CommandElement, EmoticonElement, LinkElement, MentionElement } from './slate';
 import { useMatrixClient } from '$hooks/useMatrixClient';
-import { getBeginCommand } from './utils';
-import { BlockType } from './types';
-import { mxcUrlToHttp } from '$appUtils/matrix';
+import { mxcUrlToHttp } from '$utils/matrix';
 import { useMediaAuthentication } from '$hooks/useMediaAuthentication';
 import { nicknamesAtom } from '$state/nicknames';
+import { BlockType } from './types';
+import { getBeginCommand } from './utils';
+import { CommandElement, EmoticonElement, LinkElement, MentionElement } from './slate';
 
 // Put this at the start and end of an inline component to work around this Chromium bug:
 // https://bugs.chromium.org/p/chromium/issues/detail?id=1249405

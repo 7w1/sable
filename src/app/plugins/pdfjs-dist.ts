@@ -1,8 +1,8 @@
 import { useCallback } from 'react';
 import type * as PdfJsDist from 'pdfjs-dist';
 import type { GetViewportParameters } from 'pdfjs-dist/types/src/display/api';
-import { useAsyncCallback } from '../hooks/useAsyncCallback';
-import { trimTrailingSlash } from '../utils/common';
+import { useAsyncCallback } from '$hooks/useAsyncCallback';
+import { trimTrailingSlash } from '$utils/common';
 
 export const usePdfJSLoader = () =>
   useAsyncCallback(

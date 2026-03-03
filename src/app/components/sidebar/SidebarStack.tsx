@@ -1,4 +1,3 @@
-import React from 'react';
 import classNames from 'classnames';
 import { as } from 'folds';
 import * as css from './Sidebar.css';

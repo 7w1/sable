@@ -43,7 +43,8 @@ export interface Settings {
   showHiddenEvents: boolean;
   legacyUsernameColor: boolean;
 
-  showNotifications: boolean;
+  usePushNotifications: boolean;
+  useInAppNotifications: boolean;
   isNotificationSounds: boolean;
 
   hour24Clock: boolean;
@@ -93,7 +94,8 @@ const defaultSettings: Settings = {
   showHiddenEvents: false,
   legacyUsernameColor: false,
 
-  showNotifications: true,
+  usePushNotifications: false,
+  useInAppNotifications: true,
   isNotificationSounds: true,
 
   hour24Clock: false,

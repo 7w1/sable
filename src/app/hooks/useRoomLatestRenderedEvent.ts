@@ -1,10 +1,10 @@
 /* eslint-disable no-continue */
 import { MatrixEvent, Room, RoomEvent, RoomEventHandlerMap } from '$types/matrix-sdk';
 import { useEffect, useState } from 'react';
-import { settingsAtom } from '../state/settings';
-import { useSetting } from '../state/hooks/settings';
 import { MessageEvent, StateEvent } from '$types/matrix/room';
-import { isMembershipChanged, reactionOrEditEvent } from '../utils/room';
+import { settingsAtom } from '$state/settings';
+import { useSetting } from '$state/hooks/settings';
+import { isMembershipChanged, reactionOrEditEvent } from '$utils/room';
 
 export const useRoomLatestRenderedEvent = (room: Room) => {
   const [hideMembershipEvents] = useSetting(settingsAtom, 'hideMembershipEvents');

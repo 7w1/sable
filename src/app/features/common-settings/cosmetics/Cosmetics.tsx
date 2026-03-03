@@ -1,8 +1,7 @@
-import React, { useCallback } from 'react';
+import { useCallback } from 'react';
 import { Box, Text, IconButton, Icon, Icons, Scroll, Switch } from 'folds';
 import { Page, PageContent, PageHeader } from '$components/page';
 import { SequenceCard } from '$components/sequence-card';
-import { SequenceCardStyle } from '../styles.css';
 import { SettingTile } from '$components/setting-tile';
 import { useRoom } from '$hooks/useRoom';
 import { usePowerLevels } from '$hooks/usePowerLevels';
@@ -10,10 +9,14 @@ import { useMatrixClient } from '$hooks/useMatrixClient';
 import { StateEvent } from '$types/matrix/room';
 import { useRoomCreators } from '$hooks/useRoomCreators';
 import { useRoomPermissions } from '$hooks/useRoomPermissions';
+import { createLogger } from '$utils/debug';
+import { SequenceCardStyle } from '$features/common-settings/styles.css';
 
 type CosmeticsProps = {
   requestClose: () => void;
 };
+
+const log = createLogger('Cosmetics');
 
 export function Cosmetics({ requestClose }: CosmeticsProps) {
   const mx = useMatrixClient();
@@ -41,7 +44,7 @@ export function Cosmetics({ requestClose }: CosmeticsProps) {
       try {
         await mx.sendStateEvent(room.roomId, StateEvent.RoomPowerLevels as any, newContent, '');
       } catch (e) {
-        console.error(`Failed to update permissions for ${eventType}:`, e);
+        log.error(`Failed to update permissions for ${eventType}:`, e);
       }
     },
     [mx, room.roomId, powerLevels]

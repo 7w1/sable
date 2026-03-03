@@ -1,7 +1,7 @@
 import { MatrixClient } from '$types/matrix-sdk';
-import { getAccountData } from '../utils/room';
-import { IEmoji, emojis } from './emoji';
 import { AccountDataEvent } from '$types/matrix/accountData';
+import { getAccountData } from '$utils/room';
+import { IEmoji, emojis } from './emoji';
 
 type EmojiUnicode = string;
 type EmojiUsageCount = number;

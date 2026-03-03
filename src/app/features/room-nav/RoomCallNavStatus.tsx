@@ -11,7 +11,6 @@ import {
   TooltipProvider,
   color,
 } from 'folds';
-import React from 'react';
 import { useCallState } from '$pages/client/call/CallProvider';
 import { useRoomNavigate } from '$hooks/useRoomNavigate';
 import * as css from './RoomCallNavStatus.css';

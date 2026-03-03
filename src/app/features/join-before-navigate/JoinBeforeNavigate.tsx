@@ -1,4 +1,3 @@
-import React from 'react';
 import { Box, Icon, IconButton, Icons, Scroll, Text, toRem } from 'folds';
 import { useAtomValue } from 'jotai';
 import { RoomCard } from '$components/room-card';

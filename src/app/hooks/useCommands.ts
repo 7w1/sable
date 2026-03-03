@@ -3,15 +3,15 @@ import {
   EventTimeline,
   IContextResponse,
   MatrixClient,
-  MatrixEvent,
   Method,
   Preset,
   Room,
   RoomMember,
   Visibility,
+  RoomServerAclEventContent,
 } from '$types/matrix-sdk';
-import { RoomServerAclEventContent } from '$types/matrix-sdk';
 import { useMemo } from 'react';
+import { Membership, StateEvent } from '$types/matrix/room';
 import {
   addRoomIdToMDirect,
   getDMRoomFor,
@@ -22,13 +22,11 @@ import {
   isUserId,
   rateLimitedActions,
   removeRoomIdFromMDirect,
-} from '../utils/matrix';
+} from '$utils/matrix';
+import { getStateEvent } from '$utils/room';
+import { splitWithSpace } from '$utils/common';
+import { createRoomEncryptionState } from '$components/create-room';
 import { useRoomNavigate } from './useRoomNavigate';
-import { Membership, StateEvent } from '$types/matrix/room';
-import { getStateEvent } from '../utils/room';
-import { splitWithSpace } from '../utils/common';
-import { createRoomEncryptionState } from '../components/create-room';
-import { AccountDataEvent } from '$types/matrix/accountData';
 import { enrichWidgetUrl } from './useRoomWidgets';
 
 export const SHRUG = '¯\\_(ツ)_/¯';
@@ -780,8 +778,9 @@ export const useCommands = (mx: MatrixClient, room: Room): CommandRecord => {
             return;
           }
 
+          let parsedUrl: URL;
           try {
-            new URL(url);
+            parsedUrl = new URL(url);
           } catch {
             sendFeedback('Invalid URL. Please provide a valid widget URL.');
             return;
@@ -794,7 +793,7 @@ export const useCommands = (mx: MatrixClient, room: Room): CommandRecord => {
               StateEvent.RoomWidget as any,
               {
                 type: 'm.custom',
-                url: enrichWidgetUrl(url),
+                url: enrichWidgetUrl(parsedUrl.toString()),
                 name,
                 id: widgetId,
                 creatorUserId: userId,

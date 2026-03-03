@@ -1,9 +1,4 @@
-import React, {
-  ChangeEventHandler,
-  KeyboardEventHandler,
-  MouseEventHandler,
-  useState,
-} from 'react';
+import { ChangeEventHandler, KeyboardEventHandler, MouseEventHandler, useState } from 'react';
 import {
   as,
   Box,
@@ -36,8 +31,8 @@ import {
   useThemeNames,
   useThemes,
 } from '$hooks/useTheme';
-import { stopPropagation } from '$appUtils/keyboard';
-import { SequenceCardStyle } from '../styles.css';
+import { stopPropagation } from '$utils/keyboard';
+import { SequenceCardStyle } from '$features/settings/styles.css';
 
 type ThemeSelectorProps = {
   themeNames: Record<string, string>;

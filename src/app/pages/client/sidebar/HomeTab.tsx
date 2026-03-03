@@ -1,4 +1,4 @@
-import React, { MouseEventHandler, forwardRef, useState } from 'react';
+import { MouseEventHandler, forwardRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Icon, Icons, Menu, MenuItem, PopOut, RectCords, Text, config, toRem } from 'folds';
 import { useAtomValue } from 'jotai';
@@ -21,11 +21,11 @@ import { useHomeSelected } from '$hooks/router/useHomeSelected';
 import { UnreadBadge } from '$components/unread-badge';
 import { ScreenSize, useScreenSizeContext } from '$hooks/useScreenSize';
 import { useNavToActivePathAtom } from '$state/hooks/navToActivePath';
-import { useHomeRooms } from '../home/useHomeRooms';
-import { markAsRead } from '$appUtils/notifications';
-import { stopPropagation } from '$appUtils/keyboard';
+import { markAsRead } from '$utils/notifications';
+import { stopPropagation } from '$utils/keyboard';
 import { useSetting } from '$state/hooks/settings';
 import { settingsAtom } from '$state/settings';
+import { useHomeRooms } from '$pages/client/home/useHomeRooms';
 
 type HomeMenuProps = {
   requestClose: () => void;

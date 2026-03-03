@@ -3,9 +3,9 @@ import {
   VerificationPhase,
   VerificationRequest,
   Verifier,
+  VerificationMethod,
 } from '$types/matrix-sdk';
-import React, { CSSProperties, useCallback, useEffect, useState } from 'react';
-import { VerificationMethod } from '$types/matrix-sdk';
+import { CSSProperties, useCallback, useEffect, useState } from 'react';
 import {
   Box,
   Button,
@@ -27,9 +27,9 @@ import {
   useVerificationRequestReceived,
   useVerifierCancel,
   useVerifierShowSas,
-} from '../hooks/useVerificationRequest';
-import { AsyncStatus, useAsyncCallback } from '../hooks/useAsyncCallback';
-import { ContainerColor } from '../styles/ContainerColor.css';
+} from '$hooks/useVerificationRequest';
+import { AsyncStatus, useAsyncCallback } from '$hooks/useAsyncCallback';
+import { ContainerColor } from '$styles/ContainerColor.css';
 
 const DialogHeaderStyles: CSSProperties = {
   padding: `0 ${config.space.S200} 0 ${config.space.S400}`,

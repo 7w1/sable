@@ -1,13 +1,13 @@
-import React, { useCallback } from 'react';
+import { useCallback } from 'react';
 import { Box, Button, Spinner, Text, color } from 'folds';
 
-import * as css from './RoomTombstone.css';
 import { useMatrixClient } from '$hooks/useMatrixClient';
 import { AsyncStatus, useAsyncCallback } from '$hooks/useAsyncCallback';
 import { Membership } from '$types/matrix/room';
-import { RoomInputPlaceholder } from './RoomInputPlaceholder';
 import { useRoomNavigate } from '$hooks/useRoomNavigate';
 import { getViaServers } from '$plugins/via-servers';
+import { RoomInputPlaceholder } from './RoomInputPlaceholder';
+import * as css from './RoomTombstone.css';
 
 type RoomTombstoneProps = { roomId: string; body?: string; replacementRoomId: string };
 export function RoomTombstone({ roomId, body, replacementRoomId }: RoomTombstoneProps) {

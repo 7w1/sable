@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   Outlet,
   Route,
@@ -8,7 +7,22 @@ import {
   redirect,
 } from 'react-router-dom';
 
-import { ClientConfig } from '../hooks/useClientConfig';
+import { ClientConfig } from '$hooks/useClientConfig';
+import { Room } from '$features/room';
+import { Lobby } from '$features/lobby';
+import { PageRoot } from '$components/page';
+import { ScreenSize } from '$hooks/useScreenSize';
+import { ReceiveSelfDeviceVerification } from '$components/DeviceVerification';
+import { AutoRestoreBackupOnVerification } from '$components/BackupRestore';
+import { RoomSettingsRenderer } from '$features/room-settings';
+import { SpaceSettingsRenderer } from '$features/space-settings';
+import { UserRoomProfileRenderer } from '$components/UserRoomProfileRenderer';
+import { CreateRoomModalRenderer } from '$features/create-room';
+import { CreateSpaceModalRenderer } from '$features/create-space';
+import { getFallbackSession, MATRIX_SESSIONS_KEY, Sessions } from '$state/sessions';
+import { getLocalStorageItem } from '$state/utils/atomWithLocalStorage';
+import { NotificationJumper } from '$hooks/useNotificationJumper';
+import { SearchModalRenderer } from '$features/search';
 import { AuthLayout, Login, Register, ResetPassword } from './auth';
 import {
   DIRECT_PATH,
@@ -19,16 +33,17 @@ import {
   REGISTER_PATH,
   RESET_PASSWORD_PATH,
   SPACE_PATH,
-  _CREATE_PATH,
-  _FEATURED_PATH,
-  _INVITES_PATH,
-  _JOIN_PATH,
-  _LOBBY_PATH,
-  _NOTIFICATIONS_PATH,
-  _ROOM_PATH,
-  _SEARCH_PATH,
-  _SERVER_PATH,
+  CREATE_PATH_SEGMENT,
+  FEATURED_PATH_SEGMENT,
+  INVITES_PATH_SEGMENT,
+  JOIN_PATH_SEGMENT,
+  LOBBY_PATH_SEGMENT,
+  NOTIFICATIONS_PATH_SEGMENT,
+  ROOM_PATH_SEGMENT,
+  SEARCH_PATH_SEGMENT,
+  SERVER_PATH_SEGMENT,
   CREATE_PATH,
+  TO_ROOM_EVENT_PATH,
 } from './paths';
 import {
   getAppPathFromHref,
@@ -46,32 +61,18 @@ import { RouteSpaceProvider, Space, SpaceRouteRoomProvider, SpaceSearch } from '
 import { Explore, FeaturedRooms, PublicRooms } from './client/explore';
 import { Notifications, Inbox, Invites } from './client/inbox';
 import { setAfterLoginRedirectPath } from './afterLoginRedirectPath';
-import { Room } from '../features/room';
-import { Lobby } from '../features/lobby';
 import { WelcomePage } from './client/WelcomePage';
 import { SidebarNav } from './client/SidebarNav';
-import { PageRoot } from '../components/page';
-import { ScreenSize } from '../hooks/useScreenSize';
 import { MobileFriendlyPageNav, MobileFriendlyClientNav } from './MobileFriendly';
 import { ClientInitStorageAtom } from './client/ClientInitStorageAtom';
 import { ClientNonUIFeatures } from './client/ClientNonUIFeatures';
 import { AuthRouteThemeManager, UnAuthRouteThemeManager } from './ThemeManager';
-import { ReceiveSelfDeviceVerification } from '../components/DeviceVerification';
-import { AutoRestoreBackupOnVerification } from '../components/BackupRestore';
-import { RoomSettingsRenderer } from '../features/room-settings';
 import { ClientRoomsNotificationPreferences } from './client/ClientRoomsNotificationPreferences';
-import { SpaceSettingsRenderer } from '../features/space-settings';
-import { UserRoomProfileRenderer } from '../components/UserRoomProfileRenderer';
-import { CreateRoomModalRenderer } from '../features/create-room';
 import { HomeCreateRoom } from './client/home/CreateRoom';
 import { Create } from './client/create';
-import { CreateSpaceModalRenderer } from '../features/create-space';
-import { SearchModalRenderer } from '../features/search';
-import { getFallbackSession, MATRIX_SESSIONS_KEY, Sessions } from '../state/sessions';
-import { getLocalStorageItem } from '../state/utils/atomWithLocalStorage';
 import { CallProvider } from './client/call/CallProvider';
 import { PersistentCallContainer } from './client/call/PersistentCallContainer';
-import { NotificationJumper } from '../hooks/useNotificationJumper';
+import { ToRoomEvent } from './client/ToRoomEvent';
 
 /**
  * Returns true if there is at least one stored session.
@@ -190,11 +191,11 @@ export const createRouter = (clientConfig: ClientConfig, screenSize: ScreenSize)
           }
         >
           {mobile ? null : <Route index element={<WelcomePage />} />}
-          <Route path={_CREATE_PATH} element={<HomeCreateRoom />} />
-          <Route path={_JOIN_PATH} element={<p>join</p>} />
-          <Route path={_SEARCH_PATH} element={<HomeSearch />} />
+          <Route path={CREATE_PATH_SEGMENT} element={<HomeCreateRoom />} />
+          <Route path={JOIN_PATH_SEGMENT} element={<p>join</p>} />
+          <Route path={SEARCH_PATH_SEGMENT} element={<HomeSearch />} />
           <Route
-            path={_ROOM_PATH}
+            path={ROOM_PATH_SEGMENT}
             element={
               <HomeRouteRoomProvider>
                 <Room />
@@ -217,9 +218,9 @@ export const createRouter = (clientConfig: ClientConfig, screenSize: ScreenSize)
           }
         >
           {mobile ? null : <Route index element={<WelcomePage />} />}
-          <Route path={_CREATE_PATH} element={<DirectCreate />} />
+          <Route path={CREATE_PATH_SEGMENT} element={<DirectCreate />} />
           <Route
-            path={_ROOM_PATH}
+            path={ROOM_PATH_SEGMENT}
             element={
               <DirectRouteRoomProvider>
                 <Room />
@@ -259,10 +260,10 @@ export const createRouter = (clientConfig: ClientConfig, screenSize: ScreenSize)
               element={<WelcomePage />}
             />
           )}
-          <Route path={_LOBBY_PATH} element={<Lobby />} />
-          <Route path={_SEARCH_PATH} element={<SpaceSearch />} />
+          <Route path={LOBBY_PATH_SEGMENT} element={<Lobby />} />
+          <Route path={SEARCH_PATH_SEGMENT} element={<SpaceSearch />} />
           <Route
-            path={_ROOM_PATH}
+            path={ROOM_PATH_SEGMENT}
             element={
               <SpaceRouteRoomProvider>
                 <Room />
@@ -291,8 +292,8 @@ export const createRouter = (clientConfig: ClientConfig, screenSize: ScreenSize)
               element={<WelcomePage />}
             />
           )}
-          <Route path={_FEATURED_PATH} element={<FeaturedRooms />} />
-          <Route path={_SERVER_PATH} element={<PublicRooms />} />
+          <Route path={FEATURED_PATH_SEGMENT} element={<FeaturedRooms />} />
+          <Route path={SERVER_PATH_SEGMENT} element={<PublicRooms />} />
         </Route>
         <Route path={CREATE_PATH} element={<Create />} />
         <Route
@@ -316,9 +317,10 @@ export const createRouter = (clientConfig: ClientConfig, screenSize: ScreenSize)
               element={<WelcomePage />}
             />
           )}
-          <Route path={_NOTIFICATIONS_PATH} element={<Notifications />} />
-          <Route path={_INVITES_PATH} element={<Invites />} />
+          <Route path={NOTIFICATIONS_PATH_SEGMENT} element={<Notifications />} />
+          <Route path={INVITES_PATH_SEGMENT} element={<Invites />} />
         </Route>
+        <Route path={TO_ROOM_EVENT_PATH} element={<ToRoomEvent />} />
       </Route>
       <Route path="/*" element={<p>Page not found</p>} />
     </Route>

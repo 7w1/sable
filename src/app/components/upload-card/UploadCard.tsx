@@ -1,8 +1,8 @@
 import { Badge, Box, Icon, Icons, ProgressBar, Text, percent } from 'folds';
-import React, { ReactNode, forwardRef } from 'react';
+import { ReactNode, forwardRef } from 'react';
 
+import { bytesToSize } from '$utils/common';
 import * as css from './UploadCard.css';
-import { bytesToSize } from '$appUtils/common';
 
 type UploadCardProps = {
   before?: ReactNode;

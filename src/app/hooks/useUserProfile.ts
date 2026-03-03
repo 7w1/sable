@@ -2,12 +2,12 @@ import { useEffect, useMemo } from 'react';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import { EventTimeline, Room } from '$types/matrix-sdk';
-import { useMatrixClient } from './useMatrixClient';
-import { profilesCacheAtom } from '../state/userRoomProfile';
 import { StateEvent } from '$types/matrix/room';
-import { useSetting } from '../state/hooks/settings';
-import { settingsAtom } from '../state/settings';
-import colorMXID from '$util/colorMXID';
+import colorMXID from '$utils/colorMXID';
+import { profilesCacheAtom } from '$state/userRoomProfile';
+import { useSetting } from '$state/hooks/settings';
+import { settingsAtom } from '$state/settings';
+import { useMatrixClient } from './useMatrixClient';
 
 const inFlightProfiles = new Map<string, Promise<any>>();
 
@@ -81,7 +81,7 @@ export const useUserProfile = (
   const needsFetch = !!userId && userId !== 'undefined' && !cached?._fetched;
 
   useEffect(() => {
-    if (!needsFetch) return;
+    if (!needsFetch) return undefined;
 
     let fetchPromise = inFlightProfiles.get(userId);
 

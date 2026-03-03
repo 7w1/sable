@@ -19,7 +19,7 @@ import {
   Spinner,
   Text,
 } from 'folds';
-import React, {
+import {
   ChangeEventHandler,
   MouseEventHandler,
   useCallback,
@@ -30,7 +30,7 @@ import React, {
 import { useAtomValue } from 'jotai';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { Room } from '$types/matrix-sdk';
-import { stopPropagation } from '$appUtils/keyboard';
+import { stopPropagation } from '$utils/keyboard';
 import { useDirects, useRooms, useSpaces } from '$state/hooks/roomList';
 import { useMatrixClient } from '$hooks/useMatrixClient';
 import { allRoomsAtom } from '$state/room-list/roomList';
@@ -38,17 +38,17 @@ import { mDirectAtom } from '$state/mDirectList';
 import { roomToParentsAtom } from '$state/room/roomToParents';
 import { useAllJoinedRoomsSet, useGetRoom } from '$hooks/useGetRoom';
 import { VirtualTile } from '$components/virtualizer';
-import { getDirectRoomAvatarUrl, getRoomAvatarUrl } from '$appUtils/room';
+import { getDirectRoomAvatarUrl, getRoomAvatarUrl } from '$utils/room';
 import { RoomAvatar, RoomIcon } from '$components/room-avatar';
-import { nameInitials } from '$appUtils/common';
+import { nameInitials } from '$utils/common';
 import { useMediaAuthentication } from '$hooks/useMediaAuthentication';
-import { factoryRoomIdByAtoZ } from '$appUtils/sort';
+import { factoryRoomIdByAtoZ } from '$utils/sort';
 import { SearchItemStrGetter, useAsyncSearch, UseAsyncSearchOptions } from '$hooks/useAsyncSearch';
 import { highlightText, makeHighlightRegex } from '$plugins/react-custom-html-parser';
 import { AsyncStatus, useAsyncCallback } from '$hooks/useAsyncCallback';
 import { StateEvent } from '$types/matrix/room';
 import { getViaServers } from '$plugins/via-servers';
-import { rateLimitedActions } from '$appUtils/matrix';
+import { rateLimitedActions } from '$utils/matrix';
 import { useAlive } from '$hooks/useAlive';
 
 const SEARCH_OPTS: UseAsyncSearchOptions = {

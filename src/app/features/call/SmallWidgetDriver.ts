@@ -1,8 +1,7 @@
-/* eslint-disable no-return-await */
 /* eslint-disable no-param-reassign */
 /* eslint-disable no-continue */
 /* eslint-disable class-methods-use-this */
-/* eslint-disable no-dupe-class-members */
+
 /*
  * Copyright 2024 New Vector Ltd.
  * Copyright 2020-2023 The Matrix.org Foundation C.I.C.
@@ -314,7 +313,7 @@ export class SmallWidgetDriver extends WidgetDriver {
   public async sendToDevice(
     eventType: string,
     encrypted: boolean,
-    contentMap: { [userId: string]: { [deviceId: string]: object } }
+    contentMap: Record<string, Record<string, object>>
   ): Promise<void> {
     const client = this.mxClient;
 
@@ -323,7 +322,7 @@ export class SmallWidgetDriver extends WidgetDriver {
       if (!crypto) throw new Error('E2EE not enabled');
 
       // attempt to re-batch these up into a single request
-      const invertedContentMap: { [content: string]: { userId: string; deviceId: string }[] } = {};
+      const invertedContentMap: Record<string, { userId: string; deviceId: string }[]> = {};
 
       // eslint-disable-next-line no-restricted-syntax
       for (const userId of Object.keys(contentMap)) {
@@ -392,7 +391,7 @@ export class SmallWidgetDriver extends WidgetDriver {
     if (room === null) return [];
     const results: MatrixEvent[] = [];
     const events = room.getLiveTimeline().getEvents(); // timelines are most recent last
-    for (let i = events.length - 1; i >= 0; i--) {
+    for (let i = events.length - 1; i >= 0; i -= 1) {
       const ev = events[i];
       if (results.length >= limit) break;
       if (since !== undefined && ev.getId() === since) break;
@@ -500,7 +499,7 @@ export class SmallWidgetDriver extends WidgetDriver {
   public async getMediaConfig(): Promise<IGetMediaConfigResult> {
     const client = this.mxClient;
 
-    return await client.getMediaConfig();
+    return client.getMediaConfig();
   }
 
   public async uploadFile(file: XMLHttpRequestBodyInit): Promise<{ contentUri: string }> {

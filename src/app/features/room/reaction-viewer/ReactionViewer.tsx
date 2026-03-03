@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import { useCallback, useState } from 'react';
 import classNames from 'classnames';
 import {
   Avatar,
@@ -14,11 +14,9 @@ import {
   as,
   config,
 } from 'folds';
-import { MatrixEvent, Room, RoomMember } from '$types/matrix-sdk';
-import { Relations } from '$types/matrix-sdk';
-import { getMemberDisplayName } from '$appUtils/room';
-import { eventWithShortcode, getMxIdLocalPart } from '$appUtils/matrix';
-import * as css from './ReactionViewer.css';
+import { MatrixEvent, Room, RoomMember, Relations } from '$types/matrix-sdk';
+import { getMemberDisplayName } from '$utils/room';
+import { eventWithShortcode, getMxIdLocalPart } from '$utils/matrix';
 import { useMatrixClient } from '$hooks/useMatrixClient';
 import { useRelations } from '$hooks/useRelations';
 import { Reaction } from '$components/message';
@@ -29,7 +27,8 @@ import { UserAvatar } from '$components/user-avatar';
 import { useMediaAuthentication } from '$hooks/useMediaAuthentication';
 import { useOpenUserRoomProfile } from '$state/hooks/userRoomProfile';
 import { useSpaceOptionally } from '$hooks/useSpace';
-import { getMouseEventCords } from '$appUtils/dom';
+import { getMouseEventCords } from '$utils/dom';
+import * as css from './ReactionViewer.css';
 
 export type ReactionViewerProps = {
   room: Room;
@@ -82,19 +81,17 @@ export const ReactionViewer = as<'div', ReactionViewerProps>(
         <Box shrink="No" className={css.Sidebar}>
           <Scroll visibility="Hover" hideTrack size="300">
             <Box className={css.SidebarContent} direction="Column" gap="200">
-              {reactions.map(([key, evts]) => {
-                return (
-                  <Reaction
-                    key={key}
-                    mx={mx}
-                    reaction={key}
-                    count={evts.size}
-                    aria-selected={key === selectedKey}
-                    onClick={() => setSelectedKey(key)}
-                    useAuthentication={useAuthentication}
-                  />
-                );
-              })}
+              {reactions.map(([key, evts]) => (
+                <Reaction
+                  key={key}
+                  mx={mx}
+                  reaction={key}
+                  count={evts.size}
+                  aria-selected={key === selectedKey}
+                  onClick={() => setSelectedKey(key)}
+                  useAuthentication={useAuthentication}
+                />
+              ))}
             </Box>
           </Scroll>
         </Box>

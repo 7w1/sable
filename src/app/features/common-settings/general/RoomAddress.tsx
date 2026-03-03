@@ -1,4 +1,4 @@
-import React, { FormEventHandler, useCallback, useState } from 'react';
+import { FormEventHandler, useCallback, useState } from 'react';
 import {
   Badge,
   Box,
@@ -28,11 +28,11 @@ import {
 } from '$hooks/useRoomAliases';
 import { AsyncStatus, useAsyncCallback } from '$hooks/useAsyncCallback';
 import { CutoutCard } from '$components/cutout-card';
-import { replaceSpaceWithDash } from '$appUtils/common';
+import { replaceSpaceWithDash } from '$utils/common';
 import { useAlive } from '$hooks/useAlive';
 import { StateEvent } from '$types/matrix/room';
 import { RoomPermissionsAPI } from '$hooks/useRoomPermissions';
-import { getMxIdServer } from '$appUtils/matrix';
+import { getMxIdServer } from '$utils/matrix';
 
 type RoomPublishedAddressesProps = {
   permissions: RoomPermissionsAPI;

@@ -1,7 +1,6 @@
-import type { PackContent } from '../app/plugins/custom-emoji/types';
-import type { EmoteRoomsContent } from '../app/plugins/custom-emoji/types';
-import type { IRecentEmojiContent } from '../app/plugins/recent-emoji';
-import type { InCinnySpacesContent } from '../app/hooks/useSidebarItems';
+import type { PackContent, EmoteRoomsContent } from '$plugins/custom-emoji/types';
+import type { IRecentEmojiContent } from '$plugins/recent-emoji';
+import type { InCinnySpacesContent } from '$hooks/useSidebarItems';
 
 declare module 'matrix-js-sdk/lib/@types/event' {
   interface StateEvents {

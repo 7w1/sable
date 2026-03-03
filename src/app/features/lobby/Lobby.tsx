@@ -1,23 +1,24 @@
-import React, { MouseEventHandler, useCallback, useMemo, useRef, useState } from 'react';
+import { MouseEventHandler, useCallback, useMemo, useRef, useState } from 'react';
 import { Box, Chip, Icon, IconButton, Icons, Line, Scroll, Spinner, Text, config } from 'folds';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useAtom, useAtomValue } from 'jotai';
 import { useNavigate } from 'react-router-dom';
-import { JoinRule, RestrictedAllowType, Room } from '$types/matrix-sdk';
-import { RoomJoinRulesEventContent } from '$types/matrix-sdk';
-import { IHierarchyRoom } from '$types/matrix-sdk';
+import {
+  JoinRule,
+  RestrictedAllowType,
+  Room,
+  RoomJoinRulesEventContent,
+  IHierarchyRoom,
+} from '$types/matrix-sdk';
 import { produce } from 'immer';
 import { useSpace } from '$hooks/useSpace';
 import { Page, PageContent, PageContentCenter, PageHeroSection } from '$components/page';
 import { HierarchyItem, HierarchyItemSpace, useSpaceHierarchy } from '$hooks/useSpaceHierarchy';
 import { VirtualTile } from '$components/virtualizer';
 import { spaceRoomsAtom } from '$state/spaceRooms';
-import { MembersDrawer } from '../room/MembersDrawer';
 import { useSetting } from '$state/hooks/settings';
 import { ScreenSize, useScreenSizeContext } from '$hooks/useScreenSize';
 import { settingsAtom } from '$state/settings';
-import { LobbyHeader } from './LobbyHeader';
-import { LobbyHero } from './LobbyHero';
 import { ScrollTopContainer } from '$components/scroll-top-container';
 import { useElementSizeObserver } from '$hooks/useElementSizeObserver';
 import {
@@ -31,12 +32,11 @@ import { makeLobbyCategoryId } from '$state/closedLobbyCategories';
 import { useCategoryHandler } from '$hooks/useCategoryHandler';
 import { useMatrixClient } from '$hooks/useMatrixClient';
 import { allRoomsAtom } from '$state/room-list/roomList';
-import { getCanonicalAliasOrRoomId, rateLimitedActions } from '$appUtils/matrix';
+import { getCanonicalAliasOrRoomId, rateLimitedActions } from '$utils/matrix';
 import { getSpaceRoomPath } from '$pages/pathUtils';
 import { StateEvent } from '$types/matrix/room';
-import { CanDropCallback, useDnDMonitor } from './DnD';
-import { ASCIILexicalTable, orderKeys } from '$appUtils/ASCIILexicalTable';
-import { getStateEvent } from '$appUtils/room';
+import { ASCIILexicalTable, orderKeys } from '$utils/ASCIILexicalTable';
+import { getStateEvent } from '$utils/room';
 import { useClosedLobbyCategoriesAtom } from '$state/hooks/closedLobbyCategories';
 import {
   makeCinnySpacesContent,
@@ -47,11 +47,15 @@ import { useOrphanSpaces } from '$state/hooks/roomList';
 import { roomToParentsAtom } from '$state/room/roomToParents';
 import { AccountDataEvent } from '$types/matrix/accountData';
 import { useRoomMembers } from '$hooks/useRoomMembers';
-import { SpaceHierarchy } from './SpaceHierarchy';
 import { useGetRoom } from '$hooks/useGetRoom';
 import { AsyncStatus, useAsyncCallback } from '$hooks/useAsyncCallback';
 import { getRoomPermissionsAPI } from '$hooks/useRoomPermissions';
 import { getRoomCreatorsForRoomId } from '$hooks/useRoomCreators';
+import { MembersDrawer } from '$features/room/MembersDrawer';
+import { SpaceHierarchy } from './SpaceHierarchy';
+import { CanDropCallback, useDnDMonitor } from './DnD';
+import { LobbyHero } from './LobbyHero';
+import { LobbyHeader } from './LobbyHeader';
 
 const useCanDropLobbyItem = (
   space: Room,
@@ -215,7 +219,7 @@ export function Lobby() {
 
             return [getRoom(i.space.roomId), ...childRooms];
           })
-          .filter((r) => !!r) as Room[],
+          .filter((r) => !!r),
       [hierarchy, getRoom]
     )
   );

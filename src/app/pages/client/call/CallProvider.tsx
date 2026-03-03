@@ -1,4 +1,4 @@
-import React, {
+import {
   createContext,
   useState,
   useContext,
@@ -7,12 +7,7 @@ import React, {
   ReactNode,
   useEffect,
 } from 'react';
-import {
-  WidgetApiToWidgetAction,
-  WidgetApiAction,
-  ClientWidgetApi,
-  IWidgetApiRequestData,
-} from 'matrix-widget-api';
+import { WidgetApiToWidgetAction, ClientWidgetApi, IWidgetApiRequestData } from 'matrix-widget-api';
 import { useParams } from 'react-router-dom';
 import { SmallWidget } from '$features/call/SmallWidget';
 
@@ -132,7 +127,7 @@ export function CallProvider({ children }: CallProviderProps) {
   const hangUp = useCallback(() => {
     setActiveClientWidgetApi(null, null, null, null);
     setActiveCallRoomIdState(null);
-    activeClientWidgetApi?.transport.send(`${WIDGET_HANGUP_ACTION}`, {});
+    activeClientWidgetApi?.transport.send(WIDGET_HANGUP_ACTION, {});
     setIsActiveCallReady(false);
   }, [activeClientWidgetApi?.transport, setActiveClientWidgetApi]);
 
@@ -148,7 +143,7 @@ export function CallProvider({ children }: CallProviderProps) {
         return Promise.reject(new Error('Mismatched active call clientWidgetApi'));
       }
 
-      await activeClientWidgetApi.transport.send(action as WidgetApiAction, data);
+      await activeClientWidgetApi.transport.send(action, data);
 
       return Promise.resolve();
     },
@@ -209,16 +204,14 @@ export function CallProvider({ children }: CallProviderProps) {
       if (!isActiveCallReady) return;
       ev.preventDefault();
 
-      /* eslint-disable camelcase */
-      const { audio_enabled, video_enabled } = ev.detail.data ?? {};
+      const { audio_enabled: audioEnabled, video_enabled: videoEnabled } = ev.detail.data ?? {};
 
-      if (typeof audio_enabled === 'boolean' && audio_enabled !== isAudioEnabled) {
-        setIsAudioEnabledState(audio_enabled);
+      if (typeof audioEnabled === 'boolean' && audioEnabled !== isAudioEnabled) {
+        setIsAudioEnabledState(audioEnabled);
       }
-      if (typeof video_enabled === 'boolean' && video_enabled !== isVideoEnabled) {
-        setIsVideoEnabledState(video_enabled);
+      if (typeof videoEnabled === 'boolean' && videoEnabled !== isVideoEnabled) {
+        setIsVideoEnabledState(videoEnabled);
       }
-      /* eslint-enable camelcase */
     };
 
     const handleOnScreenStateUpdate = (ev: CustomEvent) => {
@@ -257,7 +250,7 @@ export function CallProvider({ children }: CallProviderProps) {
       setIsActiveCallReady(true);
     };
 
-    void sendWidgetAction(WIDGET_MEDIA_STATE_UPDATE_ACTION, {
+    sendWidgetAction(WIDGET_MEDIA_STATE_UPDATE_ACTION, {
       audio_enabled: isAudioEnabled,
       video_enabled: isVideoEnabled,
     }).catch(() => {

@@ -1,5 +1,6 @@
-import React, { useMemo, useCallback } from 'react';
+import { memo, useMemo, useCallback } from 'react';
 import { MsgType } from '$types/matrix-sdk';
+import { testMatrixTo } from '$plugins/matrix-to';
 import { HTMLReactParserOptions } from 'html-react-parser';
 import { Opts } from 'linkifyjs';
 import { config } from 'folds';
@@ -29,7 +30,6 @@ import { Image, MediaControl, Video } from './media';
 import { ImageViewer } from './image-viewer';
 import { PdfViewer } from './Pdf-viewer';
 import { TextViewer } from './text-viewer';
-import { testMatrixTo } from '../plugins/matrix-to';
 
 type RenderMessageContentProps = {
   displayName: string;
@@ -267,4 +267,4 @@ function RenderMessageContentInternal({
   return <UnsupportedContent />;
 }
 
-export const RenderMessageContent = React.memo(RenderMessageContentInternal);
+export const RenderMessageContent = memo(RenderMessageContentInternal);

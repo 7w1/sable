@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { Badge, Box, Text } from 'folds';
 import {
   ConditionKind,
@@ -9,9 +9,7 @@ import {
 } from '$types/matrix-sdk';
 import { useAccountData } from '$hooks/useAccountData';
 import { AccountDataEvent } from '$types/matrix/accountData';
-import { NotificationModeSwitcher } from './NotificationModeSwitcher';
 import { SequenceCard } from '$components/sequence-card';
-import { SequenceCardStyle } from '../styles.css';
 import { SettingTile } from '$components/setting-tile';
 import { PushRuleData, usePushRule } from '$hooks/usePushRule';
 import {
@@ -20,6 +18,8 @@ import {
   useNotificationModeActions,
 } from '$hooks/useNotificationMode';
 import { useMatrixClient } from '$hooks/useMatrixClient';
+import { SequenceCardStyle } from '$features/settings/styles.css';
+import { NotificationModeSwitcher } from './NotificationModeSwitcher';
 
 const getAllMessageDefaultRule = (
   ruleId: RuleId,

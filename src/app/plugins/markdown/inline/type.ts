@@ -1,4 +1,4 @@
-import { MatchResult, MatchRule } from '../internal';
+import { MatchResult, MatchRule } from '$plugins/markdown/internal';
 
 /**
  * Type for a function that parses inline markdown into HTML.

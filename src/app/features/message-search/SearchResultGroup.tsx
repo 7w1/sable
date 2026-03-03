@@ -1,5 +1,5 @@
 /* eslint-disable react/destructuring-assignment */
-import React, { MouseEventHandler, useMemo } from 'react';
+import { MouseEventHandler, useMemo } from 'react';
 import { IEventWithRoomId, JoinRule, RelationType, Room } from '$types/matrix-sdk';
 import { HTMLReactParserOptions } from 'html-react-parser';
 import { Avatar, Box, Chip, Header, Icon, Icons, Text, config } from 'folds';
@@ -13,7 +13,7 @@ import {
   makeMentionCustomProps,
   renderMatrixMention,
 } from '$plugins/react-custom-html-parser';
-import { getMxIdLocalPart, mxcUrlToHttp } from '$appUtils/matrix';
+import { getMxIdLocalPart, mxcUrlToHttp } from '$utils/matrix';
 import { useMatrixEventRenderer } from '$hooks/useMatrixEventRenderer';
 import { GetContentCallback, MessageEvent, StateEvent } from '$types/matrix/room';
 import {
@@ -32,10 +32,9 @@ import { Image } from '$components/media';
 import { ImageViewer } from '$components/image-viewer';
 import * as customHtmlCss from '$styles/CustomHtml.css';
 import { RoomAvatar, RoomIcon } from '$components/room-avatar';
-import { getMemberAvatarMxc, getMemberDisplayName, getRoomAvatarUrl } from '$appUtils/room';
+import { getMemberAvatarMxc, getMemberDisplayName, getRoomAvatarUrl } from '$utils/room';
 import { useAtomValue } from 'jotai';
 import { nicknamesAtom } from '$state/nicknames';
-import { ResultItem } from './useMessageSearch';
 import { SequenceCard } from '$components/sequence-card';
 import { UserAvatar } from '$components/user-avatar';
 import { useMentionClickHandler } from '$hooks/useMentionClickHandler';
@@ -45,7 +44,7 @@ import { usePowerLevels } from '$hooks/usePowerLevels';
 import { usePowerLevelTags } from '$hooks/usePowerLevelTags';
 import { useTheme } from '$hooks/useTheme';
 import { PowerIcon } from '$components/power';
-import colorMXID from '$util/colorMXID';
+import colorMXID from '$utils/colorMXID';
 import {
   getPowerTagIconSrc,
   useAccessiblePowerTagColors,
@@ -53,6 +52,7 @@ import {
 } from '$hooks/useMemberPowerTag';
 import { useRoomCreators } from '$hooks/useRoomCreators';
 import { useRoomCreatorsTag } from '$hooks/useRoomCreatorsTag';
+import { ResultItem } from './useMessageSearch';
 
 type SearchResultGroupProps = {
   room: Room;

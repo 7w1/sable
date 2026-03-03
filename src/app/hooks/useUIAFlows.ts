@@ -7,7 +7,7 @@ import {
   getUIAErrorCode,
   getUIAParams,
   getUIASession,
-} from '../utils/matrix-uia';
+} from '$utils/matrix-uia';
 
 export const SUPPORTED_FLOW_TYPES = [
   AuthType.Dummy,

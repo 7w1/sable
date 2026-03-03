@@ -1,4 +1,4 @@
-import React, {
+import {
   FormEventHandler,
   KeyboardEventHandler,
   useCallback,
@@ -9,9 +9,9 @@ import React, {
 import { MatrixError } from '$types/matrix-sdk';
 import { Box, color, Icon, Icons, Input, Spinner, Text, toRem } from 'folds';
 import { isKeyHotkey } from 'is-hotkey';
-import { getMxIdServer } from '$appUtils/matrix';
+import { getMxIdServer } from '$utils/matrix';
 import { useMatrixClient } from '$hooks/useMatrixClient';
-import { replaceSpaceWithDash } from '$appUtils/common';
+import { replaceSpaceWithDash } from '$utils/common';
 import { AsyncState, AsyncStatus, useAsync } from '$hooks/useAsyncCallback';
 import { useDebounce } from '$hooks/useDebounce';
 

@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState, FormEventHandler, useEffect } from 'react';
+import { useCallback, useRef, useState, FormEventHandler, useEffect } from 'react';
 import { MatrixError } from '$types/matrix-sdk';
 import {
   Box,
@@ -20,7 +20,7 @@ import { useRoom } from '$hooks/useRoom';
 import { useAlive } from '$hooks/useAlive';
 import { useTextAreaCodeEditor } from '$hooks/useTextAreaCodeEditor';
 import { AsyncStatus, useAsyncCallback } from '$hooks/useAsyncCallback';
-import { syntaxErrorPosition } from '$appUtils/dom';
+import { syntaxErrorPosition } from '$utils/dom';
 import { Cursor } from '$plugins/text-area';
 
 const EDITOR_INTENT_SPACE_COUNT = 2;

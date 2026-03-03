@@ -7,10 +7,9 @@ import {
   Room,
   RoomEvent,
   SyncState,
+  PushProcessor,
 } from '$types/matrix-sdk';
-import { PushProcessor } from '$types/matrix-sdk';
 import { useAtomValue, useSetAtom } from 'jotai';
-import { useNavigate } from 'react-router-dom';
 import {
   sessionsAtom,
   activeSessionIdAtom,
@@ -19,14 +18,15 @@ import {
 } from '$state/sessions';
 import { useSetting } from '$state/hooks/settings';
 import { settingsAtom } from '$state/settings';
-import { getMxIdLocalPart, mxcUrlToHttp } from '$appUtils/matrix';
-import { getMemberDisplayName, getNotificationType, isNotificationEvent } from '$appUtils/room';
+import { getMxIdLocalPart, mxcUrlToHttp } from '$utils/matrix';
+import { getMemberDisplayName, getNotificationType, isNotificationEvent } from '$utils/room';
 import { NotificationType } from '$types/matrix/room';
-import { createLogger } from '$appUtils/debug';
+import { createLogger } from '$utils/debug';
 import LogoSVG from '$public/res/svg/cinny.svg';
 import { nicknamesAtom } from '$state/nicknames';
 import { useMatrixClient } from '$hooks/useMatrixClient';
-import { useRoomNavigate } from '$hooks/useRoomNavigate';
+import { buildRoomMessageNotification } from '$utils/notificationStyle';
+import { mobileOrTablet } from '$utils/user-agent';
 
 const log = createLogger('BackgroundNotifications');
 
@@ -66,14 +66,16 @@ export function BackgroundNotifications() {
   const sessions = useAtomValue(sessionsAtom);
   const activeSessionId = useAtomValue(activeSessionIdAtom);
   const setActiveSessionId = useSetAtom(activeSessionIdAtom);
-  const [showNotifications] = useSetting(settingsAtom, 'showNotifications');
+  const [showNotifications] = useSetting(settingsAtom, 'useInAppNotifications');
+  const [usePushNotifications] = useSetting(settingsAtom, 'usePushNotifications');
+  const [notificationSound] = useSetting(settingsAtom, 'isNotificationSounds');
+  const forcePushOnMobile = usePushNotifications && mobileOrTablet();
   const activeMx = useMatrixClient();
   const nicknames = useAtomValue(nicknamesAtom);
   const nicknamesRef = useRef(nicknames);
   nicknamesRef.current = nicknames;
   const clientsRef = useRef<Map<string, MatrixClient>>(new Map());
   const notifiedEventsRef = useRef<Set<string>>(new Set());
-  const { navigateRoom } = useRoomNavigate();
   const setPending = useSetAtom(pendingNotificationAtom);
 
   const inactiveSessions = sessions.filter(
@@ -87,6 +89,8 @@ export function BackgroundNotifications() {
     body?: string;
     /** URL to an icon (browser) – ignored on native where the app icon is used. */
     icon?: string;
+    /** Badge icon URL shown by supported platforms. */
+    badge?: string;
     /** If `true` the notification plays no sound. */
     silent?: boolean;
     /** Callback when the user taps/clicks the notification. */
@@ -94,6 +98,7 @@ export function BackgroundNotifications() {
   }
 
   useEffect(() => {
+    if (forcePushOnMobile) return undefined;
     if (!showNotifications) return undefined;
 
     const { current } = clientsRef;
@@ -103,7 +108,7 @@ export function BackgroundNotifications() {
       if ('Notification' in window && window.Notification.permission === 'granted') {
         const noti = new window.Notification(opts.title, {
           icon: opts.icon,
-          badge: opts.icon,
+          badge: opts.badge,
           body: opts.body,
           silent: opts.silent ?? false,
         });
@@ -171,7 +176,6 @@ export function BackgroundNotifications() {
               getMemberDisplayName(room, sender, nicknamesRef.current) ??
               getMxIdLocalPart(sender) ??
               sender;
-            const accountLabel = getMxIdLocalPart(session.userId) ?? session.userId;
 
             const avatarMxc =
               room.getAvatarFallbackMember()?.getMxcAvatarUrl() ?? room.getMxcAvatarUrl();
@@ -188,20 +192,31 @@ export function BackgroundNotifications() {
               if (first) notifiedEventsRef.current.delete(first);
             }
 
+            const notificationPayload = buildRoomMessageNotification({
+              roomName: room.name ?? 'Unknown',
+              roomAvatar,
+              username: senderName,
+              previewText: 'new message',
+              silent: !notificationSound || !isHighlight,
+              eventId,
+              data: {
+                type: mEvent.getType(),
+                room_id: room.roomId,
+                event_id: eventId,
+                user_id: session.userId,
+              },
+            });
+
             sendNotification({
-              title: `${room.name ?? 'Unknown'} (${accountLabel})`,
-              icon: roomAvatar,
-              body: `${senderName}: new message`,
-              silent: !isHighlight,
+              title: notificationPayload.title,
+              icon: notificationPayload.options.icon,
+              badge: notificationPayload.options.badge,
+              body: notificationPayload.options.body,
+              silent: notificationPayload.options.silent ?? undefined,
               onClick: () => {
                 window.focus();
-                setPending({ roomId: room.roomId, eventId });
-                if (session.userId !== activeSessionId) {
-                  setActiveSessionId(session.userId);
-                } else {
-                  navigateRoom(room.roomId, eventId);
-                  setPending(null);
-                }
+                setPending({ roomId: room.roomId, eventId, targetSessionId: session.userId });
+                if (session.userId !== activeSessionId) setActiveSessionId(session.userId);
               },
             });
           };
@@ -219,12 +234,13 @@ export function BackgroundNotifications() {
     };
   }, [
     inactiveSessions,
+    forcePushOnMobile,
     showNotifications,
+    notificationSound,
     activeMx,
     activeSessionId,
     setActiveSessionId,
     setPending,
-    navigateRoom,
   ]);
 
   return null;

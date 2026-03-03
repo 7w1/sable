@@ -1,4 +1,3 @@
-import React from 'react';
 import { Dialog, Text, Box, Button, config } from 'folds';
 import { AuthType } from '$types/matrix-sdk';
 import ReCAPTCHA from 'react-google-recaptcha';

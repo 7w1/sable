@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ClientWidgetApi, IWidget, IRoomEvent, Widget, WidgetKind } from 'matrix-widget-api';
 import {
   ClientEvent,
@@ -8,8 +8,11 @@ import {
   MatrixEvent,
   MatrixEventEvent,
 } from '$types/matrix-sdk';
-import { GenericWidgetDriver, CapabilityApprovalCallback } from './GenericWidgetDriver';
+import { createLogger } from '$utils/debug';
 import { resolveWidgetUrl } from '$hooks/useRoomWidgets';
+import { GenericWidgetDriver, CapabilityApprovalCallback } from './GenericWidgetDriver';
+
+const log = createLogger('WidgetIframe');
 
 interface WidgetIframeProps {
   widget: IWidget;
@@ -81,7 +84,7 @@ export function WidgetIframe({ widget, roomId, mx, onCapabilityRequest }: Widget
       messaging.transport.reply(ev.detail, { events });
     });
 
-    const readUpToMap: { [rId: string]: string } = {};
+    const readUpToMap: Record<string, string> = {};
     mx.getRooms().forEach((room) => {
       const roomEvents = room.getLiveTimeline()?.getEvents() || [];
       const last = roomEvents[roomEvents.length - 1];
@@ -95,7 +98,9 @@ export function WidgetIframe({ widget, roomId, mx, onCapabilityRequest }: Widget
       if (!messagingRef.current) return;
       if (ev.isBeingDecrypted() || ev.isDecryptionFailure()) return;
       const raw = ev.getEffectiveEvent();
-      messagingRef.current.feedEvent(raw as IRoomEvent).catch(() => null);
+      messagingRef.current.feedEvent(raw as IRoomEvent).catch((err) => {
+        log.warn('Failed to feed widget iframe event:', err);
+      });
     };
 
     const onEvent = (ev: MatrixEvent): void => {

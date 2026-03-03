@@ -14,7 +14,7 @@ export const useMutualRoomsSupport = (): boolean => {
   return !!supported;
 };
 
-export const useMutualRooms = (userId: string): AsyncState<string[], unknown> => {
+export const useMutualRooms = (userId: string): AsyncState<string[]> => {
   const mx = useMatrixClient();
 
   const supported = useMutualRoomsSupport();

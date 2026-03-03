@@ -15,7 +15,7 @@ import {
   Text,
   toRem,
 } from 'folds';
-import React, {
+import {
   ChangeEventHandler,
   KeyboardEventHandler,
   MouseEventHandler,
@@ -40,21 +40,21 @@ import {
   getDirectRoomAvatarUrl,
   getRoomAvatarUrl,
   guessPerfectParent,
-} from '$appUtils/room';
+} from '$utils/room';
 import { highlightText, makeHighlightRegex } from '$plugins/react-custom-html-parser';
-import { factoryRoomIdByActivity } from '$appUtils/sort';
-import { nameInitials } from '$appUtils/common';
+import { factoryRoomIdByActivity } from '$utils/sort';
+import { nameInitials } from '$utils/common';
 import { useRoomNavigate } from '$hooks/useRoomNavigate';
 import { useListFocusIndex } from '$hooks/useListFocusIndex';
-import { getMxIdLocalPart, getMxIdServer, guessDmRoomUserId } from '$appUtils/matrix';
+import { getMxIdLocalPart, getMxIdServer, guessDmRoomUserId } from '$utils/matrix';
 import { roomToParentsAtom } from '$state/room/roomToParents';
 import { roomToUnreadAtom } from '$state/room/roomToUnread';
 import { UnreadBadge, UnreadBadgeCenter } from '$components/unread-badge';
 import { searchModalAtom } from '$state/searchModal';
 import { useKeyDown } from '$hooks/useKeyDown';
 import { useMediaAuthentication } from '$hooks/useMediaAuthentication';
-import { KeySymbol } from '$appUtils/key-symbol';
-import { isMacOS } from '$appUtils/user-agent';
+import { KeySymbol } from '$utils/key-symbol';
+import { isMacOS } from '$utils/user-agent';
 
 enum SearchRoomType {
   Rooms = '#',

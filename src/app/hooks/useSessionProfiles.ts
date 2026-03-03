@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Session } from '../state/sessions';
+import { Session } from '$state/sessions';
 
 export type SessionProfile = {
   displayName?: string;
@@ -102,7 +102,7 @@ export const useSessionProfiles = (sessions: Session[]): SessionProfiles => {
       blobUrlsRef.current.forEach((u) => URL.revokeObjectURL(u));
       blobUrlsRef.current = newBlobUrls;
     };
-  }, [sessionKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [sessionKey]);
 
   return profiles;
 };

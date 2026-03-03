@@ -1,9 +1,10 @@
 import { ReactNode, useCallback, useMemo } from 'react';
 import { Capabilities, validateAuthMetadata, ValidatedAuthMetadata } from '$types/matrix-sdk';
-import { AsyncStatus, useAsyncCallbackValue } from '../hooks/useAsyncCallback';
-import { useMatrixClient } from '../hooks/useMatrixClient';
-import { MediaConfig } from '../hooks/useMediaConfig';
-import { promiseFulfilledResult } from '../utils/common';
+import { AsyncStatus, useAsyncCallbackValue } from '$hooks/useAsyncCallback';
+import { useMatrixClient } from '$hooks/useMatrixClient';
+import { MediaConfig } from '$hooks/useMediaConfig';
+import { promiseFulfilledResult } from '$utils/common';
+import { createLogger } from '$utils/debug';
 
 export type ServerConfigs = {
   capabilities?: Capabilities;
@@ -14,6 +15,9 @@ export type ServerConfigs = {
 type ServerConfigsLoaderProps = {
   children: (configs: ServerConfigs) => ReactNode;
 };
+
+const log = createLogger('ServerConfigsLoader');
+
 export function ServerConfigsLoader({ children }: ServerConfigsLoaderProps) {
   const mx = useMatrixClient();
   const fallbackConfigs = useMemo(() => ({}), []);
@@ -34,7 +38,7 @@ export function ServerConfigsLoader({ children }: ServerConfigsLoaderProps) {
       try {
         validatedAuthMetadata = validateAuthMetadata(authMetadata);
       } catch (e) {
-        console.error(e);
+        log.error('Failed to validate auth metadata:', e);
       }
 
       return {

@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite';
+import type { ViteDevServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import svgr from 'vite-plugin-svgr';
 import { wasm } from '@rollup/plugin-wasm';
@@ -46,10 +47,10 @@ const copyFiles = {
   ],
 };
 
-function serverMatrixSdkCryptoWasm(wasmFilePath) {
+function serverMatrixSdkCryptoWasm(wasmFilePath: string) {
   return {
     name: 'vite-plugin-serve-matrix-sdk-crypto-wasm',
-    configureServer(server) {
+    configureServer(server: ViteDevServer) {
       server.middlewares.use((req, res, next) => {
         if (req.url === wasmFilePath) {
           const resolvedPath = path.join(
@@ -87,11 +88,10 @@ export default defineConfig({
       $features: path.resolve(__dirname, 'src/app/features'),
       $state: path.resolve(__dirname, 'src/app/state'),
       $styles: path.resolve(__dirname, 'src/app/styles'),
-      $appUtils: path.resolve(__dirname, 'src/app/utils'),
+      $utils: path.resolve(__dirname, 'src/app/utils'),
       $pages: path.resolve(__dirname, 'src/app/pages'),
       $types: path.resolve(__dirname, 'src/types'),
       $public: path.resolve(__dirname, 'public'),
-      $util: path.resolve(__dirname, 'src/util'),
       $client: path.resolve(__dirname, 'src/client'),
     },
   },
@@ -112,12 +112,10 @@ export default defineConfig({
       promiseImportName: (i) => `__tla_${i}`,
     }),
     viteStaticCopy(copyFiles),
-    vanillaExtractPlugin(),
+    vanillaExtractPlugin({ identifiers: 'debug' }),
     wasm(),
     react(),
-    svgr({
-      exportAsDefault: true,
-    }),
+    svgr(),
     VitePWA({
       srcDir: 'src',
       filename: 'sw.ts',

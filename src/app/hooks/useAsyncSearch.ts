@@ -9,8 +9,8 @@ import {
   normalize,
   matchQuery,
   ResultHandler,
-} from '../utils/AsyncSearch';
-import { sanitizeForRegex } from '../utils/regex';
+} from '$utils/AsyncSearch';
+import { sanitizeForRegex } from '$utils/regex';
 
 export type UseAsyncSearchOptions = AsyncSearchOption & {
   matchOptions?: MatchQueryOption;

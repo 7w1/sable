@@ -1,4 +1,4 @@
-import { SearchItemStrGetter } from '../hooks/useAsyncSearch';
+import { SearchItemStrGetter } from '$hooks/useAsyncSearch';
 import { PackImageReader } from './custom-emoji';
 import { IEmoji } from './emoji';
 

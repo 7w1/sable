@@ -1,4 +1,4 @@
-import React, { FormEventHandler, MouseEventHandler, useState } from 'react';
+import { FormEventHandler, MouseEventHandler, useState } from 'react';
 import {
   Box,
   Header,
@@ -17,25 +17,27 @@ import {
 } from 'folds';
 import { Room } from '$types/matrix-sdk';
 
-import * as css from './WidgetsDrawer.css';
 import { useMatrixClient } from '$hooks/useMatrixClient';
 import { useRoomWidgets, RoomWidget, enrichWidgetUrl } from '$hooks/useRoomWidgets';
-import { WidgetIframe } from './WidgetIframe';
 import { useSetSetting } from '$state/hooks/settings';
 import { settingsAtom } from '$state/settings';
 import { usePowerLevelsContext } from '$hooks/usePowerLevels';
 import { useRoomCreators } from '$hooks/useRoomCreators';
 import { useRoomPermissions } from '$hooks/useRoomPermissions';
 import { StateEvent } from '$types/matrix/room';
+import { createLogger } from '$utils/debug';
+import { WidgetIframe } from './WidgetIframe';
+import * as css from './WidgetsDrawer.css';
 import { IntegrationManager } from './IntegrationManager';
 
 type WidgetsDrawerHeaderProps = {
-  room: Room;
   activeWidget: RoomWidget | null;
   onBack: () => void;
 };
 
-function WidgetDrawerHeader({ room, activeWidget, onBack }: WidgetsDrawerHeaderProps) {
+const log = createLogger('WidgetsDrawer');
+
+function WidgetDrawerHeader({ activeWidget, onBack }: WidgetsDrawerHeaderProps) {
   const setWidgetDrawer = useSetSetting(settingsAtom, 'isWidgetDrawer');
 
   return (
@@ -114,7 +116,7 @@ function AddWidgetForm({ room, onAdded }: AddWidgetFormProps) {
       setUrl('');
       onAdded();
     } catch (err) {
-      console.error('Failed to add widget:', err);
+      log.error('Failed to add widget:', err);
     } finally {
       setAdding(false);
     }
@@ -231,7 +233,7 @@ export function WidgetsDrawer({ room }: WidgetsDrawerProps) {
         setActiveWidget(null);
       }
     } catch (err) {
-      console.error('Failed to remove widget:', err);
+      log.error('Failed to remove widget:', err);
     }
   };
 
@@ -239,7 +241,7 @@ export function WidgetsDrawer({ room }: WidgetsDrawerProps) {
 
   return (
     <Box className={css.WidgetsDrawer} direction="Column">
-      <WidgetDrawerHeader room={room} activeWidget={activeWidget} onBack={handleBack} />
+      <WidgetDrawerHeader activeWidget={activeWidget} onBack={handleBack} />
       {activeWidget ? (
         <Box className={css.WidgetIframeContainer} grow="Yes">
           <WidgetIframe key={activeWidget.id} widget={activeWidget} roomId={room.roomId} mx={mx} />

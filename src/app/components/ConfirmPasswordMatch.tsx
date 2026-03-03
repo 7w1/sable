@@ -1,5 +1,5 @@
 import { ReactNode, RefObject, useCallback, useRef, useState } from 'react';
-import { useDebounce } from '../hooks/useDebounce';
+import { useDebounce } from '$hooks/useDebounce';
 
 type ConfirmPasswordMatchProps = {
   initialValue: boolean;

@@ -1,8 +1,7 @@
-import React from 'react';
 import { Box, IconButton, Text, Icon, Icons, Scroll, Chip } from 'folds';
 import { PackAddress } from '$plugins/custom-emoji';
-import { Page, PageHeader, PageContent } from '../page';
 import { useMatrixClient } from '$hooks/useMatrixClient';
+import { Page, PageHeader, PageContent } from '$components/page';
 import { RoomImagePack } from './RoomImagePack';
 import { UserImagePack } from './UserImagePack';
 

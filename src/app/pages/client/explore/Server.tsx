@@ -1,4 +1,4 @@
-import React, {
+import {
   FormEventHandler,
   MouseEventHandler,
   RefObject,
@@ -38,13 +38,13 @@ import { RoomTopicViewer } from '$components/room-topic-viewer';
 import { RoomCard, RoomCardBase, RoomCardGrid } from '$components/room-card';
 import { ExploreServerPathSearchParams } from '$pages/paths';
 import { getExploreServerPath, withSearchParam } from '$pages/pathUtils';
-import * as css from './style.css';
 import { allRoomsAtom } from '$state/room-list/roomList';
 import { useRoomNavigate } from '$hooks/useRoomNavigate';
-import { getMxIdServer } from '$appUtils/matrix';
-import { stopPropagation } from '$appUtils/keyboard';
+import { getMxIdServer } from '$utils/matrix';
+import { stopPropagation } from '$utils/keyboard';
 import { ScreenSize, useScreenSizeContext } from '$hooks/useScreenSize';
 import { BackRouteHandler } from '$components/BackRouteHandler';
+import * as css from './style.css';
 
 const useServerSearchParams = (searchParams: URLSearchParams): ExploreServerPathSearchParams =>
   useMemo(

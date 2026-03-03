@@ -34,7 +34,9 @@ async function discoverManagers(mx: MatrixClient): Promise<IntegrationManager[]>
         });
       }
     }
-  } catch {}
+  } catch {
+    // ignore malformed or unavailable .well-known data
+  }
 
   try {
     const widgetsEvent = mx.getAccountData('m.widgets' as never);
@@ -52,7 +54,9 @@ async function discoverManagers(mx: MatrixClient): Promise<IntegrationManager[]>
         }
       });
     }
-  } catch {}
+  } catch {
+    // ignore malformed widget account data
+  }
 
   if (managers.length === 0) {
     return DEFAULT_MANAGERS;

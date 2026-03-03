@@ -1,6 +1,5 @@
-import React, { forwardRef, MouseEventHandler, useEffect, useMemo } from 'react';
-import { MatrixError, Room } from '$types/matrix-sdk';
-import { IHierarchyRoom } from '$types/matrix-sdk';
+import { forwardRef, MouseEventHandler, useEffect, useMemo } from 'react';
+import { MatrixError, Room, IHierarchyRoom } from '$types/matrix-sdk';
 import { Box, config, Text } from 'folds';
 import {
   HierarchyItem,
@@ -10,14 +9,14 @@ import {
 } from '$hooks/useSpaceHierarchy';
 import { IPowerLevels } from '$hooks/usePowerLevels';
 import { useMatrixClient } from '$hooks/useMatrixClient';
-import { SpaceItemCard } from './SpaceItem';
-import { AfterItemDropTarget, CanDropCallback } from './DnD';
-import { HierarchyItemMenu } from './HierarchyItemMenu';
-import { RoomItemCard } from './RoomItem';
 import { RoomType, StateEvent } from '$types/matrix/room';
 import { SequenceCard } from '$components/sequence-card';
 import { getRoomCreatorsForRoomId } from '$hooks/useRoomCreators';
 import { getRoomPermissionsAPI } from '$hooks/useRoomPermissions';
+import { SpaceItemCard } from './SpaceItem';
+import { AfterItemDropTarget, CanDropCallback } from './DnD';
+import { HierarchyItemMenu } from './HierarchyItemMenu';
+import { RoomItemCard } from './RoomItem';
 
 type SpaceHierarchyProps = {
   summary: IHierarchyRoom | undefined;

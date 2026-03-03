@@ -6,9 +6,16 @@
 
   "disableAccountSwitcher": false,
 
+  "pushNotificationDetails": {
+    "pushNotifyUrl": "https://cinny.cc/_matrix/push/v1/notify",
+    "vapidPublicKey": "BHLwykXs79AbKNiblEtZZRAgnt7o5_ieImhVJD8QZ01MVwAHnXwZzNgQEJJEU3E5CVsihoKtb7yaNe5x3vmkWkI",
+    "webPushAppID": "cc.cinny.web"
+  },
+
   "featuredCommunities": {
     "openAsDefault": false,
     "spaces": [
+      "#sable:sable.moe",
       "#community:matrix.org",
       "#space:unredacted.org",
       "#science-space:matrix.org",
@@ -16,6 +23,7 @@
       "#mathematics-on:matrix.org"
     ],
     "rooms": [
+      "#announcements:sable.moe",
       "#freesoftware:matrix.org",
       "#pcapdroid:matrix.org",
       "#gentoo:matrix.org",

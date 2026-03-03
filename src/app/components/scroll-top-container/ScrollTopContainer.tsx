@@ -1,11 +1,11 @@
-import React, { RefObject, useCallback, useState } from 'react';
+import { RefObject, useCallback, useState } from 'react';
 import { Box, as } from 'folds';
 import classNames from 'classnames';
-import * as css from './style.css';
 import {
   getIntersectionObserverEntry,
   useIntersectionObserver,
 } from '$hooks/useIntersectionObserver';
+import * as css from './style.css';
 
 export const ScrollTopContainer = as<
   'div',

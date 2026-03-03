@@ -1,4 +1,3 @@
-import React from 'react';
 import { Box, Text, IconButton, Icon, Icons, Scroll } from 'folds';
 import { Page, PageContent, PageHeader } from '$components/page';
 import { MatrixId } from './MatrixId';

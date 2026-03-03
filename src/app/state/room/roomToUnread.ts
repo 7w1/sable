@@ -7,8 +7,9 @@ import {
   Room,
   RoomEvent,
   SyncState,
+  ReceiptContent,
+  ReceiptType,
 } from '$types/matrix-sdk';
-import { ReceiptContent, ReceiptType } from '$types/matrix-sdk';
 import { useCallback, useEffect } from 'react';
 import {
   Membership,
@@ -24,11 +25,11 @@ import {
   getUnreadInfo,
   getUnreadInfos,
   isNotificationEvent,
-} from '$appUtils/room';
-import { roomToParentsAtom } from './roomToParents';
+} from '$utils/room';
 import { useStateEventCallback } from '$hooks/useStateEventCallback';
 import { useSyncState } from '$hooks/useSyncState';
 import { useRoomsNotificationPreferencesContext } from '$hooks/useRoomsNotificationPreferences';
+import { roomToParentsAtom } from './roomToParents';
 
 export type RoomToUnreadAction =
   | {

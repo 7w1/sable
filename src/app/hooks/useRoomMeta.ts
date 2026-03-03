@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
-import { RoomJoinRulesEventContent } from '$types/matrix-sdk';
-import { Room, RoomEvent, RoomStateEvent } from '$types/matrix-sdk';
+import { RoomJoinRulesEventContent, Room, RoomEvent, RoomStateEvent } from '$types/matrix-sdk';
 import { StateEvent } from '$types/matrix/room';
 import { useStateEvent } from './useStateEvent';
 

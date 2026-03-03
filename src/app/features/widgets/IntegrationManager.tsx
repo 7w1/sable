@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Box,
   Header,
@@ -14,8 +14,8 @@ import {
 import FocusTrap from 'focus-trap-react';
 import { Room } from '$types/matrix-sdk';
 
-import * as css from './IntegrationManager.css';
 import { useIntegrationManager, buildIntegrationManagerUrl } from '$hooks/useIntegrationManager';
+import * as css from './IntegrationManager.css';
 
 interface IntegrationManagerProps {
   room: Room;

@@ -1,13 +1,12 @@
-import React from 'react';
 import { Menu, PopOut, toRem } from 'folds';
 import FocusTrap from 'focus-trap-react';
-import { useCloseUserRoomProfile, useUserRoomProfileState } from '../state/hooks/userRoomProfile';
+import { useCloseUserRoomProfile, useUserRoomProfileState } from '$state/hooks/userRoomProfile';
+import { UserRoomProfileState } from '$state/userRoomProfile';
+import { useAllJoinedRoomsSet, useGetRoom } from '$hooks/useGetRoom';
+import { stopPropagation } from '$utils/keyboard';
+import { SpaceProvider } from '$hooks/useSpace';
+import { RoomProvider } from '$hooks/useRoom';
 import { UserRoomProfile } from './user-profile';
-import { UserRoomProfileState } from '../state/userRoomProfile';
-import { useAllJoinedRoomsSet, useGetRoom } from '../hooks/useGetRoom';
-import { stopPropagation } from '../utils/keyboard';
-import { SpaceProvider } from '../hooks/useSpace';
-import { RoomProvider } from '../hooks/useRoom';
 
 function UserRoomProfileContextMenu({ state }: { state: UserRoomProfileState }) {
   const { roomId, spaceId, userId, cords, position, initialProfile } = state;

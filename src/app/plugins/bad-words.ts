@@ -1,5 +1,5 @@
 import * as badWords from 'badwords-list';
-import { sanitizeForRegex } from '../utils/regex';
+import { sanitizeForRegex } from '$utils/regex';
 
 const additionalBadWords: string[] = ['torture', 't0rture'];
 

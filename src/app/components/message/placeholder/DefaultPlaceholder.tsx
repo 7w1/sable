@@ -1,8 +1,8 @@
-import React, { CSSProperties, useMemo } from 'react';
+import { CSSProperties, useMemo } from 'react';
 import { Avatar, Box, ContainerColor, as, color, toRem } from 'folds';
-import { randomNumberBetween } from '$appUtils/common';
+import { randomNumberBetween } from '$utils/common';
+import { ModernLayout } from '$components/message/layout';
 import { LinePlaceholder } from './LinePlaceholder';
-import { ModernLayout } from '../layout';
 
 const contentMargin: CSSProperties = { marginTop: toRem(3) };
 

@@ -2,11 +2,7 @@
 // Import Matrix symbols from this module instead of matrix-js-sdk directly.
 export * from 'matrix-js-sdk/lib/client';
 export * from 'matrix-js-sdk/lib/serverCapabilities';
-export * from 'matrix-js-sdk/lib/embedded';
 export * from 'matrix-js-sdk/lib/http-api/index';
-export * from 'matrix-js-sdk/lib/http-api/method';
-export * from 'matrix-js-sdk/lib/http-api/interface';
-export * from 'matrix-js-sdk/lib/http-api/errors';
 export * from 'matrix-js-sdk/lib/autodiscovery';
 export * from 'matrix-js-sdk/lib/errors';
 export * from 'matrix-js-sdk/lib/interactive-auth';
@@ -48,13 +44,6 @@ export * from 'matrix-js-sdk/lib/@types/registration';
 export * from 'matrix-js-sdk/lib/oidc/validate';
 export { VerificationMethod } from 'matrix-js-sdk/lib/types';
 export * from 'matrix-js-sdk/lib/pushprocessor';
-
-export * from 'matrix-js-sdk/lib/crypto-api/CryptoEvent';
-export * from 'matrix-js-sdk/lib/crypto-api/CryptoEventHandlerMap';
-export * from 'matrix-js-sdk/lib/crypto-api/verification';
-export * from 'matrix-js-sdk/lib/crypto-api/keybackup';
-export * from 'matrix-js-sdk/lib/crypto-api/recovery-key';
-export * from 'matrix-js-sdk/lib/crypto-api/key-passphrase';
 export * from 'matrix-js-sdk/lib/common-crypto/CryptoBackend';
 
 export * from 'matrix-js-sdk/lib/matrixrtc/CallMembership';

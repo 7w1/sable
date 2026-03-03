@@ -1,4 +1,4 @@
-import React, { FormEventHandler, useCallback, useMemo, useState } from 'react';
+import { FormEventHandler, useCallback, useMemo, useState } from 'react';
 import {
   Box,
   Text,
@@ -29,17 +29,17 @@ import { useRoom } from '$hooks/useRoom';
 import { useRoomImagePacks } from '$hooks/useImagePacks';
 import { LineClamp2 } from '$styles/Text.css';
 import { SettingTile } from '$components/setting-tile';
-import { SequenceCardStyle } from '../styles.css';
 import { useMatrixClient } from '$hooks/useMatrixClient';
-import { mxcUrlToHttp } from '$appUtils/matrix';
+import { mxcUrlToHttp } from '$utils/matrix';
 import { useMediaAuthentication } from '$hooks/useMediaAuthentication';
 import { usePowerLevels } from '$hooks/usePowerLevels';
 import { StateEvent } from '$types/matrix/room';
-import { suffixRename } from '$appUtils/common';
+import { suffixRename } from '$utils/common';
 import { AsyncStatus, useAsyncCallback } from '$hooks/useAsyncCallback';
 import { useAlive } from '$hooks/useAlive';
 import { useRoomCreators } from '$hooks/useRoomCreators';
 import { useRoomPermissions } from '$hooks/useRoomPermissions';
+import { SequenceCardStyle } from '$features/common-settings/styles.css';
 
 type CreatePackTileProps = {
   packs: ImagePack[];

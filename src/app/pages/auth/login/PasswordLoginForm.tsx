@@ -1,4 +1,4 @@
-import React, { FormEventHandler, MouseEventHandler, useCallback, useState } from 'react';
+import { FormEventHandler, MouseEventHandler, useCallback, useState } from 'react';
 import {
   Box,
   Button,
@@ -20,12 +20,16 @@ import {
 import FocusTrap from 'focus-trap-react';
 import { Link } from 'react-router-dom';
 import { MatrixError } from '$types/matrix-sdk';
-import { getMxIdLocalPart, getMxIdServer, isUserId } from '$appUtils/matrix';
-import { EMAIL_REGEX } from '$appUtils/regex';
+import { getMxIdLocalPart, getMxIdServer, isUserId } from '$utils/matrix';
+import { EMAIL_REGEX } from '$utils/regex';
 import { useAutoDiscoveryInfo } from '$hooks/useAutoDiscoveryInfo';
 import { AsyncStatus, useAsyncCallback } from '$hooks/useAsyncCallback';
 import { useAuthServer } from '$hooks/useAuthServer';
 import { useClientConfig } from '$hooks/useClientConfig';
+import { PasswordInput } from '$components/password-input';
+import { getResetPasswordPath } from '$pages/pathUtils';
+import { stopPropagation } from '$utils/keyboard';
+import { FieldError } from '$pages/auth/FiledError';
 import {
   CustomLoginResponse,
   LoginError,
@@ -33,10 +37,6 @@ import {
   login,
   useLoginComplete,
 } from './loginUtil';
-import { PasswordInput } from '$components/password-input';
-import { FieldError } from '../FiledError';
-import { getResetPasswordPath } from '$pages/pathUtils';
-import { stopPropagation } from '$appUtils/keyboard';
 
 function UsernameHint({ server }: { server: string }) {
   const [anchor, setAnchor] = useState<RectCords>();

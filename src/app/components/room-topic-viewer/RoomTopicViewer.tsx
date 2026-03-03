@@ -1,9 +1,8 @@
-import React from 'react';
 import { as, Box, Header, Icon, IconButton, Icons, Modal, Scroll, Text } from 'folds';
 import classNames from 'classnames';
 import Linkify from 'linkify-react';
-import * as css from './style.css';
 import { LINKIFY_OPTS, scaleSystemEmoji } from '$plugins/react-custom-html-parser';
+import * as css from './style.css';
 
 export const RoomTopicViewer = as<
   'div',

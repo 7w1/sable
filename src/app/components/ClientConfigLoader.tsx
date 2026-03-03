@@ -1,7 +1,7 @@
 import { ReactNode, useCallback, useEffect, useState } from 'react';
-import { AsyncStatus, useAsyncCallback } from '../hooks/useAsyncCallback';
-import { ClientConfig } from '../hooks/useClientConfig';
-import { trimTrailingSlash } from '../utils/common';
+import { AsyncStatus, useAsyncCallback } from '$hooks/useAsyncCallback';
+import { ClientConfig } from '$hooks/useClientConfig';
+import { trimTrailingSlash } from '$utils/common';
 
 const getClientConfig = async (): Promise<ClientConfig> => {
   const url = `${trimTrailingSlash(import.meta.env.BASE_URL)}/config.json`;

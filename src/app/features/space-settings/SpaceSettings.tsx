@@ -1,23 +1,23 @@
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useAtomValue } from 'jotai';
 import { Avatar, Box, config, Icon, IconButton, Icons, IconSrc, MenuItem, Text } from 'folds';
 import { JoinRule } from '$types/matrix-sdk';
 import { PageNav, PageNavContent, PageNavHeader, PageRoot } from '$components/page';
 import { ScreenSize, useScreenSizeContext } from '$hooks/useScreenSize';
 import { useMatrixClient } from '$hooks/useMatrixClient';
-import { mxcUrlToHttp } from '$appUtils/matrix';
+import { mxcUrlToHttp } from '$utils/matrix';
 import { useMediaAuthentication } from '$hooks/useMediaAuthentication';
 import { useRoomAvatar, useRoomJoinRule, useRoomName } from '$hooks/useRoomMeta';
 import { mDirectAtom } from '$state/mDirectList';
 import { RoomAvatar, RoomIcon } from '$components/room-avatar';
 import { SpaceSettingsPage } from '$state/spaceSettings';
 import { useRoom } from '$hooks/useRoom';
-import { EmojisStickers } from '../common-settings/emojis-stickers';
-import { Members } from '../common-settings/members';
-import { DeveloperTools } from '../common-settings/developer-tools';
+import { EmojisStickers } from '$features/common-settings/emojis-stickers';
+import { Members } from '$features/common-settings/members';
+import { DeveloperTools } from '$features/common-settings/developer-tools';
+import { Cosmetics } from '$features/common-settings/cosmetics/Cosmetics';
 import { General } from './general';
 import { Permissions } from './permissions';
-import { Cosmetics } from '../common-settings/cosmetics/Cosmetics';
 
 type SpaceSettingsMenuItem = {
   page: SpaceSettingsPage;

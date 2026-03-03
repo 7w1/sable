@@ -1,10 +1,9 @@
-import React, { ChangeEventHandler, FormEventHandler, useCallback, useMemo, useState } from 'react';
+import { ChangeEventHandler, FormEventHandler, useCallback, useMemo, useState } from 'react';
 import { IPushRule, IPushRules, PushRuleKind } from '$types/matrix-sdk';
 import { Box, Text, Badge, Button, Input, config, IconButton, Icons, Icon, Spinner } from 'folds';
 import { useAccountData } from '$hooks/useAccountData';
 import { AccountDataEvent } from '$types/matrix/accountData';
 import { SequenceCard } from '$components/sequence-card';
-import { SequenceCardStyle } from '../styles.css';
 import { SettingTile } from '$components/setting-tile';
 import { useMatrixClient } from '$hooks/useMatrixClient';
 import {
@@ -13,8 +12,9 @@ import {
   NotificationModeOptions,
   useNotificationModeActions,
 } from '$hooks/useNotificationMode';
-import { NotificationModeSwitcher } from './NotificationModeSwitcher';
 import { AsyncStatus, useAsyncCallback } from '$hooks/useAsyncCallback';
+import { SequenceCardStyle } from '$features/settings/styles.css';
+import { NotificationModeSwitcher } from './NotificationModeSwitcher';
 
 const NOTIFY_MODE_OPS: NotificationModeOptions = {
   highlight: true,

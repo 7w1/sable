@@ -1,5 +1,5 @@
 import { MatrixClient, SyncState } from '$types/matrix-sdk';
-import React, { useCallback, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Box, config, Line, Text } from 'folds';
 import { useSyncState } from '$hooks/useSyncState';
 import { ContainerColor } from '$styles/ContainerColor.css';

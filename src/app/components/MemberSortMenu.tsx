@@ -1,8 +1,7 @@
 import FocusTrap from 'focus-trap-react';
-import React from 'react';
 import { config, Menu, MenuItem, Text } from 'folds';
-import { stopPropagation } from '../utils/keyboard';
-import { useMemberSortMenu } from '../hooks/useMemberSort';
+import { stopPropagation } from '$utils/keyboard';
+import { useMemberSortMenu } from '$hooks/useMemberSort';
 
 type MemberSortMenuProps = {
   requestClose: () => void;

@@ -1,4 +1,4 @@
-import React, { ReactNode, useCallback, useRef, useState } from 'react';
+import { ReactNode, useCallback, useRef, useState } from 'react';
 import { MatrixError, Room } from '$types/matrix-sdk';
 import {
   Avatar,
@@ -19,20 +19,20 @@ import {
 } from 'folds';
 import classNames from 'classnames';
 import FocusTrap from 'focus-trap-react';
-import * as css from './style.css';
-import { RoomAvatar } from '../room-avatar';
-import { getMxIdLocalPart, mxcUrlToHttp } from '$appUtils/matrix';
-import { nameInitials } from '$appUtils/common';
+import { getMxIdLocalPart, mxcUrlToHttp } from '$utils/matrix';
+import { nameInitials } from '$utils/common';
 import { millify } from '$plugins/millify';
 import { useMatrixClient } from '$hooks/useMatrixClient';
 import { AsyncStatus, useAsyncCallback } from '$hooks/useAsyncCallback';
-import { onEnterOrSpace, stopPropagation } from '$appUtils/keyboard';
+import { onEnterOrSpace, stopPropagation } from '$utils/keyboard';
 import { RoomType, StateEvent } from '$types/matrix/room';
 import { useJoinedRoomId } from '$hooks/useJoinedRoomId';
 import { useElementSizeObserver } from '$hooks/useElementSizeObserver';
-import { getRoomAvatarUrl, getStateEvent } from '$appUtils/room';
+import { getRoomAvatarUrl, getStateEvent } from '$utils/room';
 import { useStateEventCallback } from '$hooks/useStateEventCallback';
 import { useMediaAuthentication } from '$hooks/useMediaAuthentication';
+import { RoomAvatar } from '$components/room-avatar';
+import * as css from './style.css';
 
 type GridColumnCount = '1' | '2' | '3';
 const getGridColumnCount = (gridWidth: number): GridColumnCount => {
@@ -70,11 +70,13 @@ export const RoomCardBase = as<'div'>(({ className, ...props }, ref) => (
   />
 ));
 
-export const RoomCardName = as<'h6'>(({ ...props }, ref) => (
-  <Text as="h6" size="H6" truncate {...props} ref={ref} />
+export const RoomCardName = as<'h6'>(({ children, ...props }, ref) => (
+  <Text as="h6" size="H6" truncate {...props} ref={ref}>
+    {children}
+  </Text>
 ));
 
-export const RoomCardTopic = as<'p'>(({ className, ...props }, ref) => (
+export const RoomCardTopic = as<'p'>(({ children, className, ...props }, ref) => (
   <Text
     as="p"
     size="T200"
@@ -82,7 +84,9 @@ export const RoomCardTopic = as<'p'>(({ className, ...props }, ref) => (
     {...props}
     priority="400"
     ref={ref}
-  />
+  >
+    {children}
+  </Text>
 ));
 
 function ErrorDialog({

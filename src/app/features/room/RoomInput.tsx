@@ -1,7 +1,9 @@
-import React, {
+import {
   forwardRef,
   KeyboardEventHandler,
+  MouseEvent,
   RefObject,
+  ReactNode,
   useCallback,
   useEffect,
   useRef,
@@ -9,7 +11,15 @@ import React, {
 } from 'react';
 import { useAtom, useAtomValue } from 'jotai';
 import { isKeyHotkey } from 'is-hotkey';
-import { EventType, IContent, MsgType, RelationType, Room } from '$types/matrix-sdk';
+import {
+  EventType,
+  IContent,
+  MsgType,
+  RelationType,
+  Room,
+  IEventRelation,
+  StickerEventContent,
+} from '$types/matrix-sdk';
 import { ReactEditor } from 'slate-react';
 import { Editor, Transforms } from 'slate';
 import {
@@ -36,7 +46,6 @@ import {
   scaleSystemEmoji,
 } from '$plugins/react-custom-html-parser';
 
-import { StickerEventContent } from 'matrix-js-sdk/lib/types';
 import { useMatrixClient } from '$hooks/useMatrixClient';
 import {
   AUTOCOMPLETE_PREFIXES,
@@ -70,7 +79,7 @@ import {
   getImageInfo,
   getMxIdLocalPart,
   mxcUrlToHttp,
-} from '$appUtils/matrix';
+} from '$utils/matrix';
 import { useTypingStatusUpdater } from '$hooks/useTypingStatusUpdater';
 import { useFilePicker } from '$hooks/useFilePicker';
 import { useFilePasteHandler } from '$hooks/useFilePasteHandler';
@@ -82,6 +91,7 @@ import {
   roomUploadAtomFamily,
   TUploadItem,
   TUploadMetadata,
+  IReplyDraft,
 } from '$state/room/roomInputDrafts';
 import { UploadCardRenderer } from '$components/upload-card';
 import {
@@ -91,41 +101,34 @@ import {
   UploadBoardImperativeHandlers,
 } from '$components/upload-board';
 import { Upload, UploadStatus, UploadSuccess, createUploadFamilyObserverAtom } from '$state/upload';
-import { getImageUrlBlob, loadImageElement } from '$appUtils/dom';
-import { safeFile } from '$appUtils/mimeTypes';
-import { fulfilledPromiseSettledResult } from '$appUtils/common';
+import { getImageUrlBlob, loadImageElement } from '$utils/dom';
+import { safeFile } from '$utils/mimeTypes';
+import { fulfilledPromiseSettledResult } from '$utils/common';
 import { useSetting } from '$state/hooks/settings';
 import { settingsAtom } from '$state/settings';
-import {
-  getAudioMsgContent,
-  getFileMsgContent,
-  getImageMsgContent,
-  getVideoMsgContent,
-} from './msgContent';
 import {
   getMemberDisplayName,
   getMentionContent,
   trimReplyFromBody,
   trimReplyFromFormattedBody,
-} from '$appUtils/room';
-import { CommandAutocomplete } from './CommandAutocomplete';
+} from '$utils/room';
 import { Command, SHRUG, TABLEFLIP, UNFLIP, useCommands } from '$hooks/useCommands';
-import { mobileOrTablet } from '$appUtils/user-agent';
+import { mobileOrTablet } from '$utils/user-agent';
 import { useElementSizeObserver } from '$hooks/useElementSizeObserver';
 import { ReplyLayout, ThreadIndicator } from '$components/message';
 import { roomToParentsAtom } from '$state/room/roomToParents';
 import { nicknamesAtom } from '$state/nicknames';
 import { useMediaAuthentication } from '$hooks/useMediaAuthentication';
 import { useImagePackRooms } from '$hooks/useImagePackRooms';
-import { usePowerLevelsContext } from '$hooks/usePowerLevels';
-import { useIsDirectRoom } from '$hooks/useRoom';
-import { useAccessiblePowerTagColors, useGetMemberPowerTag } from '$hooks/useMemberPowerTag';
-import { useRoomCreators } from '$hooks/useRoomCreators';
-import { useTheme } from '$hooks/useTheme';
-import { useRoomCreatorsTag } from '$hooks/useRoomCreatorsTag';
-import { usePowerLevelTags } from '$hooks/usePowerLevelTags';
 import { useComposingCheck } from '$hooks/useComposingCheck';
 import { useSableCosmetics } from '$hooks/useSableCosmetics';
+import { CommandAutocomplete } from './CommandAutocomplete';
+import {
+  getAudioMsgContent,
+  getFileMsgContent,
+  getImageMsgContent,
+  getVideoMsgContent,
+} from './msgContent';
 
 const getReplyContent = (replyDraft: IReplyDraft | undefined): IEventRelation => {
   if (!replyDraft) return {};
@@ -248,7 +251,7 @@ export const RoomInput = forwardRef<HTMLDivElement, RoomInputProps>(
       format: replyFormat,
     } = replyEvent?.getContent() ?? {};
 
-    let replyBodyJSX: React.ReactNode = replyDraft ? trimReplyFromBody(replyDraft.body) : null;
+    let replyBodyJSX: ReactNode = replyDraft ? trimReplyFromBody(replyDraft.body) : null;
 
     if (replyFormat === 'org.matrix.custom.html' && replyFormattedBody) {
       const strippedHtml = trimReplyFromFormattedBody(replyFormattedBody)
@@ -340,7 +343,6 @@ export const RoomInput = forwardRef<HTMLDivElement, RoomInputProps>(
       const contents = fulfilledPromiseSettledResult(await Promise.allSettled(contentsPromises));
 
       if (contents.length > 0) {
-        console.log(editor.children);
         const replyContent = plaintext.length === 0 ? getReplyContent(replyDraft) : undefined;
         if (replyContent) contents[0]['m.relates_to'] = replyContent;
         setReplyDraft(undefined);
@@ -725,7 +727,7 @@ export const RoomInput = forwardRef<HTMLDivElement, RoomInputProps>(
               </UseStateProvider>
               <IconButton
                 onClick={submit}
-                onMouseDown={(e: React.MouseEvent) => e.preventDefault()}
+                onMouseDown={(e: MouseEvent) => e.preventDefault()}
                 variant="SurfaceVariant"
                 size="300"
                 radii="300"

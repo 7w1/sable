@@ -1,14 +1,14 @@
-import React, { forwardRef, useCallback } from 'react';
+import { forwardRef, useCallback } from 'react';
 import { Dialog, Header, config, Box, Text, Button, Spinner, color } from 'folds';
-import { AsyncStatus, useAsyncCallback } from '../hooks/useAsyncCallback';
 import { logoutClient } from '$client/initMatrix';
-import { useMatrixClient } from '../hooks/useMatrixClient';
-import { useCrossSigningActive } from '../hooks/useCrossSigning';
-import { InfoCard } from './info-card';
+import { AsyncStatus, useAsyncCallback } from '$hooks/useAsyncCallback';
+import { useMatrixClient } from '$hooks/useMatrixClient';
+import { useCrossSigningActive } from '$hooks/useCrossSigning';
 import {
   useDeviceVerificationStatus,
   VerificationStatus,
-} from '../hooks/useDeviceVerificationStatus';
+} from '$hooks/useDeviceVerificationStatus';
+import { InfoCard } from './info-card';
 
 type LogoutDialogProps = {
   handleClose: () => void;

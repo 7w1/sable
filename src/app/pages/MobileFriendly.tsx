@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { useMatch } from 'react-router-dom';
-import { ScreenSize, useScreenSizeContext } from '../hooks/useScreenSize';
+import { ScreenSize, useScreenSizeContext } from '$hooks/useScreenSize';
 import { DIRECT_PATH, EXPLORE_PATH, HOME_PATH, INBOX_PATH, SPACE_PATH } from './paths';
 
 type MobileFriendlyClientNavProps = {

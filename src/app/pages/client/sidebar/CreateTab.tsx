@@ -1,9 +1,9 @@
-import React, { MouseEventHandler, useState } from 'react';
+import { MouseEventHandler, useState } from 'react';
 import { Box, config, Icon, Icons, Menu, PopOut, RectCords, Text } from 'folds';
 import FocusTrap from 'focus-trap-react';
 import { useNavigate } from 'react-router-dom';
 import { SidebarAvatar, SidebarItem, SidebarItemTooltip } from '$components/sidebar';
-import { stopPropagation } from '$appUtils/keyboard';
+import { stopPropagation } from '$utils/keyboard';
 import { SequenceCard } from '$components/sequence-card';
 import { SettingTile } from '$components/setting-tile';
 import { ContainerColor } from '$styles/ContainerColor.css';
@@ -15,7 +15,7 @@ import {
 } from '$pages/pathUtils';
 import { useCreateSelected } from '$hooks/router/useCreateSelected';
 import { JoinAddressPrompt } from '$components/join-address-prompt';
-import { _RoomSearchParams } from '$pages/paths';
+import { RoomSearchParams } from '$pages/paths';
 
 export function CreateTab() {
   const createSelected = useCreateSelected();
@@ -118,7 +118,7 @@ export function CreateTab() {
                   const path = getSpacePath(roomIdOrAlias);
                   navigate(
                     viaServers
-                      ? withSearchParam<_RoomSearchParams>(path, {
+                      ? withSearchParam<RoomSearchParams>(path, {
                           viaServers: encodeSearchParamValueArray(viaServers),
                         })
                       : path

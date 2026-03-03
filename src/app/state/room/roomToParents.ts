@@ -16,7 +16,7 @@ import {
   isSpace,
   isValidChild,
   mapParentWithChildren,
-} from '$appUtils/room';
+} from '$utils/room';
 
 export type RoomToParentsAction =
   | {

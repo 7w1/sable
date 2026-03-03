@@ -1,4 +1,4 @@
-import React, {
+import {
   ChangeEventHandler,
   FormEventHandler,
   useCallback,
@@ -27,28 +27,28 @@ import {
 import FocusTrap from 'focus-trap-react';
 import { useSetAtom } from 'jotai';
 import { SequenceCard } from '$components/sequence-card';
-import { SequenceCardStyle } from '../styles.css';
 import { SettingTile } from '$components/setting-tile';
 import { useMatrixClient } from '$hooks/useMatrixClient';
 import { UserProfile, useUserProfile } from '$hooks/useUserProfile';
-import { getMxIdLocalPart, mxcUrlToHttp } from '$appUtils/matrix';
+import { getMxIdLocalPart, mxcUrlToHttp } from '$utils/matrix';
 import { UserAvatar } from '$components/user-avatar';
 import { useMediaAuthentication } from '$hooks/useMediaAuthentication';
-import { nameInitials } from '$appUtils/common';
+import { nameInitials } from '$utils/common';
 import { AsyncStatus, useAsyncCallback } from '$hooks/useAsyncCallback';
 import { useFilePicker } from '$hooks/useFilePicker';
 import { useObjectURL } from '$hooks/useObjectURL';
-import { stopPropagation } from '$appUtils/keyboard';
+import { stopPropagation } from '$utils/keyboard';
 import { ImageEditor } from '$components/image-editor';
 import { ModalWide } from '$styles/Modal.css';
 import { createUploadAtom, UploadSuccess } from '$state/upload';
 import { CompactUploadCardRenderer } from '$components/upload-card';
 import { useCapabilities } from '$hooks/useCapabilities';
+import { profilesCacheAtom } from '$state/userRoomProfile';
+import { SequenceCardStyle } from '$features/settings/styles.css';
 import { TimezoneEditor } from './TimezoneEditor';
 import { PronounEditor } from './PronounEditor';
 import { BioEditor } from './BioEditor';
 import { NameColorEditor } from './NameColorEditor';
-import { profilesCacheAtom } from '$state/userRoomProfile';
 
 type PronounSet = {
   summary: string;
@@ -216,6 +216,7 @@ function ProfileAvatar({ profile, userId }: ProfileProps) {
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function ProfileBanner({ profile, userId }: ProfileProps) {
   const mx = useMatrixClient();
   const useAuthentication = useMediaAuthentication();

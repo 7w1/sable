@@ -1,23 +1,23 @@
-import React, { useEffect, KeyboardEvent as ReactKeyboardEvent } from 'react';
+import { useEffect, KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { Editor } from 'slate';
 import { Avatar, Icon, Icons, MenuItem, Text } from 'folds';
 import { MatrixClient, Room, RoomMember } from '$types/matrix-sdk';
 
-import { AutocompleteQuery } from './autocompleteQuery';
-import { AutocompleteMenu } from './AutocompleteMenu';
 import { useRoomMembers } from '$hooks/useRoomMembers';
 import { useMatrixClient } from '$hooks/useMatrixClient';
 import { SearchItemStrGetter, UseAsyncSearchOptions, useAsyncSearch } from '$hooks/useAsyncSearch';
-import { onTabPress } from '$appUtils/keyboard';
-import { createMentionElement, moveCursor, replaceWithElement } from '../utils';
+import { onTabPress } from '$utils/keyboard';
 import { useKeyDown } from '$hooks/useKeyDown';
-import { getMxIdLocalPart, getMxIdServer, isUserId } from '$appUtils/matrix';
-import { getMemberDisplayName, getMemberSearchStr } from '$appUtils/room';
+import { getMxIdLocalPart, getMxIdServer, isUserId } from '$utils/matrix';
+import { getMemberDisplayName, getMemberSearchStr } from '$utils/room';
 import { UserAvatar } from '$components/user-avatar';
 import { useMediaAuthentication } from '$hooks/useMediaAuthentication';
 import { Membership } from '$types/matrix/room';
 import { useAtomValue } from 'jotai';
 import { nicknamesAtom } from '$state/nicknames';
+import { createMentionElement, moveCursor, replaceWithElement } from '$components/editor/utils';
+import { AutocompleteMenu } from './AutocompleteMenu';
+import { AutocompleteQuery } from './autocompleteQuery';
 
 type MentionAutoCompleteHandler = (userId: string, name: string) => void;
 
@@ -91,7 +91,7 @@ export function UserMentionAutocomplete({
   const mx = useMatrixClient();
   const useAuthentication = useMediaAuthentication();
   const nicknames = useAtomValue(nicknamesAtom);
-  const roomId: string = room.roomId!;
+  const roomId: string = room.roomId;
   const roomAliasOrId = room.getCanonicalAlias() || roomId;
   const members = useRoomMembers(mx, roomId);
 
@@ -116,6 +116,14 @@ export function UserMentionAutocomplete({
     requestClose();
   };
 
+  function getName(member: RoomMember) {
+    return (
+      getMemberDisplayName(room, member.userId, nicknames) ??
+      getMxIdLocalPart(member.userId) ??
+      member.userId
+    );
+  }
+
   useKeyDown(window, (evt: KeyboardEvent) => {
     onTabPress(evt, () => {
       if (query.text === 'room') {
@@ -131,11 +139,6 @@ export function UserMentionAutocomplete({
       handleAutocomplete(roomMember.userId, getName(roomMember));
     });
   });
-
-  const getName = (member: RoomMember) =>
-    getMemberDisplayName(room, member.userId, nicknames) ??
-    getMxIdLocalPart(member.userId) ??
-    member.userId;
 
   return (
     <AutocompleteMenu headerContent={<Text size="L400">Mentions</Text>} requestClose={requestClose}>

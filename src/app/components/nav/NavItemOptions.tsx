@@ -1,4 +1,4 @@
-import React, { ComponentProps } from 'react';
+import { ComponentProps } from 'react';
 import { Box, as } from 'folds';
 import classNames from 'classnames';
 import * as css from './styles.css';

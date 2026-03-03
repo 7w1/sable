@@ -1,14 +1,14 @@
-import React, { useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { Room } from '$types/matrix-sdk';
 import { usePowerLevels } from '$hooks/usePowerLevels';
 import { useMatrixClient } from '$hooks/useMatrixClient';
-import { ImagePackContent } from './ImagePackContent';
 import { ImagePack, PackContent } from '$plugins/custom-emoji';
 import { StateEvent } from '$types/matrix/room';
 import { useRoomImagePack } from '$hooks/useImagePacks';
-import { randomStr } from '$appUtils/common';
+import { randomStr } from '$utils/common';
 import { useRoomPermissions } from '$hooks/useRoomPermissions';
 import { useRoomCreators } from '$hooks/useRoomCreators';
+import { ImagePackContent } from './ImagePackContent';
 
 type RoomImagePackProps = {
   room: Room;

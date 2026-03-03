@@ -1,13 +1,13 @@
-import React, { ReactNode, useEffect } from 'react';
+import { ReactNode, useEffect } from 'react';
 import { Box, Chip, Icon, IconButton, Icons, Text, color, config, toRem } from 'folds';
-import { UploadCard, UploadCardError, UploadCardProgress } from './UploadCard';
 import { UploadStatus, UploadSuccess, useBindUploadAtom } from '$state/upload';
 import { useMatrixClient } from '$hooks/useMatrixClient';
-import { TUploadContent } from '$appUtils/matrix';
-import { bytesToSize, getFileTypeIcon } from '$appUtils/common';
+import { TUploadContent } from '$utils/matrix';
+import { bytesToSize, getFileTypeIcon } from '$utils/common';
 import { roomUploadAtomFamily, TUploadItem, TUploadMetadata } from '$state/room/roomInputDrafts';
 import { useObjectURL } from '$hooks/useObjectURL';
 import { useMediaConfig } from '$hooks/useMediaConfig';
+import { UploadCard, UploadCardError, UploadCardProgress } from './UploadCard';
 
 type PreviewImageProps = {
   fileItem: TUploadItem;

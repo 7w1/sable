@@ -1,17 +1,17 @@
 import { Descendant, Editor, Text } from 'slate';
 import { MatrixClient } from '$types/matrix-sdk';
-import { sanitizeText } from '$appUtils/sanitize';
-import { BlockType } from './types';
-import { CustomElement } from './slate';
+import { sanitizeText } from '$utils/sanitize';
 import {
   parseBlockMD,
   parseInlineMD,
   unescapeMarkdownBlockSequences,
   unescapeMarkdownInlineSequences,
 } from '$plugins/markdown';
-import { findAndReplace } from '$appUtils/findAndReplace';
-import { sanitizeForRegex } from '$appUtils/regex';
-import { getCanonicalAliasOrRoomId, isUserId } from '$appUtils/matrix';
+import { findAndReplace } from '$utils/findAndReplace';
+import { sanitizeForRegex } from '$utils/regex';
+import { isUserId } from '$utils/matrix';
+import { CustomElement } from './slate';
+import { BlockType } from './types';
 
 export type OutputOptions = {
   allowTextFormatting?: boolean;

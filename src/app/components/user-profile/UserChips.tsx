@@ -1,7 +1,8 @@
-import React, {
+import {
   KeyboardEventHandler,
   MouseEventHandler,
   useCallback,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -28,27 +29,27 @@ import {
   Avatar,
 } from 'folds';
 import { useMatrixClient } from '$hooks/useMatrixClient';
-import { getMxIdServer } from '$appUtils/matrix';
+import { getMxIdServer } from '$utils/matrix';
 import { useCloseUserRoomProfile } from '$state/hooks/userRoomProfile';
-import { stopPropagation } from '$appUtils/keyboard';
-import { copyToClipboard } from '$appUtils/dom';
+import { stopPropagation } from '$utils/keyboard';
+import { copyToClipboard } from '$utils/dom';
 import { getExploreServerPath } from '$pages/pathUtils';
 import { AsyncStatus, useAsyncCallback } from '$hooks/useAsyncCallback';
-import { factoryRoomIdByAtoZ } from '$appUtils/sort';
+import { factoryRoomIdByAtoZ } from '$utils/sort';
 import { useMutualRooms, useMutualRoomsSupport } from '$hooks/useMutualRooms';
 import { useRoomNavigate } from '$hooks/useRoomNavigate';
 import { useDirectRooms } from '$pages/client/direct/useDirectRooms';
 import { useMediaAuthentication } from '$hooks/useMediaAuthentication';
 import { useAllJoinedRoomsSet, useGetRoom } from '$hooks/useGetRoom';
-import { RoomAvatar, RoomIcon } from '../room-avatar';
-import { getDirectRoomAvatarUrl, getRoomAvatarUrl } from '$appUtils/room';
-import { nameInitials } from '$appUtils/common';
+import { getDirectRoomAvatarUrl, getRoomAvatarUrl } from '$utils/room';
+import { nameInitials } from '$utils/common';
 import { getMatrixToUser } from '$plugins/matrix-to';
 import { useTimeoutToggle } from '$hooks/useTimeoutToggle';
 import { useIgnoredUsers } from '$hooks/useIgnoredUsers';
-import { CutoutCard } from '../cutout-card';
-import { SettingTile } from '../setting-tile';
 import { useNickname, useSetNickname } from '$hooks/useNickname';
+import { CutoutCard } from '$components/cutout-card';
+import { SettingTile } from '$components/setting-tile';
+import { RoomAvatar, RoomIcon } from '$components/room-avatar';
 
 export function ServerChip({ server }: { server: string }) {
   const mx = useMatrixClient();
@@ -447,6 +448,8 @@ export function IgnoredUserAlert() {
 export function OptionsChip({ userId }: { userId: string }) {
   const mx = useMatrixClient();
   const [cords, setCords] = useState<RectCords>();
+  const [editingNick, setEditingNick] = useState(false);
+  const nickInputRef = useRef<HTMLInputElement>(null);
 
   const open: MouseEventHandler<HTMLButtonElement> = (evt) => {
     setCords(evt.currentTarget.getBoundingClientRect());
@@ -471,8 +474,12 @@ export function OptionsChip({ userId }: { userId: string }) {
 
   const currentNick = useNickname(userId);
   const setNickname = useSetNickname();
-  const [editingNick, setEditingNick] = useState(false);
-  const nickInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (editingNick) {
+      nickInputRef.current?.focus();
+    }
+  }, [editingNick]);
 
   const handleSaveNick = () => {
     const value = nickInputRef.current?.value ?? '';
@@ -513,7 +520,6 @@ export function OptionsChip({ userId }: { userId: string }) {
                   <Text size="L400">Nickname</Text>
                   <input
                     ref={nickInputRef}
-                    autoFocus
                     defaultValue={currentNick ?? ''}
                     placeholder="Enter a nickname…"
                     onKeyDown={handleNickKeyDown}

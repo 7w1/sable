@@ -5,7 +5,7 @@ import {
   IRoomIdToTypingMembers,
   TypingReceipt,
   roomIdToTypingMembersAtom,
-} from '../state/typingMembers';
+} from '$state/typingMembers';
 
 const typingReceiptEqual = (a: TypingReceipt, b: TypingReceipt): boolean =>
   a.userId === b.userId && a.ts === b.ts;

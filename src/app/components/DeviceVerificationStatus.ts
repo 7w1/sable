@@ -3,7 +3,7 @@ import { CryptoApi } from '$types/matrix-sdk';
 import {
   useDeviceVerificationStatus,
   VerificationStatus,
-} from '../hooks/useDeviceVerificationStatus';
+} from '$hooks/useDeviceVerificationStatus';
 
 type DeviceVerificationStatusProps = {
   crypto?: CryptoApi;

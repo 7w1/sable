@@ -1,4 +1,4 @@
-import React, {
+import {
   ChangeEventHandler,
   FormEventHandler,
   MouseEventHandler,
@@ -35,13 +35,13 @@ import {
   settingsAtom,
 } from '$state/settings';
 import { SettingTile } from '$components/setting-tile';
-import { KeySymbol } from '$appUtils/key-symbol';
-import { isMacOS, mobileOrTablet } from '$appUtils/user-agent';
-import { stopPropagation } from '$appUtils/keyboard';
+import { KeySymbol } from '$utils/key-symbol';
+import { isMacOS, mobileOrTablet } from '$utils/user-agent';
+import { stopPropagation } from '$utils/keyboard';
 import { useMessageLayoutItems } from '$hooks/useMessageLayout';
 import { useMessageSpacingItems } from '$hooks/useMessageSpacing';
 import { useDateFormatItems } from '$hooks/useDateFormat';
-import { SequenceCardStyle } from '../styles.css';
+import { SequenceCardStyle } from '$features/settings/styles.css';
 
 type DateHintProps = {
   hasChanges: boolean;

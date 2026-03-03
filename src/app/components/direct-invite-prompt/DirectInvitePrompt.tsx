@@ -1,4 +1,3 @@
-import React from 'react';
 import FocusTrap from 'focus-trap-react';
 import {
   Box,
@@ -16,7 +15,7 @@ import {
   color,
   config,
 } from 'folds';
-import { stopPropagation } from '../../utils/keyboard';
+import { stopPropagation } from '$utils/keyboard';
 
 type DirectInvitePromptProps = {
   onCancel: () => void;
@@ -82,9 +81,16 @@ export function DirectInvitePrompt({
                   }
                   aria-disabled={converting}
                 >
-                  <Text size="B400">{converting ? 'Converting...' : 'Convert to Group Chat and Invite'}</Text>
+                  <Text size="B400">
+                    {converting ? 'Converting...' : 'Convert to Group Chat and Invite'}
+                  </Text>
                 </Button>
-                <Button variant="Warning" fill="Soft" onClick={onInviteDirect} disabled={converting}>
+                <Button
+                  variant="Warning"
+                  fill="Soft"
+                  onClick={onInviteDirect}
+                  disabled={converting}
+                >
                   <Text size="B400">Invite to Direct Message anyway</Text>
                 </Button>
                 <Button variant="Secondary" fill="Soft" onClick={onCancel} disabled={converting}>

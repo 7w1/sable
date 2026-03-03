@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import { ReactNode } from 'react';
 import { Box, Text } from 'folds';
 import { BreakWord } from '$styles/Text.css';
 

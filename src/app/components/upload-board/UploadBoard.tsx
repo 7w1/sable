@@ -1,10 +1,10 @@
-import React, { MutableRefObject, ReactNode, useImperativeHandle, useRef } from 'react';
+import { MutableRefObject, ReactNode, useImperativeHandle, useRef } from 'react';
 import { Badge, Box, Chip, Header, Icon, Icons, Spinner, Text, as, percent } from 'folds';
 import classNames from 'classnames';
 import { useAtomValue } from 'jotai';
 
-import * as css from './UploadBoard.css';
 import { TUploadFamilyObserverAtom, Upload, UploadStatus, UploadSuccess } from '$state/upload';
+import * as css from './UploadBoard.css';
 
 type UploadBoardProps = {
   header: ReactNode;
@@ -65,9 +65,7 @@ export function UploadBoardHeader({
   const handleSend = async () => {
     if (sendingRef.current) return;
     sendingRef.current = true;
-    await onSend(
-      uploads.filter((upload) => upload.status === UploadStatus.Success) as UploadSuccess[]
-    );
+    await onSend(uploads.filter((upload) => upload.status === UploadStatus.Success));
     sendingRef.current = false;
   };
 

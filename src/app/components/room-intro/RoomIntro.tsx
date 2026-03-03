@@ -1,25 +1,25 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Avatar, Box, Button, Icon, Icons, Spinner, Text, as } from 'folds';
 import { Room } from '$types/matrix-sdk';
 import { useAtomValue } from 'jotai';
 import { IRoomCreateContent, Membership, StateEvent } from '$types/matrix/room';
-import { getMemberDisplayName, getStateEvent } from '$appUtils/room';
+import { getMemberDisplayName, getStateEvent } from '$utils/room';
 import { nicknamesAtom } from '$state/nicknames';
 import { useMatrixClient } from '$hooks/useMatrixClient';
-import { getMxIdLocalPart, mxcUrlToHttp, removeRoomIdFromMDirect } from '$appUtils/matrix';
+import { getMxIdLocalPart, mxcUrlToHttp, removeRoomIdFromMDirect } from '$utils/matrix';
 import { AsyncStatus, useAsyncCallback } from '$hooks/useAsyncCallback';
-import { timeDayMonthYear, timeHourMinute } from '$appUtils/time';
+import { timeDayMonthYear, timeHourMinute } from '$utils/time';
 import { useRoomNavigate } from '$hooks/useRoomNavigate';
-import { RoomAvatar } from '../room-avatar';
-import { nameInitials } from '$appUtils/common';
+import { nameInitials } from '$utils/common';
 import { useRoomAvatar, useRoomName, useRoomTopic } from '$hooks/useRoomMeta';
 import { mDirectAtom } from '$state/mDirectList';
 import { useMediaAuthentication } from '$hooks/useMediaAuthentication';
 import { useSetting } from '$state/hooks/settings';
 import { settingsAtom } from '$state/settings';
-import { InviteUserPrompt } from '../invite-user-prompt';
-import { InfoCard } from '../info-card';
-import { DirectInvitePrompt } from '../direct-invite-prompt';
+import { RoomAvatar } from '$components/room-avatar';
+import { InviteUserPrompt } from '$components/invite-user-prompt';
+import { InfoCard } from '$components/info-card';
+import { DirectInvitePrompt } from '$components/direct-invite-prompt';
 
 export type RoomIntroProps = {
   room: Room;
@@ -145,7 +145,9 @@ export const RoomIntro = as<'div', RoomIntroProps>(({ room, ...props }, ref) => 
               </Button>
             ) : (
               <Button
-                onClick={() => void joinPrevRoom(prevRoomId)}
+                onClick={() => {
+                  joinPrevRoom(prevRoomId);
+                }}
                 variant="Secondary"
                 size="300"
                 fill="Soft"

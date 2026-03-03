@@ -12,7 +12,41 @@ The web app is available at [app.sable.moe](https://app.sable.moe/) and gets upd
 You can also download our desktop app for windows and linux from [releases](https://github.com/7w1/sable/releases/latest).
 
 ## Self-hosting
-To host Sable on your own, download this repo and built with nginx.
+You can either run the prebuilt container image or build Sable yourself.
+
+### Docker
+
+Prebuilt images are published to `ghcr.io/7w1/sable`.
+
+- `latest` tracks the current `dev` branch image.
+- `X.Y.Z` tags are versioned releases.
+- `X.Y` tags float within a release line.
+- Pushes to `dev` also publish a short commit SHA tag.
+
+Run the latest image with:
+
+```sh
+docker run --rm -p 8080:80 ghcr.io/7w1/sable:latest
+```
+
+Then open `http://localhost:8080`.
+
+If you want to override the bundled [`config.json`](config.json), mount your own
+file at `/app/config.json`:
+
+```yaml
+services:
+  sable:
+    image: ghcr.io/7w1/sable:latest
+    ports:
+      - '8080:80'
+    volumes:
+      - ./config.json:/app/config.json:ro
+```
+
+### Build it yourself
+
+To build and serve Sable yourself with nginx, clone this repo and build it:
 
 ```sh
 npm ci # Installs all dependencies

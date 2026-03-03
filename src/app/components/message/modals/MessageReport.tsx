@@ -1,4 +1,4 @@
-import React, { useCallback, FormEventHandler } from 'react';
+import { FormEventHandler, MouseEvent, useCallback } from 'react';
 import { Room, MatrixEvent } from '$types/matrix-sdk';
 import { useSetAtom } from 'jotai';
 import {
@@ -31,7 +31,7 @@ export function MessageReportItem({ room, mEvent }: { room: Room; mEvent: Matrix
       fill="None"
       after={<Icon size="100" src={Icons.Warning} />}
       radii="300"
-      onClick={(e: React.MouseEvent) => {
+      onClick={(e: MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
         setModal({

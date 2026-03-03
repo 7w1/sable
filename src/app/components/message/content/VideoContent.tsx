@@ -1,4 +1,4 @@
-import React, { ReactNode, useCallback, useEffect, useState } from 'react';
+import { ReactNode, useCallback, useEffect, useState } from 'react';
 import {
   Badge,
   Box,
@@ -20,13 +20,13 @@ import {
   IVideoInfo,
   MATRIX_BLUR_HASH_PROPERTY_NAME,
 } from '$types/matrix/common';
-import * as css from './style.css';
 import { useMatrixClient } from '$hooks/useMatrixClient';
 import { AsyncStatus, useAsyncCallback } from '$hooks/useAsyncCallback';
-import { bytesToSize, millisecondsToMinutesAndSeconds } from '$appUtils/common';
-import { decryptFile, downloadEncryptedMedia, downloadMedia, mxcUrlToHttp } from '$appUtils/matrix';
+import { bytesToSize, millisecondsToMinutesAndSeconds } from '$utils/common';
+import { decryptFile, downloadEncryptedMedia, downloadMedia, mxcUrlToHttp } from '$utils/matrix';
 import { useMediaAuthentication } from '$hooks/useMediaAuthentication';
-import { validBlurHash } from '$appUtils/blurHash';
+import { validBlurHash } from '$utils/blurHash';
+import * as css from './style.css';
 
 type RenderVideoProps = {
   title: string;

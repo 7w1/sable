@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { MessageLayout } from '../state/settings';
+import { MessageLayout } from '$state/settings';
 
 export type MessageLayoutItem = {
   name: string;

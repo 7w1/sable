@@ -1,7 +1,11 @@
-import React, { useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { color, Text } from 'folds';
-import { JoinRule, MatrixError, RestrictedAllowType } from '$types/matrix-sdk';
-import { RoomJoinRulesEventContent } from '$types/matrix-sdk';
+import {
+  JoinRule,
+  MatrixError,
+  RestrictedAllowType,
+  RoomJoinRulesEventContent,
+} from '$types/matrix-sdk';
 import { useAtomValue } from 'jotai';
 import {
   ExtendedJoinRules,
@@ -18,11 +22,11 @@ import { StateEvent } from '$types/matrix/room';
 import { useStateEvent } from '$hooks/useStateEvent';
 import { useSpaceOptionally } from '$hooks/useSpace';
 import { AsyncStatus, useAsyncCallback } from '$hooks/useAsyncCallback';
-import { getStateEvents } from '$appUtils/room';
+import { getStateEvents } from '$utils/room';
 import { useRecursiveChildSpaceScopeFactory, useSpaceChildren } from '$state/hooks/roomList';
 import { allRoomsAtom } from '$state/room-list/roomList';
 import { roomToParentsAtom } from '$state/room/roomToParents';
-import { knockRestrictedSupported, knockSupported, restrictedSupported } from '$appUtils/matrix';
+import { knockRestrictedSupported, knockSupported, restrictedSupported } from '$utils/matrix';
 import { RoomPermissionsAPI } from '$hooks/useRoomPermissions';
 
 type RestrictedRoomAllowContent = {

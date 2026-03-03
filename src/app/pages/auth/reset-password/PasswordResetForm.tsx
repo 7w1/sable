@@ -1,4 +1,4 @@
-import React, { FormEventHandler, useCallback, useEffect, useMemo, useState } from 'react';
+import { FormEventHandler, useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Box,
   Button,
@@ -21,13 +21,13 @@ import { useAuthServer } from '$hooks/useAuthServer';
 import { usePasswordEmail } from '$hooks/usePasswordEmail';
 import { PasswordInput } from '$components/password-input';
 import { ConfirmPasswordMatch } from '$components/ConfirmPasswordMatch';
-import { FieldError } from '../FiledError';
 import { UIAFlowOverlay } from '$components/UIAFlowOverlay';
 import { EmailStageDialog } from '$components/uia-stages';
-import { ResetPasswordResult, resetPassword } from './resetPasswordUtil';
 import { getLoginPath, withSearchParam } from '$pages/pathUtils';
 import { LoginPathSearchParams } from '$pages/paths';
-import { getUIAError, getUIAErrorCode } from '$appUtils/matrix-uia';
+import { getUIAError, getUIAErrorCode } from '$utils/matrix-uia';
+import { FieldError } from '$pages/auth/FiledError';
+import { ResetPasswordResult, resetPassword } from './resetPasswordUtil';
 
 type FormData = {
   email: string;

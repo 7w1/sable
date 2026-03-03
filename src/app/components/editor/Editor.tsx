@@ -1,5 +1,5 @@
 /* eslint-disable no-param-reassign */
-import React, {
+import {
   ClipboardEventHandler,
   KeyboardEventHandler,
   ReactNode,
@@ -19,12 +19,12 @@ import {
   ReactEditor,
 } from 'slate-react';
 import { withHistory } from 'slate-history';
+import { mobileOrTablet } from '$utils/user-agent';
 import { BlockType } from './types';
 import { RenderElement, RenderLeaf } from './Elements';
 import { CustomElement } from './slate';
 import * as css from './Editor.css';
 import { toggleKeyboardShortcut } from './keyboard';
-import { mobileOrTablet } from '$appUtils/user-agent';
 
 const initialValue: CustomElement[] = [
   {

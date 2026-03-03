@@ -20,21 +20,19 @@ import {
   Text,
   toRem,
 } from 'folds';
-import React, { MouseEventHandler, useCallback, useState } from 'react';
+import { MouseEventHandler, useCallback, useState } from 'react';
 import FocusTrap from 'focus-trap-react';
 import { isKeyHotkey } from 'is-hotkey';
 import { useMatrixClient } from '$hooks/useMatrixClient';
 import { useMediaAuthentication } from '$hooks/useMediaAuthentication';
-import { PowerColorBadge, PowerIcon } from '../power';
 import { useGetMemberPowerLevel, usePowerLevels } from '$hooks/usePowerLevels';
 import { getPowers, usePowerLevelTags } from '$hooks/usePowerLevelTags';
-import { stopPropagation } from '$appUtils/keyboard';
+import { stopPropagation } from '$utils/keyboard';
 import { StateEvent } from '$types/matrix/room';
 import { useOpenRoomSettings } from '$state/hooks/roomSettings';
 import { RoomSettingsPage } from '$state/roomSettings';
 import { useRoom } from '$hooks/useRoom';
 import { useSpaceOptionally } from '$hooks/useSpace';
-import { CutoutCard } from '../cutout-card';
 import { useOpenSpaceSettings } from '$state/hooks/spaceSettings';
 import { SpaceSettingsPage } from '$state/spaceSettings';
 import { AsyncStatus, useAsyncCallback } from '$hooks/useAsyncCallback';
@@ -43,6 +41,8 @@ import { getPowerTagIconSrc, useGetMemberPowerTag } from '$hooks/useMemberPowerT
 import { useRoomCreators } from '$hooks/useRoomCreators';
 import { useRoomPermissions } from '$hooks/useRoomPermissions';
 import { useMemberPowerCompare } from '$hooks/useMemberPowerCompare';
+import { CutoutCard } from '$components/cutout-card';
+import { PowerColorBadge, PowerIcon } from '$components/power';
 
 type SelfDemoteAlertProps = {
   power: number;

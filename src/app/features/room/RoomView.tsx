@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Box, Text, config, toRem } from 'folds';
 import { EventType, Room } from '$types/matrix-sdk';
 import { ReactEditor } from 'slate-react';
@@ -8,15 +8,9 @@ import { StateEvent } from '$types/matrix/room';
 import { usePowerLevelsContext } from '$hooks/usePowerLevels';
 import { useMatrixClient } from '$hooks/useMatrixClient';
 import { useEditor } from '$components/editor';
-import { RoomInputPlaceholder } from './RoomInputPlaceholder';
-import { RoomTimeline } from './RoomTimeline';
-import { RoomViewTyping } from './RoomViewTyping';
-import { RoomTombstone } from './RoomTombstone';
-import { RoomInput } from './RoomInput';
-import { RoomViewFollowing, RoomViewFollowingPlaceholder } from './RoomViewFollowing';
 import { Page } from '$components/page';
 import { useKeyDown } from '$hooks/useKeyDown';
-import { editableActiveElement } from '$appUtils/dom';
+import { editableActiveElement } from '$utils/dom';
 import { settingsAtom } from '$state/settings';
 import { useSetting } from '$state/hooks/settings';
 import { useRoomPermissions } from '$hooks/useRoomPermissions';
@@ -28,6 +22,12 @@ import { useOpenRoomSettings } from '$state/hooks/roomSettings';
 import { useSpaceOptionally } from '$hooks/useSpace';
 import { RoomSettingsPage } from '$state/roomSettings';
 import { GlobalModalManager } from '$components/message/modals/GlobalModalManager';
+import { RoomViewFollowing, RoomViewFollowingPlaceholder } from './RoomViewFollowing';
+import { RoomInput } from './RoomInput';
+import { RoomTombstone } from './RoomTombstone';
+import { RoomViewTyping } from './RoomViewTyping';
+import { RoomTimeline } from './RoomTimeline';
+import { RoomInputPlaceholder } from './RoomInputPlaceholder';
 
 const FN_KEYS_REGEX = /^F\d+$/;
 const shouldFocusMessageField = (evt: KeyboardEvent): boolean => {

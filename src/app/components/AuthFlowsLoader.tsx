@@ -1,14 +1,14 @@
 import { ReactNode, useCallback, useEffect, useMemo } from 'react';
 import { MatrixError, createClient } from '$types/matrix-sdk';
-import { AsyncStatus, useAsyncCallback } from '../hooks/useAsyncCallback';
-import { useAutoDiscoveryInfo } from '../hooks/useAutoDiscoveryInfo';
-import { promiseFulfilledResult, promiseRejectedResult } from '../utils/common';
+import { AsyncStatus, useAsyncCallback } from '$hooks/useAsyncCallback';
+import { useAutoDiscoveryInfo } from '$hooks/useAutoDiscoveryInfo';
+import { promiseFulfilledResult, promiseRejectedResult } from '$utils/common';
 import {
   AuthFlows,
   RegisterFlowStatus,
   RegisterFlowsResponse,
   parseRegisterErrResp,
-} from '../hooks/useAuthFlows';
+} from '$hooks/useAuthFlows';
 
 type AuthFlowsLoaderProps = {
   fallback?: () => ReactNode;

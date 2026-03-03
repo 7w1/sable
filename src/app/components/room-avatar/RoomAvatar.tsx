@@ -1,9 +1,9 @@
 import { JoinRule } from '$types/matrix-sdk';
 import { AvatarFallback, Icon, Icons, color } from 'folds';
-import React, { ComponentProps, ReactNode, forwardRef, useState } from 'react';
+import { ComponentProps, ReactNode, forwardRef, useState } from 'react';
+import { getRoomIconSrc } from '$utils/room';
+import colorMXID from '$utils/colorMXID';
 import * as css from './RoomAvatar.css';
-import { getRoomIconSrc } from '$appUtils/room';
-import colorMXID from '$util/colorMXID';
 import { AvatarImage } from './AvatarImage';
 
 type RoomAvatarProps = {

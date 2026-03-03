@@ -17,7 +17,7 @@ export function useBlobCache(url?: string): string | undefined {
   }
 
   useEffect(() => {
-    if (!url || imageBlobCache.has(url)) return;
+    if (!url || imageBlobCache.has(url)) return undefined;
 
     let isMounted = true;
 
@@ -50,7 +50,7 @@ export function useBlobCache(url?: string): string | undefined {
         if (isMounted) {
           setCacheState({ sourceUrl: url, blobUrl: finalBlobUrl });
         }
-      } catch (err) {
+      } catch {
         // silency fail... mrow
       } finally {
         inflightRequests.delete(url);

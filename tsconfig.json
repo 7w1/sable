@@ -1,13 +1,14 @@
 {
   "compilerOptions": {
     "sourceMap": true,
-    "jsx": "react",
+    "jsx": "react-jsx",
     "target": "ES2022",
     "module": "ES2022",
     "allowJs": true,
     "strict": true,
     "strictNullChecks": true,
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "baseUrl": ".",
     "paths": {
       "$hooks/*": ["src/app/hooks/*"],
@@ -16,11 +17,10 @@
       "$features/*": ["src/app/features/*"],
       "$state/*": ["src/app/state/*"],
       "$styles/*": ["src/app/styles/*"],
-      "$appUtils/*": ["src/app/utils/*"],
+      "$utils/*": ["src/app/utils/*"],
       "$pages/*": ["src/app/pages/*"],
       "$types/*": ["src/types/*"],
       "$public/*": ["public/*"],
-      "$util/*": ["src/util/*"],
       "$client/*": ["src/client/*"]
     },
     "moduleResolution": "bundler",
@@ -32,5 +32,5 @@
     "lib": ["ES2022", "DOM"]
   },
   "exclude": ["node_modules", "dist"],
-  "include": ["src"]
+  "include": ["src", "vite.config.ts"]
 }

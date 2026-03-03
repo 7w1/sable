@@ -1,6 +1,6 @@
-import React, { CSSProperties } from 'react';
+import { CSSProperties } from 'react';
 import { Badge, Box, Text } from 'folds';
-import { EmojiBoardTab } from '../types';
+import { EmojiBoardTab } from '$components/emoji-board/types';
 
 const styles: CSSProperties = {
   cursor: 'pointer',

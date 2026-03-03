@@ -1,6 +1,6 @@
 import { Position, RectCords } from 'folds';
 import { atom } from 'jotai';
-import { UserProfile } from '../hooks/useUserProfile';
+import type { UserProfile } from '$hooks/useUserProfile';
 
 export type UserRoomProfileState = {
   userId: string;

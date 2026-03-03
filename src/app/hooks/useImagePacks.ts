@@ -9,7 +9,7 @@ import {
   getUserImagePack,
   ImagePack,
   ImageUsage,
-} from '../plugins/custom-emoji';
+} from '$plugins/custom-emoji';
 import { useMatrixClient } from './useMatrixClient';
 import { useAccountDataCallback } from './useAccountDataCallback';
 import { useStateEventCallback } from './useStateEventCallback';

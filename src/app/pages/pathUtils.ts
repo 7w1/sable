@@ -1,4 +1,6 @@
 import { generatePath, Path } from 'react-router-dom';
+import { trimLeadingSlash, trimTrailingSlash } from '$utils/common';
+import { HashRouterConfig } from '$hooks/useClientConfig';
 import {
   DIRECT_CREATE_PATH,
   DIRECT_PATH,
@@ -24,8 +26,6 @@ import {
   SPACE_SEARCH_PATH,
   CREATE_PATH,
 } from './paths';
-import { trimLeadingSlash, trimTrailingSlash } from '../utils/common';
-import { HashRouterConfig } from '../hooks/useClientConfig';
 
 export const joinPathComponent = (path: Path): string => path.pathname + path.search + path.hash;
 

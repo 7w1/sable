@@ -1,4 +1,4 @@
-import React, { FormEventHandler, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { FormEventHandler, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Box,
   Text,
@@ -24,13 +24,13 @@ import { useMatrixClient } from '$hooks/useMatrixClient';
 import { useAlive } from '$hooks/useAlive';
 import { Cursor } from '$plugins/text-area';
 import { AsyncStatus, useAsyncCallback } from '$hooks/useAsyncCallback';
-import { syntaxErrorPosition } from '$appUtils/dom';
+import { syntaxErrorPosition } from '$utils/dom';
 import { SettingTile } from '$components/setting-tile';
-import { SequenceCardStyle } from '../styles.css';
 import { usePowerLevels } from '$hooks/usePowerLevels';
 import { useTextAreaCodeEditor } from '$hooks/useTextAreaCodeEditor';
 import { useRoomCreators } from '$hooks/useRoomCreators';
 import { useRoomPermissions } from '$hooks/useRoomPermissions';
+import { SequenceCardStyle } from '$features/common-settings/styles.css';
 
 const EDITOR_INTENT_SPACE_COUNT = 2;
 

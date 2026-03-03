@@ -1,4 +1,4 @@
-import React, { MouseEventHandler, forwardRef, useState } from 'react';
+import { MouseEventHandler, forwardRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Icon, Icons, Menu, MenuItem, PopOut, RectCords, Text, config, toRem } from 'folds';
 import FocusTrap from 'focus-trap-react';
@@ -20,11 +20,11 @@ import { useDirectSelected } from '$hooks/router/useDirectSelected';
 import { UnreadBadge } from '$components/unread-badge';
 import { ScreenSize, useScreenSizeContext } from '$hooks/useScreenSize';
 import { useNavToActivePathAtom } from '$state/hooks/navToActivePath';
-import { useDirectRooms } from '../direct/useDirectRooms';
-import { markAsRead } from '$appUtils/notifications';
-import { stopPropagation } from '$appUtils/keyboard';
+import { markAsRead } from '$utils/notifications';
+import { stopPropagation } from '$utils/keyboard';
 import { settingsAtom } from '$state/settings';
 import { useSetting } from '$state/hooks/settings';
+import { useDirectRooms } from '$pages/client/direct/useDirectRooms';
 
 type DirectMenuProps = {
   requestClose: () => void;

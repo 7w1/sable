@@ -1,6 +1,6 @@
-import React, { ChangeEventHandler, useRef } from 'react';
+import { ChangeEventHandler, useRef } from 'react';
 import { Input, Chip, Icon, Icons, Text } from 'folds';
-import { mobileOrTablet } from '$appUtils/user-agent';
+import { mobileOrTablet } from '$utils/user-agent';
 
 type SearchInputProps = {
   query?: string;

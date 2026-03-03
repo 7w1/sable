@@ -1,4 +1,4 @@
-import React, { MouseEventHandler, useCallback, useMemo, useState } from 'react';
+import { MouseEventHandler, useCallback, useMemo, useState } from 'react';
 import {
   config,
   Box,
@@ -15,8 +15,8 @@ import {
 } from 'folds';
 import { JoinRule } from '$types/matrix-sdk';
 import FocusTrap from 'focus-trap-react';
-import { stopPropagation } from '../utils/keyboard';
-import { getRoomIconSrc } from '../utils/room';
+import { stopPropagation } from '$utils/keyboard';
+import { getRoomIconSrc } from '$utils/room';
 
 export type ExtraJoinRules = 'knock_restricted';
 export type ExtendedJoinRules = JoinRule | ExtraJoinRules;

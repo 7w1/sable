@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   Avatar,
   Box,
@@ -15,24 +15,24 @@ import {
   Text,
 } from 'folds';
 import FocusTrap from 'focus-trap-react';
-import { General } from './general';
 import { PageNav, PageNavContent, PageNavHeader, PageRoot } from '$components/page';
 import { ScreenSize, useScreenSizeContext } from '$hooks/useScreenSize';
-import { Account } from './account';
 import { useUserProfile } from '$hooks/useUserProfile';
 import { useMatrixClient } from '$hooks/useMatrixClient';
-import { getMxIdLocalPart, mxcUrlToHttp } from '$appUtils/matrix';
+import { getMxIdLocalPart, mxcUrlToHttp } from '$utils/matrix';
 import { useMediaAuthentication } from '$hooks/useMediaAuthentication';
 import { UserAvatar } from '$components/user-avatar';
-import { nameInitials } from '$appUtils/common';
+import { nameInitials } from '$utils/common';
+import { UseStateProvider } from '$components/UseStateProvider';
+import { stopPropagation } from '$utils/keyboard';
+import { LogoutDialog } from '$components/LogoutDialog';
 import { Notifications } from './notifications';
 import { Devices } from './devices';
 import { EmojisStickers } from './emojis-stickers';
 import { DeveloperTools } from './developer-tools';
 import { About } from './about';
-import { UseStateProvider } from '$components/UseStateProvider';
-import { stopPropagation } from '$appUtils/keyboard';
-import { LogoutDialog } from '$components/LogoutDialog';
+import { Account } from './account';
+import { General } from './general';
 import { Cosmetics } from './cosmetics/Cosmetics';
 
 export enum SettingsPages {

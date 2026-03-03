@@ -1,25 +1,24 @@
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useAtomValue } from 'jotai';
 import { Avatar, Box, config, Icon, IconButton, Icons, IconSrc, MenuItem, Text } from 'folds';
 import { JoinRule } from '$types/matrix-sdk';
 import { PageNav, PageNavContent, PageNavHeader, PageRoot } from '$components/page';
 import { ScreenSize, useScreenSizeContext } from '$hooks/useScreenSize';
 import { useMatrixClient } from '$hooks/useMatrixClient';
-import { mxcUrlToHttp } from '$appUtils/matrix';
+import { mxcUrlToHttp } from '$utils/matrix';
 import { useMediaAuthentication } from '$hooks/useMediaAuthentication';
 import { useRoomAvatar, useRoomJoinRule, useRoomName } from '$hooks/useRoomMeta';
 import { mDirectAtom } from '$state/mDirectList';
 import { RoomAvatar, RoomIcon } from '$components/room-avatar';
-import { General } from './general';
-import { Members } from '../common-settings/members';
-import { EmojisStickers } from '../common-settings/emojis-stickers';
-import { Permissions } from './permissions';
 import { RoomSettingsPage } from '$state/roomSettings';
 import { useRoom } from '$hooks/useRoom';
-import { DeveloperTools } from '../common-settings/developer-tools';
-import { Cosmetics } from '../common-settings/cosmetics/Cosmetics';
-import { SwipeableChatWrapper } from '$components/SwipeableChatWrapper';
 import { SwipeableOverlayWrapper } from '$components/SwipeableOverlayWrapper';
+import { Members } from '$features/common-settings/members';
+import { EmojisStickers } from '$features/common-settings/emojis-stickers';
+import { DeveloperTools } from '$features/common-settings/developer-tools';
+import { Cosmetics } from '$features/common-settings/cosmetics/Cosmetics';
+import { Permissions } from './permissions';
+import { General } from './general';
 
 type RoomSettingsMenuItem = {
   page: RoomSettingsPage;

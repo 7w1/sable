@@ -1,4 +1,4 @@
-import React, {
+import {
   ChangeEventHandler,
   MouseEventHandler,
   useCallback,
@@ -31,11 +31,11 @@ import { useGetMemberPowerLevel, usePowerLevels } from '$hooks/usePowerLevels';
 import { VirtualTile } from '$components/virtualizer';
 import { MemberTile } from '$components/member-tile';
 import { useMediaAuthentication } from '$hooks/useMediaAuthentication';
-import { getMxIdLocalPart, getMxIdServer } from '$appUtils/matrix';
+import { getMxIdLocalPart, getMxIdServer } from '$utils/matrix';
 import { ServerBadge } from '$components/server-badge';
 import { useDebounce } from '$hooks/useDebounce';
 import { SearchItemStrGetter, useAsyncSearch, UseAsyncSearchOptions } from '$hooks/useAsyncSearch';
-import { getMemberSearchStr } from '$appUtils/room';
+import { getMemberSearchStr } from '$utils/room';
 import { useMembershipFilter, useMembershipFilterMenu } from '$hooks/useMemberFilter';
 import { useMemberPowerSort, useMemberSort, useMemberSortMenu } from '$hooks/useMemberSort';
 import { settingsAtom } from '$state/settings';
@@ -48,7 +48,7 @@ import { useOpenUserRoomProfile, useUserRoomProfileState } from '$state/hooks/us
 import { useSpaceOptionally } from '$hooks/useSpace';
 import { useFlattenPowerTagMembers, useGetMemberPowerTag } from '$hooks/useMemberPowerTag';
 import { useRoomCreators } from '$hooks/useRoomCreators';
-import { getMouseEventCords } from '$appUtils/dom';
+import { getMouseEventCords } from '$utils/dom';
 
 const SEARCH_OPTIONS: UseAsyncSearchOptions = {
   limit: 1000,

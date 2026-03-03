@@ -1,13 +1,12 @@
-import React from 'react';
 import { useAtom } from 'jotai';
 import { Overlay, OverlayBackdrop, OverlayCenter, Box, Modal } from 'folds';
 import FocusTrap from 'focus-trap-react';
+import { stopPropagation } from '$utils/keyboard';
+import { modalAtom, ModalType } from '$state/modal';
 import { MessageReportInternal } from './MessageReport';
 import { MessageDeleteInternal } from './MessageDelete';
 import { MessageSourceInternal } from './MessageSource';
 import { MessageAllReactionInternal } from './MessageReactions';
-import { stopPropagation } from '$appUtils/keyboard';
-import { modalAtom, ModalType } from '$state/modal';
 import { MessageReadReceiptInternal } from './MessageReadRecipts';
 
 export function GlobalModalManager() {

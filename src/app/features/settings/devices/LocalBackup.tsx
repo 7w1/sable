@@ -1,22 +1,36 @@
-import React, { FormEventHandler, useCallback, useEffect, useState } from 'react';
+import { FormEventHandler, useCallback, useEffect, useState } from 'react';
 import { Box, Button, color, Icon, Icons, Spinner, Text, toRem } from 'folds';
 import FileSaver from 'file-saver';
 import { SequenceCard } from '$components/sequence-card';
 import { SettingTile } from '$components/setting-tile';
-import { SequenceCardStyle } from '../styles.css';
 import { PasswordInput } from '$components/password-input';
 import { ConfirmPasswordMatch } from '$components/ConfirmPasswordMatch';
 import { useMatrixClient } from '$hooks/useMatrixClient';
 import { AsyncStatus, useAsyncCallback } from '$hooks/useAsyncCallback';
-import { decryptMegolmKeyFile, encryptMegolmKeyFile } from '$util/cryptE2ERoomKeys';
+import {
+  decryptMegolmKeyFile,
+  encryptMegolmKeyFile,
+  type FriendlyError,
+} from '$utils/MegolmExportEncryption';
 import { useAlive } from '$hooks/useAlive';
 import { useFilePicker } from '$hooks/useFilePicker';
+import { SequenceCardStyle } from '$features/settings/styles.css';
+
+type LocalBackupError = Error | FriendlyError;
+
+function getErrorMessage(error: LocalBackupError): string {
+  if ('friendlyText' in error) {
+    return error.friendlyText;
+  }
+
+  return error.message;
+}
 
 function ExportKeys() {
   const mx = useMatrixClient();
   const alive = useAlive();
 
-  const [exportState, exportKeys] = useAsyncCallback<void, Error, [string]>(
+  const [exportState, exportKeys] = useAsyncCallback<void, LocalBackupError, [string]>(
     useCallback(
       async (password) => {
         const crypto = mx.getCrypto();
@@ -113,7 +127,7 @@ function ExportKeys() {
         </Box>
         {exportState.status === AsyncStatus.Error && (
           <Text size="T200" style={{ color: color.Critical.Main }}>
-            <b>{exportState.error.message}</b>
+            <b>{getErrorMessage(exportState.error)}</b>
           </Text>
         )}
       </Box>
@@ -163,7 +177,7 @@ function ImportKeys({ file, onDone }: ImportKeysProps) {
   const mx = useMatrixClient();
   const alive = useAlive();
 
-  const [decryptState, decryptFile] = useAsyncCallback<void, Error, [string]>(
+  const [decryptState, decryptFile] = useAsyncCallback<void, LocalBackupError, [string]>(
     useCallback(
       async (password) => {
         const crypto = mx.getCrypto();
@@ -237,7 +251,7 @@ function ImportKeys({ file, onDone }: ImportKeysProps) {
         </Box>
         {decryptState.status === AsyncStatus.Error && (
           <Text size="T200" style={{ color: color.Critical.Main }}>
-            <b>{decryptState.error.message}</b>
+            <b>{getErrorMessage(decryptState.error)}</b>
           </Text>
         )}
       </Box>

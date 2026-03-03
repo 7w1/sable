@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useMemo } from 'react';
-import { MatrixError, Room } from '$types/matrix-sdk';
-import { RoomCanonicalAliasEventContent } from '$types/matrix-sdk';
+import { MatrixError, Room, RoomCanonicalAliasEventContent } from '$types/matrix-sdk';
+import { StateEvent } from '$types/matrix/room';
+import { getStateEvent } from '$utils/room';
 import { AsyncState, useAsyncCallback } from './useAsyncCallback';
 import { useMatrixClient } from './useMatrixClient';
 import { useAlive } from './useAlive';
 import { useStateEvent } from './useStateEvent';
-import { StateEvent } from '$types/matrix/room';
-import { getStateEvent } from '../utils/room';
 
 export const usePublishedAliases = (room: Room): [string | undefined, string[]] => {
   const aliasContent = useStateEvent(

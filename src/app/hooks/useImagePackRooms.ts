@@ -1,6 +1,6 @@
 import { Room } from '$types/matrix-sdk';
 import { useMemo } from 'react';
-import { getAllParents } from '../utils/room';
+import { getAllParents } from '$utils/room';
 import { useMatrixClient } from './useMatrixClient';
 
 export const useImagePackRooms = (

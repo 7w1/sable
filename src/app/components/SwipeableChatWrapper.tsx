@@ -1,9 +1,9 @@
-import React, { ReactNode } from 'react';
+import { ReactNode } from 'react';
 import { motion, useMotionValue, useSpring } from 'framer-motion';
 import { useDrag } from '@use-gesture/react';
 import { useAtomValue } from 'jotai';
-import { settingsAtom, RightSwipeAction } from '../state/settings';
-import { mobileOrTablet } from '../utils/user-agent';
+import { settingsAtom, RightSwipeAction } from '$state/settings';
+import { mobileOrTablet } from '$utils/user-agent';
 
 interface SwipeableChatWrapperProps {
   children: ReactNode;

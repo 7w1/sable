@@ -1,5 +1,5 @@
 import chroma from 'chroma-js';
-import { ThemeKind } from '../hooks/useTheme';
+import { ThemeKind } from '$hooks/useTheme';
 
 export const accessibleColor = (themeKind: ThemeKind, color: string): string => {
   if (!chroma.valid(color)) return color;

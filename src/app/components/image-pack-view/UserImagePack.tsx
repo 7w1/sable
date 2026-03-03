@@ -1,9 +1,9 @@
-import React, { useCallback, useMemo } from 'react';
-import { ImagePackContent } from './ImagePackContent';
+import { useCallback, useMemo } from 'react';
 import { ImagePack, PackContent } from '$plugins/custom-emoji';
 import { useMatrixClient } from '$hooks/useMatrixClient';
 import { AccountDataEvent } from '$types/matrix/accountData';
 import { useUserImagePack } from '$hooks/useImagePacks';
+import { ImagePackContent } from './ImagePackContent';
 
 export function UserImagePack() {
   const mx = useMatrixClient();

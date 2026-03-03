@@ -1,23 +1,23 @@
-import React, { KeyboardEvent as ReactKeyboardEvent, useCallback, useEffect } from 'react';
+import { KeyboardEvent as ReactKeyboardEvent, useCallback, useEffect } from 'react';
 import { Editor } from 'slate';
 import { Avatar, Icon, Icons, MenuItem, Text } from 'folds';
 import { JoinRule, MatrixClient } from '$types/matrix-sdk';
 import { useAtomValue } from 'jotai';
 
-import { createMentionElement, moveCursor, replaceWithElement } from '../utils';
-import { getDirectRoomAvatarUrl } from '$appUtils/room';
+import { getDirectRoomAvatarUrl } from '$utils/room';
 import { useMatrixClient } from '$hooks/useMatrixClient';
-import { AutocompleteQuery } from './autocompleteQuery';
-import { AutocompleteMenu } from './AutocompleteMenu';
-import { getMxIdServer, isRoomAlias } from '$appUtils/matrix';
+import { getMxIdServer, isRoomAlias } from '$utils/matrix';
 import { UseAsyncSearchOptions, useAsyncSearch } from '$hooks/useAsyncSearch';
-import { onTabPress } from '$appUtils/keyboard';
+import { onTabPress } from '$utils/keyboard';
 import { useKeyDown } from '$hooks/useKeyDown';
 import { mDirectAtom } from '$state/mDirectList';
 import { allRoomsAtom } from '$state/room-list/roomList';
-import { factoryRoomIdByActivity } from '$appUtils/sort';
+import { factoryRoomIdByActivity } from '$utils/sort';
 import { RoomAvatar, RoomIcon } from '$components/room-avatar';
 import { getViaServers } from '$plugins/via-servers';
+import { createMentionElement, moveCursor, replaceWithElement } from '$components/editor/utils';
+import { AutocompleteMenu } from './AutocompleteMenu';
+import { AutocompleteQuery } from './autocompleteQuery';
 
 type MentionAutoCompleteHandler = (roomAliasOrId: string, name: string) => void;
 

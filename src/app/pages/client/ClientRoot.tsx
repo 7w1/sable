@@ -15,7 +15,7 @@ import {
 } from 'folds';
 import { HttpApiEvent, HttpApiEventHandlerMap, MatrixClient } from '$types/matrix-sdk';
 import FocusTrap from 'focus-trap-react';
-import React, { MouseEventHandler, ReactNode, useCallback, useEffect, useState } from 'react';
+import { useRef, MouseEventHandler, ReactNode, useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import {
@@ -31,17 +31,18 @@ import { ServerConfigsLoader } from '$components/ServerConfigsLoader';
 import { CapabilitiesProvider } from '$hooks/useCapabilities';
 import { MediaConfigProvider } from '$hooks/useMediaConfig';
 import { MatrixClientProvider } from '$hooks/useMatrixClient';
-import { SpecVersions } from './SpecVersions';
 import { AsyncStatus, useAsyncCallback } from '$hooks/useAsyncCallback';
 import { useSyncState } from '$hooks/useSyncState';
-import { stopPropagation } from '$appUtils/keyboard';
-import { SyncStatus } from './SyncStatus';
+import { stopPropagation } from '$utils/keyboard';
 import { AuthMetadataProvider } from '$hooks/useAuthMetadata';
 import { sessionsAtom, activeSessionIdAtom, Session, SessionsAction } from '$state/sessions';
-import { getHomePath } from '../pathUtils';
-import { createLogger } from '$appUtils/debug';
-import { pushSessionToSW } from '../../../sw-session';
+import { createLogger } from '$utils/debug';
 import { useSyncNicknames } from '$hooks/useNickname';
+import { useAppVisibility } from '$hooks/useAppVisibility';
+import { getHomePath } from '$pages/pathUtils';
+import { pushSessionToSW } from '../../../sw-session';
+import { SyncStatus } from './SyncStatus';
+import { SpecVersions } from './SpecVersions';
 
 const log = createLogger('ClientRoot');
 
@@ -58,7 +59,6 @@ function ClientRootLoading() {
 
 type ClientRootOptionsProps = {
   mx?: MatrixClient;
-  session?: Session;
   onLogout: () => void;
 };
 function ClientRootOptions({ mx, onLogout }: ClientRootOptionsProps) {
@@ -167,7 +167,7 @@ export function ClientRoot({ children }: ClientRootProps) {
 
   const { baseUrl } = activeSession ?? {};
 
-  const loadedUserIdRef = React.useRef<string | undefined>(undefined);
+  const loadedUserIdRef = useRef<string | undefined>(undefined);
 
   const [loadState, loadMatrix, setLoadState] = useAsyncCallback<MatrixClient, Error, []>(
     useCallback(async () => {
@@ -225,15 +225,17 @@ export function ClientRoot({ children }: ClientRootProps) {
 
   useSyncNicknames(mx);
   useLogoutListener(mx);
+  useAppVisibility(mx);
 
-  useEffect(() => {
-    return () => {
+  useEffect(
+    () => () => {
       if (mx?.clientRunning) {
         log.log('ClientRoot unmounting — stopping client', mx.getUserId());
         mx.stopClient();
       }
-    };
-  }, [mx]);
+    },
+    [mx]
+  );
 
   useEffect(() => {
     if (loadState.status === AsyncStatus.Idle) {
@@ -255,11 +257,10 @@ export function ClientRoot({ children }: ClientRootProps) {
       }
     }, [])
   );
-
   return (
-    <SpecVersions baseUrl={baseUrl!}>
+    <SpecVersions baseUrl={baseUrl}>
       {mx && <SyncStatus mx={mx} />}
-      {loading && <ClientRootOptions mx={mx} session={activeSession} onLogout={handleLogout} />}
+      {loading && <ClientRootOptions mx={mx} onLogout={handleLogout} />}
       {(loadState.status === AsyncStatus.Error || startState.status === AsyncStatus.Error) && (
         <SplashScreen>
           <Box direction="Column" grow="Yes" alignItems="Center" justifyContent="Center" gap="400">

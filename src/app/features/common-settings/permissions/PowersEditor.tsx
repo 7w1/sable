@@ -1,4 +1,4 @@
-import React, { FormEventHandler, MouseEventHandler, useCallback, useMemo, useState } from 'react';
+import { FormEventHandler, MouseEventHandler, useCallback, useMemo, useState } from 'react';
 import {
   Box,
   Text,
@@ -23,7 +23,6 @@ import { useAtomValue } from 'jotai';
 import { Page, PageContent, PageHeader } from '$components/page';
 import { IPowerLevels } from '$hooks/usePowerLevels';
 import { SequenceCard } from '$components/sequence-card';
-import { SequenceCardStyle } from '../styles.css';
 import { SettingTile } from '$components/setting-tile';
 import {
   getPowers,
@@ -48,7 +47,8 @@ import { MemberPowerTag, MemberPowerTagIcon, StateEvent } from '$types/matrix/ro
 import { useAlive } from '$hooks/useAlive';
 import { BetaNoticeBadge } from '$components/BetaNoticeBadge';
 import { getPowerTagIconSrc } from '$hooks/useMemberPowerTag';
-import { creatorsSupported } from '$appUtils/matrix';
+import { creatorsSupported } from '$utils/matrix';
+import { SequenceCardStyle } from '$features/common-settings/styles.css';
 
 type EditPowerProps = {
   maxPower: number;

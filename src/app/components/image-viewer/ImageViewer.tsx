@@ -1,11 +1,10 @@
-/* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
-import React, { useEffect } from 'react';
+import { WheelEvent } from 'react';
 import FileSaver from 'file-saver';
 import classNames from 'classnames';
 import { Box, Chip, Header, Icon, IconButton, Icons, Text, as } from 'folds';
-import * as css from './ImageViewer.css';
 import { useImageGestures } from '$hooks/useImageGestures';
-import { downloadMedia } from '$appUtils/matrix';
+import { downloadMedia } from '$utils/matrix';
+import * as css from './ImageViewer.css';
 
 export type ImageViewerProps = {
   alt: string;
@@ -25,7 +24,7 @@ export const ImageViewer = as<'div', ImageViewerProps>(
       FileSaver.saveAs(fileContent, alt);
     };
 
-    const handleWheel = (e: React.WheelEvent) => {
+    const handleWheel = (e: WheelEvent) => {
       if (e.deltaY < 0) zoomIn();
       else zoomOut();
     };

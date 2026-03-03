@@ -1,4 +1,4 @@
-import { replaceMatch } from '../internal';
+import { replaceMatch } from '$plugins/markdown/internal';
 import { BlockMDParser, BlockMDRule } from './type';
 
 /**

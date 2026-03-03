@@ -13,9 +13,13 @@ import {
   as,
   config,
 } from 'folds';
-import React, {
+
+import {
   MouseEventHandler,
+  MouseEvent,
+  PointerEvent,
   ReactNode,
+  memo,
   useCallback,
   useRef,
   useState,
@@ -24,11 +28,9 @@ import React, {
 } from 'react';
 import FocusTrap from 'focus-trap-react';
 import { useHover, useFocusWithin } from 'react-aria';
-import { MatrixEvent, Room } from '$types/matrix-sdk';
-import { Relations } from '$types/matrix-sdk';
+import { MatrixEvent, Room, Relations, RoomPinnedEventsEventContent } from '$types/matrix-sdk';
 import classNames from 'classnames';
 import { useAtomValue, useSetAtom } from 'jotai';
-import { RoomPinnedEventsEventContent } from '$types/matrix-sdk';
 import {
   AvatarBase,
   BubbleLayout,
@@ -40,22 +42,16 @@ import {
   Username,
   UsernameBold,
 } from '$components/message';
-import { canEditEvent, getMemberAvatarMxc } from '$appUtils/room';
-import { getCanonicalAliasOrRoomId, isRoomAlias, mxcUrlToHttp } from '$appUtils/matrix';
+import { canEditEvent, getMemberAvatarMxc } from '$utils/room';
+import { mxcUrlToHttp } from '$utils/matrix';
 import { MessageLayout, MessageSpacing, settingsAtom } from '$state/settings';
 import { nicknamesAtom, setNicknameAtom } from '$state/nicknames';
 import { useMatrixClient } from '$hooks/useMatrixClient';
 import { useRecentEmoji } from '$hooks/useRecentEmoji';
-import * as css from './styles.css';
-import { EventReaders } from '$components/event-readers';
-import { TextViewer } from '$components/text-viewer';
-import { AsyncStatus, useAsyncCallback } from '$hooks/useAsyncCallback';
 import { EmojiBoard } from '$components/emoji-board';
-import { ReactionViewer } from '../reaction-viewer';
-import { MessageEditor } from './MessageEditor';
 import { UserAvatar } from '$components/user-avatar';
-import { copyToClipboard } from '$appUtils/dom';
-import { stopPropagation } from '$appUtils/keyboard';
+import { copyToClipboard } from '$utils/dom';
+import { stopPropagation } from '$utils/keyboard';
 import { getMatrixToRoomEvent } from '$plugins/matrix-to';
 import { getViaServers } from '$plugins/via-servers';
 import { useMediaAuthentication } from '$hooks/useMediaAuthentication';
@@ -65,7 +61,7 @@ import { PowerIcon } from '$components/power';
 import { getPowerTagIconSrc } from '$hooks/useMemberPowerTag';
 import { useSableCosmetics } from '$hooks/useSableCosmetics';
 import { SwipeableMessageWrapper } from '$components/SwipeableMessageWrapper';
-import { mobileOrTablet } from '$appUtils/user-agent';
+import { mobileOrTablet } from '$utils/user-agent';
 import { useUserProfile } from '$hooks/useUserProfile';
 import { useSetting } from '$state/hooks/settings';
 import { useBlobCache } from '$hooks/useBlobCache';
@@ -74,12 +70,12 @@ import { MessageReadReceiptItem } from '$components/message/modals/MessageReadRe
 import { MessageSourceCodeItem } from '$components/message/modals/MessageSource';
 import { MessageDeleteItem } from '$components/message/modals/MessageDelete';
 import { MessageReportItem } from '$components/message/modals/MessageReport';
+import { MessageEditor } from './MessageEditor';
+import * as css from './styles.css';
 
 export type ReactionHandler = (keyOrMxc: string, shortcode: string) => void;
 
-const MemoizedBody = React.memo(({ children }: { children: ReactNode }) => {
-  return <>{children}</>;
-});
+const MemoizedBody = memo(({ children }: { children: ReactNode }) => children);
 type MessageQuickReactionsProps = {
   onReaction: ReactionHandler;
 };
@@ -128,14 +124,10 @@ export const MessageCopyLinkItem = as<
     onClose?: () => void;
   }
 >(({ room, mEvent, onClose, ...props }, ref) => {
-  const mx = useMatrixClient();
-
   const handleCopy = () => {
-    const roomIdOrAlias = getCanonicalAliasOrRoomId(mx, room.roomId);
     const eventId = mEvent.getId();
-    const viaServers = isRoomAlias(roomIdOrAlias) ? undefined : getViaServers(room);
     if (!eventId) return;
-    copyToClipboard(getMatrixToRoomEvent(roomIdOrAlias, eventId, viaServers));
+    copyToClipboard(getMatrixToRoomEvent(room.roomId, eventId, getViaServers(room)));
     onClose?.();
   };
 
@@ -233,7 +225,8 @@ function useMobileDoubleTap(callback: () => void, delay = 300) {
   const lastTapRef = useRef<number>(0);
 
   return useCallback(
-    (e: React.PointerEvent<HTMLElement>) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    (e: PointerEvent<HTMLElement>) => {
       if (!mobileOrTablet()) return;
 
       const now = Date.now();
@@ -251,31 +244,27 @@ function useMobileDoubleTap(callback: () => void, delay = 300) {
 }
 
 const Pronouns = as<
-  'div',
+  'span',
   {
     pronouns?: any[];
     tagColor: string;
   }
->(({ pronouns, tagColor, ...props }, ref) => {
+>(({ as: AsPronouns = 'span', pronouns, tagColor, ...props }, ref) => {
   if (!pronouns || pronouns.length === 0) return null;
 
   const clamp = (str: string, len: number) => (str.length > len ? `${str.slice(0, len)}...` : str);
   const limit = mobileOrTablet() ? 1 : 3;
 
-  const display = pronouns.slice(0, limit).map((p) => (
-    <PronounPill style={{ color: tagColor }} {...props} ref={ref}>
-      {clamp(p.summary, 16)}
-    </PronounPill>
-  ));
-
-  if (pronouns.length > limit) {
-    display.push(
-      <PronounPill style={{ color: tagColor }} {...props} ref={ref}>
-        ...
-      </PronounPill>
-    );
-  }
-  return <>{display}</>;
+  return (
+    <AsPronouns {...props} ref={ref}>
+      {pronouns.slice(0, limit).map((p) => (
+        <PronounPill key={p.summary} style={{ color: tagColor }}>
+          {clamp(p.summary, 16)}
+        </PronounPill>
+      ))}
+      {pronouns.length > limit && <PronounPill style={{ color: tagColor }}>...</PronounPill>}
+    </AsPronouns>
+  );
 });
 
 function MessageInternal(
@@ -439,9 +428,7 @@ function MessageInternal(
     </AvatarBase>
   );
 
-  const stableContent = useMemo(() => {
-    return mEvent.getContent().body || '';
-  }, [mEvent]);
+  const stableContent = useMemo(() => mEvent.getContent().body || '', [mEvent]);
 
   const MSG_CONTENT_STYLE = { maxWidth: '100%' };
 
@@ -520,7 +507,7 @@ function MessageInternal(
       currentTarget: {
         getAttribute: (attr: string) => (attr === 'data-event-id' ? targetId : null),
       },
-    } as unknown as React.MouseEvent<HTMLButtonElement>;
+    } as unknown as MouseEvent<HTMLButtonElement>;
 
     onReplyClick(mockEvent);
   };
@@ -888,7 +875,7 @@ function MessageInternal(
 }
 
 const MessageAs = as<'div', MessageProps>(MessageInternal);
-export const Message = React.memo(MessageAs);
+export const Message = memo(MessageAs);
 
 export type EventProps = {
   room: Room;

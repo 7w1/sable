@@ -2,7 +2,14 @@ import { Descendant, Text } from 'slate';
 import parse from 'html-dom-parser';
 import { ChildNode, Element, isText, isTag } from 'domhandler';
 
-import { sanitizeCustomHtml } from '$appUtils/sanitize';
+import { sanitizeCustomHtml } from '$utils/sanitize';
+import {
+  parseMatrixToRoom,
+  parseMatrixToRoomEvent,
+  parseMatrixToUser,
+  testMatrixTo,
+} from '$plugins/matrix-to';
+import { escapeMarkdownInlineSequences, escapeMarkdownBlockSequences } from '$plugins/markdown';
 import { BlockType, MarkType } from './types';
 import {
   BlockQuoteElement,
@@ -20,13 +27,6 @@ import {
   UnorderedListElement,
 } from './slate';
 import { createEmoticonElement, createMentionElement } from './utils';
-import {
-  parseMatrixToRoom,
-  parseMatrixToRoomEvent,
-  parseMatrixToUser,
-  testMatrixTo,
-} from '$plugins/matrix-to';
-import { escapeMarkdownInlineSequences, escapeMarkdownBlockSequences } from '$plugins/markdown';
 
 type ProcessTextCallback = (text: string) => string;
 
@@ -83,12 +83,7 @@ const getInlineMarkElement = (
     children.push({ text: mdSequence });
     return children;
   }
-  children.forEach((child) => {
-    if (Text.isText(child)) {
-      child[markType] = true;
-    }
-  });
-  return children;
+  return children.map((child) => (Text.isText(child) ? { ...child, [markType]: true } : child));
 };
 
 const getInlineNonMarkElement = (node: Element): MentionElement | EmoticonElement | undefined => {

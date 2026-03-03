@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect, ChangeEvent } from 'react';
+import { useMemo, useState, useEffect, ChangeEvent } from 'react';
 import { Box, IconButton, Icon, Icons, Input } from 'folds';
 import { SettingTile } from '$components/setting-tile';
 

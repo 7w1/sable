@@ -1,3 +1,7 @@
+import { createLogger } from './debug';
+
+const log = createLogger('ASCIILexicalTable');
+
 export class ASCIILexicalTable {
   readonly startCode: number;
 
@@ -36,7 +40,7 @@ export class ASCIILexicalTable {
     this.populateWidthToSize();
 
     if (this.size() > Number.MAX_SAFE_INTEGER) {
-      console.warn(
+      log.warn(
         `[!] Warning: ASCIILexicalTable size is larger than the Number.MAX_SAFE_INTEGER: ${this.size()} > ${
           Number.MAX_SAFE_INTEGER
         }`

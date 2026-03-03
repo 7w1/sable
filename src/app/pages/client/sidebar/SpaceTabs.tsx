@@ -1,4 +1,4 @@
-import React, {
+import {
   MouseEventHandler,
   ReactNode,
   RefObject,
@@ -61,9 +61,9 @@ import {
 import { RoomUnreadProvider, RoomsUnreadProvider } from '$components/RoomUnreadProvider';
 import { useSelectedSpace } from '$hooks/router/useSelectedSpace';
 import { UnreadBadge } from '$components/unread-badge';
-import { getCanonicalAliasOrRoomId, isRoomAlias } from '$appUtils/matrix';
+import { getCanonicalAliasOrRoomId, isRoomAlias } from '$utils/matrix';
 import { RoomAvatar } from '$components/room-avatar';
-import { nameInitials, randomStr } from '$appUtils/common';
+import { nameInitials, randomStr } from '$utils/common';
 import {
   ISidebarFolder,
   SidebarItems,
@@ -80,12 +80,12 @@ import { useOpenedSidebarFolderAtom } from '$state/hooks/openedSidebarFolder';
 import { usePowerLevels } from '$hooks/usePowerLevels';
 import { useRoomsUnread } from '$state/hooks/unread';
 import { roomToUnreadAtom } from '$state/room/roomToUnread';
-import { markAsRead } from '$appUtils/notifications';
-import { copyToClipboard } from '$appUtils/dom';
-import { stopPropagation } from '$appUtils/keyboard';
+import { markAsRead } from '$utils/notifications';
+import { copyToClipboard } from '$utils/dom';
+import { stopPropagation } from '$utils/keyboard';
 import { getMatrixToRoom } from '$plugins/matrix-to';
 import { getViaServers } from '$plugins/via-servers';
-import { getRoomAvatarUrl } from '$appUtils/room';
+import { getRoomAvatarUrl } from '$utils/room';
 import { useMediaAuthentication } from '$hooks/useMediaAuthentication';
 import { useSetting } from '$state/hooks/settings';
 import { settingsAtom } from '$state/settings';

@@ -1,10 +1,10 @@
-import React, { ReactNode } from 'react';
+import { ReactNode } from 'react';
 import { AuthDict, AuthType, IAuthData, UIAFlow } from '$types/matrix-sdk';
-import { getUIAFlowForStages } from '../utils/matrix-uia';
-import { useSupportedUIAFlows, useUIACompleted, useUIAFlow } from '../hooks/useUIAFlows';
+import { getUIAFlowForStages } from '$utils/matrix-uia';
+import { useSupportedUIAFlows, useUIACompleted, useUIAFlow } from '$hooks/useUIAFlows';
+import { useMatrixClient } from '$hooks/useMatrixClient';
 import { UIAFlowOverlay } from './UIAFlowOverlay';
 import { PasswordStage, SSOStage } from './uia-stages';
-import { useMatrixClient } from '../hooks/useMatrixClient';
 
 export const SUPPORTED_IN_APP_UIA_STAGES = [AuthType.Password, AuthType.Sso];
 

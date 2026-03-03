@@ -1,6 +1,6 @@
 import { isKeyHotkey } from 'is-hotkey';
 import { KeyboardEventHandler, useCallback } from 'react';
-import { Cursor, Intent, Operations, TextArea } from '../plugins/text-area';
+import { Cursor, Intent, Operations, TextArea } from '$plugins/text-area';
 
 export const useTextAreaIntentHandler = (
   textArea: TextArea,

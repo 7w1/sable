@@ -1,4 +1,3 @@
-import React from 'react';
 import { Text, as } from 'folds';
 import classNames from 'classnames';
 import * as css from './layout.css';
@@ -28,12 +27,17 @@ export const UsernameBold = as<'b'>(({ as: AsUsernameBold = 'b', className, ...p
   <AsUsernameBold className={classNames(css.UsernameBold, className)} {...props} ref={ref} />
 ));
 
-export const PronounPill = as<'span'>(({ as: AsPronounPill = 'span', className, ...props }, ref) => (
-  <AsPronounPill className={classNames(css.PronounPill, className)} {...props} ref={ref} />
-));
+export const PronounPill = as<'span'>(
+  ({ as: AsPronounPill = 'span', className, ...props }, ref) => (
+    <AsPronounPill className={classNames(css.PronounPill, className)} {...props} ref={ref} />
+  )
+);
 
 export const MessageTextBody = as<'div', css.MessageTextBodyVariants & { notice?: boolean }>(
-  ({ as: asComp = 'div', className, preWrap, jumboEmoji, emote, notice, ...props }, ref) => (
+  (
+    { as: asComp = 'div', children, className, preWrap, jumboEmoji, emote, notice, ...props },
+    ref
+  ) => (
     <Text
       as={asComp}
       size="T400"
@@ -41,6 +45,8 @@ export const MessageTextBody = as<'div', css.MessageTextBodyVariants & { notice?
       className={classNames(css.MessageTextBody({ preWrap, jumboEmoji, emote }), className)}
       {...props}
       ref={ref}
-    />
+    >
+      {children}
+    </Text>
   )
 );

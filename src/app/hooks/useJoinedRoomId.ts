@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
+import { getCanonicalAliasRoomId, isRoomAlias } from '$utils/matrix';
 import { useMatrixClient } from './useMatrixClient';
-
-import { getCanonicalAliasRoomId, isRoomAlias } from '../utils/matrix';
 
 export const useJoinedRoomId = (allRooms: string[], roomIdOrAlias: string): string | undefined => {
   const mx = useMatrixClient();

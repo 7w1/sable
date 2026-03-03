@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom';
-import { getCanonicalAliasRoomId, isRoomAlias } from '$appUtils/matrix';
-import { useMatrixClient } from '../useMatrixClient';
+import { getCanonicalAliasRoomId, isRoomAlias } from '$utils/matrix';
+import { useMatrixClient } from '$hooks/useMatrixClient';
 
 export const useSelectedRoom = (): string | undefined => {
   const mx = useMatrixClient();

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   Avatar,
   Box,
@@ -13,19 +13,19 @@ import {
 } from 'folds';
 import classNames from 'classnames';
 import FocusTrap from 'focus-trap-react';
-import * as css from './styles.css';
-import { UserAvatar } from '../user-avatar';
-import colorMXID from '$util/colorMXID';
-import { getMxIdLocalPart } from '$appUtils/matrix';
+import colorMXID from '$utils/colorMXID';
+import { getMxIdLocalPart } from '$utils/matrix';
 import { BreakWord, LineClamp3 } from '$styles/Text.css';
 import { Presence, UserPresence } from '$hooks/useUserPresence';
-import { AvatarPresence, PresenceBadge } from '../presence';
-import { ImageViewer } from '../image-viewer';
 import { stopPropagation } from '$appUtils/keyboard';
 import { useRoom } from '$hooks/useRoom';
 import { useSableCosmetics } from '$hooks/useSableCosmetics';
 import { useNickname } from '$hooks/useNickname';
 import { useBlobCache } from '$hooks/useBlobCache';
+import { ImageViewer } from '$components/image-viewer';
+import { AvatarPresence, PresenceBadge } from '$components/presence';
+import { UserAvatar } from '$components/user-avatar';
+import * as css from './styles.css';
 
 type UserHeroProps = {
   userId: string;

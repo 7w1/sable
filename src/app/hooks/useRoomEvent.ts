@@ -1,7 +1,6 @@
-import { IEvent, MatrixEvent, Room } from '$types/matrix-sdk';
+import { IEvent, MatrixEvent, Room, CryptoBackend } from '$types/matrix-sdk';
 import { useCallback, useMemo } from 'react';
 import to from 'await-to-js';
-import { CryptoBackend } from '$types/matrix-sdk';
 import { useQuery } from '@tanstack/react-query';
 import { useMatrixClient } from './useMatrixClient';
 

@@ -1,7 +1,17 @@
 /// <reference lib="WebWorker" />
+// eslint-disable-next-line import-x/no-extraneous-dependencies
+import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
+import { EventType } from 'matrix-js-sdk/lib/@types/event';
+import { createPushNotifications } from './sw/pushNotification';
 
 export type {};
 declare const self: ServiceWorkerGlobalScope;
+
+let notificationSoundEnabled = true;
+let preferPushOnMobile = false;
+const { handlePushNotificationPushData } = createPushNotifications(self, () => ({
+  notificationSoundEnabled,
+}));
 
 type SessionInfo = {
   accessToken: string;
@@ -76,8 +86,8 @@ async function requestSessionWithTimeout(
   return Promise.race([sessionPromise, timeout]);
 }
 
-self.addEventListener('install', () => {
-  void self.skipWaiting();
+self.addEventListener('install', (event: ExtendableEvent) => {
+  event.waitUntil(self.skipWaiting());
 });
 
 self.addEventListener('activate', (event: ExtendableEvent) => {
@@ -96,13 +106,24 @@ self.addEventListener('message', (event: ExtendableMessageEvent) => {
   const client = event.source as Client | null;
   if (!client) return;
 
-  const data: unknown = event.data;
+  const { data } = event;
   if (!data || typeof data !== 'object') return;
   const { type, accessToken, baseUrl } = data as Record<string, unknown>;
 
   if (type === 'setSession') {
     setSession(client.id, accessToken, baseUrl);
-    void cleanupDeadClients();
+    event.waitUntil(cleanupDeadClients());
+  }
+  if (type === 'setNotificationSettings') {
+    if (
+      typeof (data as { notificationSoundEnabled?: unknown }).notificationSoundEnabled === 'boolean'
+    ) {
+      notificationSoundEnabled = (data as { notificationSoundEnabled: boolean })
+        .notificationSoundEnabled;
+    }
+    if (typeof (data as { preferPushOnMobile?: unknown }).preferPushOnMobile === 'boolean') {
+      preferPushOnMobile = (data as { preferPushOnMobile: boolean }).preferPushOnMobile;
+    }
   }
 });
 
@@ -133,6 +154,20 @@ function fetchConfig(token: string): RequestInit {
   };
 }
 
+self.addEventListener('message', (event: ExtendableMessageEvent) => {
+  if (event.data.type === 'togglePush') {
+    const token = event.data?.token;
+    const fetchOptions = fetchConfig(token);
+    event.waitUntil(
+      fetch(`${event.data.url}/_matrix/client/v3/pushers/set`, {
+        method: 'POST',
+        ...fetchOptions,
+        body: JSON.stringify(event.data.pusherData),
+      })
+    );
+  }
+});
+
 self.addEventListener('fetch', (event: FetchEvent) => {
   const { url, method } = event.request;
 
@@ -158,3 +193,89 @@ self.addEventListener('fetch', (event: FetchEvent) => {
     })
   );
 });
+
+const onPushNotification = async (event: PushEvent) => {
+  if (!event?.data) {
+    return;
+  }
+
+  const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+  const hasVisibleClient = clients.some((client) => client.visibilityState === 'visible');
+  if (hasVisibleClient && !preferPushOnMobile) {
+    return;
+  }
+
+  const pushData = event.data.json();
+
+  // try {
+  //   if (typeof pushData?.unread === 'number') {
+  //     self.navigator.setAppBadge(pushData.unread);
+
+  //     if (pushData.unread == 0) {
+  //       self.registration
+  //         .getNotifications()
+  //         .then((notifications) => notifications.forEach((notification) => notification.close()));
+  //       await navigator.clearAppBadge();
+  //       return;
+  //     }
+  //   } else {
+  //     await navigator.clearAppBadge();
+  //   }
+  // } catch (_) {
+  //   // Likely Firefox/Gecko-based and doesn't support badging API
+  // }
+
+  await handlePushNotificationPushData(pushData);
+};
+
+self.addEventListener('push', (event: PushEvent) => event.waitUntil(onPushNotification(event)));
+
+self.addEventListener('notificationclick', (event: NotificationEvent) => {
+  event.notification.close();
+
+  const messageData = event.notification.data;
+  const { scope } = self.registration;
+
+  const eventType = messageData?.type as EventType | undefined;
+  if (!eventType) return Promise.resolve();
+
+  let targetUrl = `${scope}inbox/`;
+  if (
+    (eventType === EventType.RoomMessage || eventType === EventType.RoomMessageEncrypted) &&
+    messageData?.room_id &&
+    messageData?.event_id
+  )
+    targetUrl = `${scope}to/${messageData.room_id}/${messageData.event_id}`;
+  if (eventType === EventType.RoomMember && messageData?.content?.membership === 'invite')
+    targetUrl = `${scope}inbox/invites/`;
+
+  const postMessageToClient = (client: WindowClient) => {
+    client.postMessage({
+      type: 'notificationToRoomEvent',
+      message: messageData,
+    });
+  };
+
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      const focusedClient = clientList.find((client): client is WindowClient => 'focus' in client);
+      if (focusedClient) {
+        return focusedClient.focus().then(() => {
+          postMessageToClient(focusedClient);
+          return null;
+        });
+      }
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(targetUrl).then(() => null);
+      }
+      return null;
+    })
+  );
+
+  return Promise.resolve();
+});
+
+if (self.__WB_MANIFEST) {
+  precacheAndRoute(self.__WB_MANIFEST);
+}
+cleanupOutdatedCaches();

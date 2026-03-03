@@ -1,6 +1,6 @@
-import React, { ReactNode } from 'react';
+import { ReactNode } from 'react';
 import { Box, Text, Scroll } from 'folds';
-import { CutoutCard } from '../cutout-card';
+import { CutoutCard } from '$components/cutout-card';
 import * as css from './styles.css';
 
 export function PickerColumn({ title, children }: { title: string; children: ReactNode }) {

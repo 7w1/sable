@@ -1,11 +1,4 @@
-import React, {
-  MouseEventHandler,
-  forwardRef,
-  useCallback,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { MouseEventHandler, forwardRef, useCallback, useMemo, useRef, useState } from 'react';
 import { useAtom, useAtomValue } from 'jotai';
 import {
   Avatar,
@@ -26,14 +19,13 @@ import {
   toRem,
 } from 'folds';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { JoinRule, Room } from '$types/matrix-sdk';
-import { RoomJoinRulesEventContent } from '$types/matrix-sdk';
+import { JoinRule, Room, RoomJoinRulesEventContent } from '$types/matrix-sdk';
 import FocusTrap from 'focus-trap-react';
 import { useMatrixClient } from '$hooks/useMatrixClient';
 import { mDirectAtom } from '$state/mDirectList';
 import { NavCategory, NavCategoryHeader, NavItem, NavItemContent, NavLink } from '$components/nav';
 import { getSpaceLobbyPath, getSpaceRoomPath, getSpaceSearchPath } from '$pages/pathUtils';
-import { getCanonicalAliasOrRoomId, isRoomAlias } from '$appUtils/matrix';
+import { getCanonicalAliasOrRoomId, isRoomAlias } from '$utils/matrix';
 import { useSelectedRoom } from '$hooks/router/useSelectedRoom';
 import { useSpaceLobbySelected, useSpaceSearchSelected } from '$hooks/router/useSelectedSpace';
 import { useSpace } from '$hooks/useSpace';
@@ -50,15 +42,15 @@ import { PageNav, PageNavContent, PageNavHeader } from '$components/page';
 import { usePowerLevels } from '$hooks/usePowerLevels';
 import { useRecursiveChildScopeFactory, useSpaceChildren } from '$state/hooks/roomList';
 import { roomToParentsAtom } from '$state/room/roomToParents';
-import { markAsRead } from '$appUtils/notifications';
+import { markAsRead } from '$utils/notifications';
 import { useRoomsUnread } from '$state/hooks/unread';
 import { UseStateProvider } from '$components/UseStateProvider';
 import { LeaveSpacePrompt } from '$components/leave-space-prompt';
-import { copyToClipboard } from '$appUtils/dom';
+import { copyToClipboard } from '$utils/dom';
 import { useClosedNavCategoriesAtom } from '$state/hooks/closedNavCategories';
 import { useStateEvent } from '$hooks/useStateEvent';
 import { Membership, StateEvent } from '$types/matrix/room';
-import { stopPropagation } from '$appUtils/keyboard';
+import { stopPropagation } from '$utils/keyboard';
 import { getMatrixToRoom } from '$plugins/matrix-to';
 import { getViaServers } from '$plugins/via-servers';
 import { useSetting } from '$state/hooks/settings';
@@ -76,12 +68,11 @@ import { AsyncStatus, useAsyncCallback } from '$hooks/useAsyncCallback';
 import { BreakWord } from '$styles/Text.css';
 import { InviteUserPrompt } from '$components/invite-user-prompt';
 import { CallNavStatus } from '$features/room-nav/RoomCallNavStatus';
-import { useCallState } from '../call/CallProvider';
-import { SwipeableChatWrapper } from '$components/SwipeableChatWrapper';
-import { mobileOrTablet } from '$appUtils/user-agent';
+import { mobileOrTablet } from '$utils/user-agent';
 import { useNavigate } from 'react-router-dom';
 import { lastVisitedRoomIdAtom } from '$state/room/lastRoom';
 import { SwipeableOverlayWrapper } from '$components/SwipeableOverlayWrapper';
+import { useCallState } from '$pages/client/call/CallProvider';
 
 type SpaceMenuProps = {
   room: Room;

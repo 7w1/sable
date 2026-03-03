@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { useAccountData } from './useAccountData';
 import { AccountDataEvent } from '$types/matrix/accountData';
+import { useAccountData } from './useAccountData';
 
 export type IgnoredUserListContent = {
   ignored_users?: Record<string, object>;

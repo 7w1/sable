@@ -1,6 +1,6 @@
 /* eslint-disable no-param-reassign */
-/* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
-import React, { FormEventHandler, MouseEventHandler, useEffect, useRef, useState } from 'react';
+
+import { FormEventHandler, MouseEventHandler, useEffect, useRef, useState } from 'react';
 import classNames from 'classnames';
 import {
   Box,
@@ -22,11 +22,11 @@ import {
 } from 'folds';
 import FocusTrap from 'focus-trap-react';
 import FileSaver from 'file-saver';
-import * as css from './PdfViewer.css';
 import { AsyncStatus } from '$hooks/useAsyncCallback';
 import { useImageGestures } from '$hooks/useImageGestures';
 import { createPage, usePdfDocumentLoader, usePdfJSLoader } from '$plugins/pdfjs-dist';
-import { stopPropagation } from '$appUtils/keyboard';
+import { stopPropagation } from '$utils/keyboard';
+import * as css from './PdfViewer.css';
 
 export type PdfViewerProps = {
   name: string;

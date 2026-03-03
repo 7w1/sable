@@ -1,4 +1,4 @@
-import React, { FormEventHandler, useState } from 'react';
+import { FormEventHandler, useState } from 'react';
 import FocusTrap from 'focus-trap-react';
 import {
   Dialog,
@@ -16,8 +16,8 @@ import {
   Input,
   color,
 } from 'folds';
-import { stopPropagation } from '$appUtils/keyboard';
-import { isRoomAlias, isRoomId } from '$appUtils/matrix';
+import { stopPropagation } from '$utils/keyboard';
+import { isRoomAlias, isRoomId } from '$utils/matrix';
 import { parseMatrixToRoom, parseMatrixToRoomEvent, testMatrixTo } from '$plugins/matrix-to';
 
 type JoinAddressProps = {

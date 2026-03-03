@@ -1,5 +1,5 @@
 /* eslint-disable react/destructuring-assignment */
-import React, { MouseEventHandler, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { MouseEventHandler, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Avatar,
   Box,
@@ -30,7 +30,7 @@ import { useAtomValue } from 'jotai';
 import { nicknamesAtom } from '$state/nicknames';
 import { Page, PageContent, PageContentCenter, PageHeader } from '$components/page';
 import { useMatrixClient } from '$hooks/useMatrixClient';
-import { getMxIdLocalPart, mxcUrlToHttp } from '$appUtils/matrix';
+import { getMxIdLocalPart, mxcUrlToHttp } from '$utils/matrix';
 import { InboxNotificationsPathSearchParams } from '$pages/paths';
 import { AsyncStatus, useAsyncCallback } from '$hooks/useAsyncCallback';
 import { SequenceCard } from '$components/sequence-card';
@@ -40,7 +40,7 @@ import {
   getMemberAvatarMxc,
   getMemberDisplayName,
   getRoomAvatarUrl,
-} from '$appUtils/room';
+} from '$utils/room';
 import { ScrollTopContainer } from '$components/scroll-top-container';
 import { useInterval } from '$hooks/useInterval';
 import {
@@ -74,7 +74,7 @@ import * as customHtmlCss from '$styles/CustomHtml.css';
 import { useRoomNavigate } from '$hooks/useRoomNavigate';
 import { useRoomUnread } from '$state/hooks/unread';
 import { roomToUnreadAtom } from '$state/room/roomToUnread';
-import { markAsRead } from '$appUtils/notifications';
+import { markAsRead } from '$utils/notifications';
 import { ContainerColor } from '$styles/ContainerColor.css';
 import { VirtualTile } from '$components/virtualizer';
 import { UserAvatar } from '$components/user-avatar';
@@ -89,7 +89,7 @@ import { usePowerLevels } from '$hooks/usePowerLevels';
 import { usePowerLevelTags } from '$hooks/usePowerLevelTags';
 import { useTheme } from '$hooks/useTheme';
 import { PowerIcon } from '$components/power';
-import colorMXID from '$util/colorMXID';
+import colorMXID from '$utils/colorMXID';
 import { mDirectAtom } from '$state/mDirectList';
 import {
   getPowerTagIconSrc,
@@ -593,11 +593,11 @@ export function Notifications() {
     setSearchParams();
   };
 
-  const [notificationTimeline, _loadTimeline, silentReloadTimeline] = useNotificationTimeline(
+  const [notificationTimeline, loadTimelineRaw, silentReloadTimeline] = useNotificationTimeline(
     24,
     onlyHighlight
   );
-  const [timelineState, loadTimeline] = useAsyncCallback(_loadTimeline);
+  const [timelineState, loadTimeline] = useAsyncCallback(loadTimelineRaw);
 
   const virtualizer = useVirtualizer({
     count: notificationTimeline.groups.length,

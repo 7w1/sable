@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { UIAFlow } from '$types/matrix-sdk';
-import { useSupportedUIAFlows } from '../hooks/useUIAFlows';
+import { useSupportedUIAFlows } from '$hooks/useUIAFlows';
 
 export function SupportedUIAFlowsLoader({
   flows,

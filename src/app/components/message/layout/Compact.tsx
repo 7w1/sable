@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import { ReactNode } from 'react';
 import { Box, as } from 'folds';
 import * as css from './layout.css';
 
