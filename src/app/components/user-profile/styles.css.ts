@@ -51,6 +51,7 @@ export const UserHeroStatusContainer = style({
   textAlign: 'justify',
   display: 'grid',
   width: '100%',
+  paddingLeft: '2%',
 });
 export const UserHeroAvatar = style({
   outline: `${config.borderWidth.B600} solid ${color.Surface.Container}`,

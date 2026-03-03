@@ -105,7 +105,7 @@ export function UserHero({ userId, avatarUrl, bannerUrl, presence }: UserHeroPro
         </div>
         {presence?.status?.length && (
           <div className={css.UserHeroStatusContainer}>
-            <Tooltip style={{ maxWidth: '90%', justifySelf: 'center' }}>
+            <Tooltip style={{ maxWidth: '90%', justifySelf: 'left' }}>
               <Text size="T200"> {presence.status} </Text>
             </Tooltip>
           </div>
