@@ -213,8 +213,12 @@ export function Home() {
         ? factoryRoomIdByActivity(mx)
         : factoryRoomIdByAtoZ(mx)
     );
+    const hasUnread = (roomId: string) => {
+      const unread = roomToUnread.get(roomId);
+      return !!unread && (unread.total > 0 || unread.highlight > 0);
+    };
     if (closedCategories.has(DEFAULT_CATEGORY_ID)) {
-      return items.filter((rId) => roomToUnread.has(rId) || rId === selectedRoomId);
+      return items.filter((rId) => hasUnread(rId) || rId === selectedRoomId);
     }
     return items;
   }, [mx, rooms, closedCategories, roomToUnread, selectedRoomId]);

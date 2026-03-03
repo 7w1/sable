@@ -48,6 +48,7 @@ export enum StateEvent {
   // Sable state events
   RoomCosmeticsColor = 'moe.sable.room.cosmetics.color',
   RoomCosmeticsFont = 'moe.sable.room.cosmetics.font',
+  RoomCosmeticsPronouns = 'moe.sable.room.cosmetics.pronouns',
 }
 
 export enum MessageEvent {

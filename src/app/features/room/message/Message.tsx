@@ -306,7 +306,7 @@ function MessageInternal(
   const useAuthentication = useMediaAuthentication();
 
   // Profiles and Colors
-  const profile = useUserProfile(senderId);
+  const profile = useUserProfile(senderId, room);
   const { color: usernameColor, font: usernameFont } = useSableCosmetics(senderId, room);
 
   // Avatars

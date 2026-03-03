@@ -68,7 +68,11 @@ export const useUserProfile = (
   userId: string,
   room?: Room,
   initialProfile?: Partial<UserProfile>
-): UserProfile & { resolvedColor?: string; resolvedFont?: string } => {
+): UserProfile & {
+  resolvedColor?: string;
+  resolvedFont?: string;
+  resolvedPronouns?: any[];
+} => {
   const mx = useMatrixClient();
   const [legacyUsernameColor] = useSetting(settingsAtom, 'legacyUsernameColor');
   const [renderGlobalColors] = useSetting(settingsAtom, 'renderGlobalNameColors');
@@ -125,20 +129,28 @@ export const useUserProfile = (
 
     let localColor;
     let localFont;
+    let localPronouns;
     let spaceColor;
     let spaceFont;
+    let spacePronouns;
 
     if (room) {
       const state = room.getLiveTimeline().getState(EventTimeline.FORWARDS);
 
-      // Safely get local cosmetics
       const localEvent = state?.getStateEvents(StateEvent.RoomCosmeticsColor, userId);
-      // If userId is provided, Matrix returns a single event. If it's an array, we take the first.
       localColor = (Array.isArray(localEvent) ? localEvent[0] : localEvent)?.getContent()?.color;
 
       const localFontEvent = state?.getStateEvents(StateEvent.RoomCosmeticsFont, userId);
       localFont = (Array.isArray(localFontEvent) ? localFontEvent[0] : localFontEvent)?.getContent()
         ?.font;
+
+      const localPronounEvent = state?.getStateEvents(
+        StateEvent.RoomCosmeticsPronouns as string,
+        userId
+      );
+      localPronouns = (
+        Array.isArray(localPronounEvent) ? localPronounEvent[0] : localPronounEvent
+      )?.getContent()?.pronouns;
 
       const parents = state?.getStateEvents(StateEvent.SpaceParent);
       if (parents && parents.length > 0) {
@@ -179,6 +191,14 @@ export const useUserProfile = (
         : `${clean}, var(--font-secondary)`;
     }
 
-    return { ...data, resolvedColor, resolvedFont };
+    const resolvedPronouns = localPronouns || spacePronouns || data?.pronouns;
+
+    return {
+      ...data,
+      resolvedColor,
+      resolvedFont,
+      resolvedPronouns,
+      pronouns: resolvedPronouns,
+    };
   }, [cached, userId, room, mx, legacyUsernameColor, renderGlobalColors, initialProfile]);
 };

@@ -3,6 +3,9 @@ FROM --platform=$BUILDPLATFORM node:24.13.1-alpine AS builder
 
 WORKDIR /src
 
+ARG VITE_BUILD_HASH
+ENV VITE_BUILD_HASH=$VITE_BUILD_HASH
+
 COPY .npmrc package.json package-lock.json /src/
 RUN npm ci
 COPY . /src/

@@ -24,7 +24,7 @@ import { nameInitials } from '$utils/common';
 import { getMxIdLocalPart, mxcUrlToHttp } from '$utils/matrix';
 import { stopPropagation } from '$utils/keyboard';
 import { getHomePath, getLoginPath, withSearchParam } from '$pages/pathUtils';
-import { logoutClient, initClient } from '$client/initMatrix';
+import { logoutClient, initClient, stopClient } from '$client/initMatrix';
 import { useMatrixClient } from '$hooks/useMatrixClient';
 import { useUserProfile } from '$hooks/useUserProfile';
 import { useMediaAuthentication } from '$hooks/useMediaAuthentication';
@@ -201,7 +201,7 @@ export function AccountSwitcherTab() {
   const handleAddAccount = () => {
     const url = withSearchParam(getLoginPath(), { addAccount: '1' });
     setMenuAnchor(undefined);
-    mx.stopClient();
+    stopClient(mx);
     setTimeout(() => window.location.assign(url), 100);
   };
 

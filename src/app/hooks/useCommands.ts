@@ -167,6 +167,8 @@ export enum Command {
   Font = 'font',
   GFont = 'gfont',
   AddWidget = 'addwidget',
+  Pronoun = 'pronoun',
+  GPronoun = 'gpronoun',
 }
 
 export type CommandContent = {
@@ -808,6 +810,118 @@ export const useCommands = (mx: MatrixClient, room: Room): CommandRecord => {
               );
             } else {
               sendFeedback(`Failed to add widget: ${e.message || 'Unknown error'}`);
+            }
+          }
+        },
+      },
+      [Command.Pronoun]: {
+        name: Command.Pronoun,
+        description:
+          'Set your pronouns for this room. Example: /pronoun "they/them, it/its" | /pronoun reset',
+        exe: async (payload) => {
+          const match = payload.trim().match(/^"(.*)"$/);
+          const rawInput = match ? match[1].trim() : payload.trim();
+          const userId = mx.getSafeUserId();
+
+          const sendFeedback = (msg: string) => {
+            const localNotice = new (window as any).matrixcs.MatrixEvent({
+              type: 'm.room.message',
+              content: { msgtype: 'm.notice', body: msg },
+              event_id: `~pronoun-${Date.now()}`,
+              room_id: room.roomId,
+              sender: userId,
+            });
+            (room as any).addLiveEvents([localNotice], { duplicateStrategy: 'ignore' } as any);
+          };
+
+          try {
+            if (['reset', 'clear', ''].includes(rawInput.toLowerCase())) {
+              await mx.sendStateEvent(
+                room.roomId,
+                StateEvent.RoomCosmeticsPronouns as any,
+                {},
+                userId
+              );
+              sendFeedback('Room pronouns have been reset.');
+              return;
+            }
+
+            const pronounsArray = rawInput
+              .split(',')
+              .map((p) => p.trim())
+              .filter((p) => p.length > 0)
+              .map((p) => ({ summary: p }));
+
+            await mx.sendStateEvent(
+              room.roomId,
+              StateEvent.RoomCosmeticsPronouns as any,
+              { pronouns: pronounsArray },
+              userId
+            );
+            sendFeedback(`Room pronouns set: ${rawInput}`);
+          } catch (e: any) {
+            if (e.errcode === 'M_FORBIDDEN') {
+              sendFeedback('Permission Denied. Could not update room pronouns.');
+            }
+          }
+        },
+      },
+      [Command.GPronoun]: {
+        name: Command.GPronoun,
+        description:
+          'Set your global pronouns for this space. Example: /gpronoun "they/them, it/its" | /gpronoun reset',
+        exe: async (payload) => {
+          const match = payload.trim().match(/^"(.*)"$/);
+          const rawInput = match ? match[1].trim() : payload.trim();
+          const userId = mx.getSafeUserId();
+
+          const sendFeedback = (msg: string) => {
+            const localNotice = new (window as any).matrixcs.MatrixEvent({
+              type: 'm.room.message',
+              content: { msgtype: 'm.notice', body: msg },
+              event_id: `~gpronoun-${Date.now()}`,
+              room_id: room.roomId,
+              sender: userId,
+            });
+            (room as any).addLiveEvents([localNotice], { duplicateStrategy: 'ignore' } as any);
+          };
+
+          const parents = room
+            .getLiveTimeline()
+            .getState(EventTimeline.FORWARDS)
+            ?.getStateEvents(StateEvent.SpaceParent);
+
+          const targetSpaceId =
+            parents && parents.length > 0 ? parents[0].getStateKey() : room.roomId;
+
+          try {
+            if (['reset', 'clear', ''].includes(rawInput.toLowerCase())) {
+              await mx.sendStateEvent(
+                targetSpaceId as any,
+                StateEvent.RoomCosmeticsPronouns as any,
+                {},
+                userId
+              );
+              sendFeedback('Global space pronouns reset.');
+              return;
+            }
+
+            const pronounsArray = rawInput
+              .split(',')
+              .map((p) => p.trim())
+              .filter((p) => p.length > 0)
+              .map((p) => ({ summary: p }));
+
+            await mx.sendStateEvent(
+              targetSpaceId as any,
+              StateEvent.RoomCosmeticsPronouns as any,
+              { pronouns: pronounsArray },
+              userId
+            );
+            sendFeedback(`Global space pronouns set: ${rawInput}`);
+          } catch (e: any) {
+            if (e.errcode === 'M_FORBIDDEN') {
+              sendFeedback('Permission Denied. Could not update space pronouns.');
             }
           }
         },

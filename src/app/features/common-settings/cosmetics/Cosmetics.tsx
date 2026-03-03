@@ -120,6 +120,32 @@ export function Cosmetics({ requestClose }: CosmeticsProps) {
                     }
                   />
                 </SequenceCard>
+
+                <SequenceCard
+                  className={SequenceCardStyle}
+                  variant="SurfaceVariant"
+                  direction="Column"
+                  gap="400"
+                >
+                  <SettingTile
+                    title={isSpace ? 'Space-Wide Pronouns' : 'Room Pronouns'}
+                    description={
+                      isSpace
+                        ? 'Allow everyone to use /gpronoun in this space.'
+                        : 'Allow everyone to use /pronoun in this room.'
+                    }
+                    after={
+                      <Switch
+                        variant="Primary"
+                        value={getLevel(StateEvent.RoomCosmeticsPronouns) === 0}
+                        onChange={(enabled) =>
+                          handleToggle(StateEvent.RoomCosmeticsPronouns, enabled)
+                        }
+                        disabled={!canEditPermissions}
+                      />
+                    }
+                  />
+                </SequenceCard>
               </Box>
 
               {/* --- COMMAND REFERENCE SECTION --- */}
@@ -146,9 +172,15 @@ export function Cosmetics({ requestClose }: CosmeticsProps) {
                       </Text>
                     </Box>
                     <Box direction="Column">
-                      <Text size="T300">/gcolor | /gfont</Text>
+                      <Text size="T300">/pronoun [pronouns]</Text>
                       <Text size="T200" priority="300">
-                        Apply colors/fonts to the entire space.
+                        Set room-specific pronoun set. (e.g. /pronoun &quot;they\them, it\its&quot;)
+                      </Text>
+                    </Box>
+                    <Box direction="Column">
+                      <Text size="T300">/gcolor | /gfont | /gpronoun</Text>
+                      <Text size="T200" priority="300">
+                        Apply colors/fonts/pronouns to the entire space.
                       </Text>
                     </Box>
                   </Box>

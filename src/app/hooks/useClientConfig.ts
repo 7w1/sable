@@ -19,6 +19,17 @@ export type ClientConfig = {
     webPushAppID?: string;
   };
 
+  slidingSync?: {
+    enabled?: boolean;
+    proxyBaseUrl?: string;
+    listPageSize?: number;
+    timelineLimit?: number;
+    pollTimeoutMs?: number;
+    maxRooms?: number;
+    includeInviteList?: boolean;
+    probeTimeoutMs?: number;
+  };
+
   featuredCommunities?: {
     openAsDefault?: boolean;
     spaces?: string[];

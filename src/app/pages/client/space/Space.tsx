@@ -401,8 +401,10 @@ export function Space() {
         if (!closedCategories.has(makeNavCategoryId(space.roomId, parentId))) {
           return false;
         }
+        const unread = roomToUnread.get(roomId);
+        const hasUnread = !!unread && (unread.total > 0 || unread.highlight > 0);
         const showRoomAnyway =
-          roomToUnread.has(roomId) ||
+          hasUnread ||
           roomId === selectedRoomId ||
           (isActiveCallReady && activeCallRoomId === roomId);
         return !showRoomAnyway;

@@ -25,6 +25,7 @@ import {
   initClient,
   logoutClient,
   startClient,
+  stopClient,
 } from '$client/initMatrix';
 import { SplashScreen } from '$components/splash-screen';
 import { ServerConfigsLoader } from '$components/ServerConfigsLoader';
@@ -40,6 +41,7 @@ import { createLogger } from '$utils/debug';
 import { useSyncNicknames } from '$hooks/useNickname';
 import { useAppVisibility } from '$hooks/useAppVisibility';
 import { getHomePath } from '$pages/pathUtils';
+import { useClientConfig } from '$hooks/useClientConfig';
 import { pushSessionToSW } from '../../../sw-session';
 import { SyncStatus } from './SyncStatus';
 import { SpecVersions } from './SpecVersions';
@@ -139,7 +141,7 @@ function ClientRootOptions({ mx, onLogout }: ClientRootOptionsProps) {
 const useLogoutListener = (mx?: MatrixClient) => {
   useEffect(() => {
     const handleLogout: HttpApiEventHandlerMap[HttpApiEvent.SessionLoggedOut] = async () => {
-      mx?.stopClient();
+      if (mx) stopClient(mx);
       await mx?.clearStores();
       window.localStorage.clear();
       window.location.reload();
@@ -158,6 +160,7 @@ type ClientRootProps = {
 export function ClientRoot({ children }: ClientRootProps) {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const clientConfig = useClientConfig();
   const sessions = useAtomValue(sessionsAtom);
   const [activeSessionId, setActiveSessionId] = useAtom(activeSessionIdAtom);
   const setSessions = useSetAtom(sessionsAtom);
@@ -189,7 +192,14 @@ export function ClientRoot({ children }: ClientRootProps) {
   );
   const mx = loadState.status === AsyncStatus.Success ? loadState.data : undefined;
   const [startState, startMatrix] = useAsyncCallback<void, Error, [MatrixClient]>(
-    useCallback((m) => startClient(m), [])
+    useCallback(
+      (m) =>
+        startClient(m, {
+          baseUrl: activeSession?.baseUrl,
+          slidingSync: clientConfig.slidingSync,
+        }),
+      [activeSession?.baseUrl, clientConfig.slidingSync]
+    )
   );
 
   useEffect(() => {
@@ -205,7 +215,7 @@ export function ClientRoot({ children }: ClientRootProps) {
       // Update the SW immediately so media requests use the new account's token
       pushSessionToSW(activeSession.baseUrl, activeSession.accessToken);
       if (mx?.clientRunning) {
-        mx.stopClient();
+        stopClient(mx);
       }
       setLoading(true);
       loadedUserIdRef.current = undefined;
@@ -231,7 +241,7 @@ export function ClientRoot({ children }: ClientRootProps) {
     () => () => {
       if (mx?.clientRunning) {
         log.log('ClientRoot unmounting — stopping client', mx.getUserId());
-        mx.stopClient();
+        stopClient(mx);
       }
     },
     [mx]

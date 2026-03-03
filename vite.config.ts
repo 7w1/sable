@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import type { ViteDevServer } from 'vite';
+import { execSync } from 'child_process';
 import react from '@vitejs/plugin-react';
 import svgr from 'vite-plugin-svgr';
 import { wasm } from '@rollup/plugin-wasm';
@@ -12,6 +13,37 @@ import { VitePWA } from 'vite-plugin-pwa';
 import fs from 'fs';
 import path from 'path';
 import buildConfig from './build.config';
+
+const packageJson = JSON.parse(
+  fs.readFileSync(path.resolve(__dirname, 'package.json'), 'utf8')
+) as {
+  version: string;
+};
+
+const normalizeShortSha = (value?: string): string | undefined => {
+  if (!value) return undefined;
+  const normalized = value.trim();
+  if (!normalized) return undefined;
+  return normalized.slice(0, 7);
+};
+
+const resolveBuildHash = (): string | undefined => {
+  const envHash = normalizeShortSha(
+    process.env.VITE_BUILD_HASH ??
+      process.env.GITHUB_SHA ??
+      process.env.CI_COMMIT_SHA ??
+      process.env.SOURCE_VERSION
+  );
+  if (envHash) return envHash;
+  try {
+    return normalizeShortSha(execSync('git rev-parse --short HEAD').toString('utf8'));
+  } catch {
+    return undefined;
+  }
+};
+
+const appVersion = packageJson.version;
+const buildHash = resolveBuildHash();
 
 const copyFiles = {
   targets: [
@@ -80,6 +112,10 @@ export default defineConfig({
   appType: 'spa',
   publicDir: false,
   base: buildConfig.base,
+  define: {
+    APP_VERSION: JSON.stringify(appVersion),
+    BUILD_HASH: JSON.stringify(buildHash ?? ''),
+  },
   resolve: {
     alias: {
       $hooks: path.resolve(__dirname, 'src/app/hooks'),

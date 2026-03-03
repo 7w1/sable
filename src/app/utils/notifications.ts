@@ -19,6 +19,18 @@ export async function markAsRead(mx: MatrixClient, roomId: string, privateReceip
   const latestEvent = getLatestValidEvent();
   if (latestEvent === null) return;
 
+  const latestEventId = latestEvent.getId();
+  if (!latestEventId) return;
+
+  // Update both read receipt and fully-read marker so unread state clears reliably
+  // across clients and bridge-heavy rooms where hidden events may exist.
+  if (privateReceipt) {
+    await mx.setRoomReadMarkers(roomId, latestEventId, undefined, latestEvent);
+  } else {
+    await mx.setRoomReadMarkers(roomId, latestEventId, latestEvent);
+  }
+
+  // Keep legacy receipt path as a safety fallback for homeservers with partial support.
   await mx.sendReadReceipt(
     latestEvent,
     privateReceipt ? ReceiptType.ReadPrivate : ReceiptType.Read

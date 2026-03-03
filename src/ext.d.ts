@@ -1,5 +1,8 @@
 /// <reference types="vite/client" />
 
+declare const APP_VERSION: string;
+declare const BUILD_HASH: string;
+
 declare module 'browser-encrypt-attachment' {
   export interface EncryptedAttachmentInfo {
     v: string;

@@ -1,4 +1,5 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useAtomValue } from 'jotai';
 import {
   Box,
   Text,
@@ -12,6 +13,7 @@ import {
   config,
   color,
 } from 'folds';
+import { EventType, NotificationCountType } from '$types/matrix-sdk';
 import { Page, PageContent, PageHeader } from '$components/page';
 import { SequenceCard } from '$components/sequence-card';
 import { SettingTile } from '$components/setting-tile';
@@ -21,6 +23,8 @@ import { copyToClipboard } from '$utils/dom';
 import { useRoom } from '$hooks/useRoom';
 import { useRoomState } from '$hooks/useRoomState';
 import { useRoomAccountData } from '$hooks/useRoomAccountData';
+import { roomToUnreadAtom } from '$state/room/roomToUnread';
+import { isNotificationEvent } from '$utils/room';
 import { CutoutCard } from '$components/cutout-card';
 import { AccountDataEditor, AccountDataSubmitCallback } from '$components/AccountDataEditor';
 import { useMatrixClient } from '$hooks/useMatrixClient';
@@ -46,6 +50,61 @@ export function DeveloperTools({ requestClose }: DeveloperToolsProps) {
 
   const [expandAccountData, setExpandAccountData] = useState(false);
   const [accountDataType, setAccountDataType] = useState<string | null>();
+  const roomToUnread = useAtomValue(roomToUnreadAtom);
+  const [, setTick] = useState(0);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => setTick((v) => v + 1), 1000);
+    return () => window.clearInterval(intervalId);
+  }, []);
+
+  const unreadDiagnostics = useMemo(() => {
+    const userId = mx.getUserId();
+    const liveEvents = room.getLiveTimeline().getEvents();
+    const latestLiveEvent = liveEvents[liveEvents.length - 1];
+    const latestLiveEventId = latestLiveEvent?.getId() ?? null;
+    const latestNotificationEvent = [...liveEvents]
+      .reverse()
+      .find((event) => isNotificationEvent(event));
+    const latestNotificationEventId = latestNotificationEvent?.getId() ?? null;
+    const fullyReadEventId =
+      room.getAccountData(EventType.FullyRead)?.getContent<{ event_id?: string }>()?.event_id ??
+      null;
+    const readUpToEventId = userId ? (room.getEventReadUpTo(userId) ?? null) : null;
+    const sdkUnreadTotal = room.getUnreadNotificationCount(NotificationCountType.Total);
+    const sdkUnreadHighlight = room.getUnreadNotificationCount(NotificationCountType.Highlight);
+    const atomUnread = roomToUnread.get(room.roomId);
+
+    return {
+      roomId: room.roomId,
+      userId: userId ?? null,
+      timelineSize: liveEvents.length,
+      latestLiveEventId,
+      latestNotificationEventId,
+      fullyReadEventId,
+      readUpToEventId,
+      hasReadLatestLive: !!(
+        userId &&
+        latestLiveEventId &&
+        room.hasUserReadEvent(userId, latestLiveEventId)
+      ),
+      hasReadLatestNotification: !!(
+        userId &&
+        latestNotificationEventId &&
+        room.hasUserReadEvent(userId, latestNotificationEventId)
+      ),
+      sdkUnread: {
+        total: sdkUnreadTotal,
+        highlight: sdkUnreadHighlight,
+      },
+      atomUnread: atomUnread
+        ? {
+            total: atomUnread.total,
+            highlight: atomUnread.highlight,
+          }
+        : null,
+    };
+  }, [mx, room, roomToUnread]);
 
   const handleClose = useCallback(() => {
     setOpenStateEvent(undefined);
@@ -203,6 +262,55 @@ export function DeveloperTools({ requestClose }: DeveloperToolsProps) {
                     />
                     {expandState && (
                       <Box direction="Column" gap="100">
+                        <Box
+                          direction="Column"
+                          gap="100"
+                          style={{
+                            paddingInline: config.space.S400,
+                            paddingBottom: config.space.S300,
+                          }}
+                        >
+                          <Box justifyContent="SpaceBetween" alignItems="Center">
+                            <Text size="L400">Unread Diagnostics</Text>
+                            <Button
+                              onClick={() =>
+                                copyToClipboard(JSON.stringify(unreadDiagnostics, null, 2))
+                              }
+                              variant="Secondary"
+                              fill="Soft"
+                              size="300"
+                              radii="300"
+                              outlined
+                            >
+                              <Text size="B300">Copy JSON</Text>
+                            </Button>
+                          </Box>
+                          <Text size="T200">
+                            `readUpTo`: {unreadDiagnostics.readUpToEventId ?? 'null'}
+                          </Text>
+                          <Text size="T200">
+                            `m.fully_read`: {unreadDiagnostics.fullyReadEventId ?? 'null'}
+                          </Text>
+                          <Text size="T200">
+                            Latest live: {unreadDiagnostics.latestLiveEventId ?? 'null'} | read?{' '}
+                            {unreadDiagnostics.hasReadLatestLive ? 'yes' : 'no'}
+                          </Text>
+                          <Text size="T200">
+                            Latest notification:{' '}
+                            {unreadDiagnostics.latestNotificationEventId ?? 'null'} | read?{' '}
+                            {unreadDiagnostics.hasReadLatestNotification ? 'yes' : 'no'}
+                          </Text>
+                          <Text size="T200">
+                            SDK unread: {unreadDiagnostics.sdkUnread.total} total /{' '}
+                            {unreadDiagnostics.sdkUnread.highlight} highlight
+                          </Text>
+                          <Text size="T200">
+                            Atom unread:{' '}
+                            {unreadDiagnostics.atomUnread
+                              ? `${unreadDiagnostics.atomUnread.total} total / ${unreadDiagnostics.atomUnread.highlight} highlight`
+                              : 'none'}
+                          </Text>
+                        </Box>
                         <Box justifyContent="SpaceBetween">
                           <Text size="L400">Events</Text>
                           <Text size="L400">Total: {roomState.size}</Text>

@@ -249,7 +249,7 @@ export function UserRoomProfile({ userId, initialProfile }: UserRoomProfileProps
 
   const presence = useUserPresence(userId);
 
-  const fetchedProfile = useUserProfile(userId);
+  const fetchedProfile = useUserProfile(userId, room);
   const extendedProfile =
     fetchedProfile && Object.keys(fetchedProfile).length > 0
       ? fetchedProfile

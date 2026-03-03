@@ -27,10 +27,15 @@ import { nicknamesAtom } from '$state/nicknames';
 import { useMatrixClient } from '$hooks/useMatrixClient';
 import { buildRoomMessageNotification } from '$utils/notificationStyle';
 import { mobileOrTablet } from '$utils/user-agent';
+import { startClient, stopClient } from '$client/initMatrix';
+import { useClientConfig } from '$hooks/useClientConfig';
 
 const log = createLogger('BackgroundNotifications');
 
-const startBackgroundClient = async (session: Session): Promise<MatrixClient> => {
+const startBackgroundClient = async (
+  session: Session,
+  slidingSyncConfig: ReturnType<typeof useClientConfig>['slidingSync']
+): Promise<MatrixClient> => {
   const mx = createClient({
     baseUrl: session.baseUrl,
     accessToken: session.accessToken,
@@ -38,7 +43,10 @@ const startBackgroundClient = async (session: Session): Promise<MatrixClient> =>
     deviceId: session.deviceId,
     timelineSupport: false,
   });
-  await mx.startClient({ lazyLoadMembers: true, initialSyncLimit: 0 });
+  await startClient(mx, {
+    baseUrl: session.baseUrl,
+    slidingSync: slidingSyncConfig,
+  });
   return mx;
 };
 
@@ -63,6 +71,7 @@ const waitForSync = (mx: MatrixClient): Promise<void> =>
   });
 
 export function BackgroundNotifications() {
+  const clientConfig = useClientConfig();
   const sessions = useAtomValue(sessionsAtom);
   const activeSessionId = useAtomValue(activeSessionIdAtom);
   const setActiveSessionId = useSetAtom(activeSessionIdAtom);
@@ -128,7 +137,7 @@ export function BackgroundNotifications() {
     current.forEach((mx, userId) => {
       if (!activeIds.has(userId)) {
         log.log('stopping background client for', userId);
-        mx.stopClient();
+        stopClient(mx);
         current.delete(userId);
       }
     });
@@ -137,7 +146,7 @@ export function BackgroundNotifications() {
       if (current.has(session.userId)) return;
 
       log.log('starting background client for', session.userId);
-      startBackgroundClient(session)
+      startBackgroundClient(session, clientConfig.slidingSync)
         .then(async (mx) => {
           current.set(session.userId, mx);
 
@@ -229,10 +238,11 @@ export function BackgroundNotifications() {
     });
 
     return () => {
-      current.forEach((mx) => mx.stopClient());
+      current.forEach((mx) => stopClient(mx));
       current.clear();
     };
   }, [
+    clientConfig.slidingSync,
     inactiveSessions,
     forcePushOnMobile,
     showNotifications,

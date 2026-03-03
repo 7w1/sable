@@ -12,6 +12,10 @@
     "webPushAppID": "cc.cinny.web"
   },
 
+  "slidingSync": {
+    "enabled": false
+  },
+
   "featuredCommunities": {
     "openAsDefault": false,
     "spaces": [

@@ -144,7 +144,7 @@ export const mapParentWithChildren = (
 export const getRoomToParents = (mx: MatrixClient): RoomToParents => {
   const map: RoomToParents = new Map();
   mx.getRooms()
-    .filter((room) => isSpace(room))
+    .filter((room) => isSpace(room) && room.getMyMembership() === Membership.Join)
     .forEach((room) => mapParentWithChildren(map, room.roomId, getSpaceChildren(room)));
 
   return map;
@@ -212,6 +212,7 @@ export const roomHaveUnread = (mx: MatrixClient, room: Room) => {
   const userId = mx.getUserId();
   if (!userId) return false;
   const readUpToId = room.getEventReadUpTo(userId);
+  if (!readUpToId) return false;
   const liveEvents = room.getLiveTimeline().getEvents();
 
   if (liveEvents[liveEvents.length - 1]?.getSender() === userId) {
@@ -224,12 +225,31 @@ export const roomHaveUnread = (mx: MatrixClient, room: Room) => {
     if (event.getId() === readUpToId) return false;
     if (isNotificationEvent(event)) return true;
   }
-  return true;
+  return false;
 };
 
 export const getUnreadInfo = (room: Room): UnreadInfo => {
-  const total = room.getUnreadNotificationCount(NotificationCountType.Total);
+  const userId = room.client.getUserId();
+  if (userId) {
+    // Reconcile known notification-count drift (notably with Sliding Sync / mixed receipts).
+    room.fixupNotifications(userId);
+  }
+
+  let total = room.getUnreadNotificationCount(NotificationCountType.Total);
   const highlight = room.getUnreadNotificationCount(NotificationCountType.Highlight);
+
+  // If our latest notification event is confirmed read, clamp stale non-highlight totals.
+  if (userId && total > 0 && highlight === 0) {
+    const liveEvents = room.getLiveTimeline().getEvents();
+    const latestNotification = [...liveEvents]
+      .reverse()
+      .find((event) => !event.isSending() && isNotificationEvent(event));
+    const latestNotificationId = latestNotification?.getId();
+    if (latestNotificationId && room.hasUserReadEvent(userId, latestNotificationId)) {
+      total = 0;
+    }
+  }
+
   return {
     roomId: room.roomId,
     highlight,
@@ -244,7 +264,10 @@ export const getUnreadInfos = (mx: MatrixClient): UnreadInfo[] =>
     if (getNotificationType(mx, room.roomId) === NotificationType.Mute) return unread;
 
     if (roomHaveNotification(room) || roomHaveUnread(mx, room)) {
-      unread.push(getUnreadInfo(room));
+      const unreadInfo = getUnreadInfo(room);
+      if (unreadInfo.total > 0 || unreadInfo.highlight > 0) {
+        unread.push(unreadInfo);
+      }
     }
 
     return unread;

@@ -10,6 +10,7 @@ import { AccountDataEditor, AccountDataSubmitCallback } from '$components/Accoun
 import { copyToClipboard } from '$utils/dom';
 import { SequenceCardStyle } from '$features/settings/styles.css';
 import { AccountData } from './AccountData';
+import { SyncDiagnostics } from './SyncDiagnostics';
 
 type DeveloperToolsProps = {
   requestClose: () => void;
@@ -111,6 +112,7 @@ export function DeveloperTools({ requestClose }: DeveloperToolsProps) {
                   </SequenceCard>
                 )}
               </Box>
+              {developerTools && <SyncDiagnostics />}
               {developerTools && (
                 <AccountData
                   expand={expand}

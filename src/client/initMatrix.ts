@@ -17,8 +17,17 @@ import { getLocalStorageItem } from '$state/utils/atomWithLocalStorage';
 import { createLogger } from '$utils/debug';
 import { pushSessionToSW } from '../sw-session';
 import { cryptoCallbacks } from './secretStorageKeys';
+import { SlidingSyncConfig, SlidingSyncDiagnostics, SlidingSyncManager } from './slidingSync';
 
 const log = createLogger('initMatrix');
+const slidingSyncByClient = new WeakMap<MatrixClient, SlidingSyncManager>();
+type SyncTransport = 'classic' | 'sliding';
+type SyncTransportMeta = {
+  transport: SyncTransport;
+  slidingConfigured: boolean;
+  fallbackFromSliding: boolean;
+};
+const syncTransportByClient = new WeakMap<MatrixClient, SyncTransportMeta>();
 
 const deleteDatabase = (name: string): Promise<void> =>
   new Promise((resolve) => {
@@ -244,19 +253,106 @@ export const initClient = async (session: Session): Promise<MatrixClient> => {
   return mx;
 };
 
-export const startClient = async (mx: MatrixClient) => {
+export type StartClientConfig = {
+  baseUrl?: string;
+  slidingSync?: SlidingSyncConfig;
+};
+
+export type ClientSyncDiagnostics = SyncTransportMeta & {
+  syncState: string | null;
+  sliding?: SlidingSyncDiagnostics;
+};
+
+const disposeSlidingSync = (mx: MatrixClient): void => {
+  const manager = slidingSyncByClient.get(mx);
+  if (!manager) return;
+  manager.dispose();
+  slidingSyncByClient.delete(mx);
+};
+
+export const stopClient = (mx: MatrixClient): void => {
+  disposeSlidingSync(mx);
+  mx.stopClient();
+};
+
+export const startClient = async (mx: MatrixClient, config?: StartClientConfig) => {
   log.log('startClient', mx.getUserId());
-  await mx.startClient({
-    lazyLoadMembers: true,
+  disposeSlidingSync(mx);
+  const slidingConfig = config?.slidingSync;
+  const proxyBaseUrl = slidingConfig?.proxyBaseUrl ?? config?.baseUrl;
+  const slidingEnabled = false; // temporary
+  const canUseSliding = slidingEnabled && typeof proxyBaseUrl === 'string';
+  syncTransportByClient.set(mx, {
+    transport: 'classic',
+    slidingConfigured: canUseSliding,
+    fallbackFromSliding: false,
   });
+
+  if (!canUseSliding) {
+    await mx.startClient({
+      lazyLoadMembers: true,
+    });
+    return;
+  }
+
+  const resolvedProxyBaseUrl = proxyBaseUrl;
+  const manager = new SlidingSyncManager(mx, resolvedProxyBaseUrl, slidingConfig ?? {});
+  const supported = await SlidingSyncManager.probe(
+    mx,
+    resolvedProxyBaseUrl,
+    manager.probeTimeoutMs
+  );
+  if (!supported) {
+    syncTransportByClient.set(mx, {
+      transport: 'classic',
+      slidingConfigured: canUseSliding,
+      fallbackFromSliding: true,
+    });
+    log.warn('Sliding Sync unavailable, falling back to classic sync for', mx.getUserId());
+    await mx.startClient({
+      lazyLoadMembers: true,
+    });
+    return;
+  }
+
+  manager.attach();
+  slidingSyncByClient.set(mx, manager);
+  syncTransportByClient.set(mx, {
+    transport: 'sliding',
+    slidingConfigured: true,
+    fallbackFromSliding: false,
+  });
+
+  try {
+    await mx.startClient({
+      lazyLoadMembers: true,
+      slidingSync: manager.slidingSync,
+    });
+  } catch (err) {
+    disposeSlidingSync(mx);
+    throw err;
+  }
 };
 
 export const clearCacheAndReload = async (mx: MatrixClient) => {
   log.log('clearCacheAndReload', mx.getUserId());
-  mx.stopClient();
+  stopClient(mx);
   clearNavToActivePathStore(mx.getSafeUserId());
   await mx.store.deleteAllData();
   window.location.reload();
+};
+
+export const getClientSyncDiagnostics = (mx: MatrixClient): ClientSyncDiagnostics => {
+  const meta = syncTransportByClient.get(mx) ?? {
+    transport: 'classic',
+    slidingConfigured: false,
+    fallbackFromSliding: false,
+  };
+  return {
+    ...meta,
+    syncState: mx.getSyncState(),
+    sliding: slidingSyncByClient.get(mx)?.getDiagnostics(),
+  };
 };
 
 /**
@@ -267,7 +363,7 @@ export const clearCacheAndReload = async (mx: MatrixClient) => {
 export const logoutClient = async (mx: MatrixClient, session?: Session) => {
   log.log('logoutClient', { userId: mx.getUserId(), sessionUserId: session?.userId });
   pushSessionToSW();
-  mx.stopClient();
+  stopClient(mx);
   try {
     await mx.logout();
   } catch {

@@ -1,6 +1,6 @@
 # Sable
 
-A Matrix client built to enhance the user experience with quality-of-life features, cosmetics, utilites, and sheer usability. See the [changelog](https://github.com/7w1/sable/blob/dev/CHANGELOG.md).
+A Matrix client built to enhance the user experience with quality-of-life features, cosmetics, utilities, and sheer usability. See the [changelog](https://github.com/7w1/sable/blob/dev/CHANGELOG.md).
 
 Join our matrix space [here](https://matrix.to/#/#sable:sable.moe) to discuss features, issues, or meowing.
 
@@ -55,9 +55,7 @@ npm run build # Compiles the app into the dist/ directory
 
 After that, you can copy the dist/ directory to your server and serve it.
 
-* The default homeservers and explore pages are defined in [`config.json`](config.json).
-
-* You can also disable the account switcher in the config.json.
+* In the [`config.json`](config.json), you can modify the default homeservers, feature rooms/spaces, toggle the account switcher, and toggle experimental simplified slilding sync support.
 
 * To deploy on subdirectory, you need to rebuild the app youself after updating the `base` path in [`build.config.ts`](build.config.ts).
     * For example, if you want to deploy on `https://sable.moe/app`, then set `base: '/app'`.
