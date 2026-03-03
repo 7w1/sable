@@ -165,10 +165,16 @@ function MemberItem({
         )
       }
     >
-      <Box grow="Yes">
+      <Box direction="Column" grow="Yes">
         <Text size="T400" truncate style={{ color, fontFamily: font }}>
           {name}
         </Text>
+        {presence?.status && (
+          /*THE COLOR SHOULD BE BASED ON SOMETHING I CANT FIND*/
+          <Text size="T300" truncate style={{ color: '#888888', fontFamily: font }}>
+            {presence.status}
+          </Text>
+        )}
       </Box>
     </MenuItem>
   );
