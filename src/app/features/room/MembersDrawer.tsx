@@ -59,6 +59,9 @@ import { useFlattenPowerTagMembers, useGetMemberPowerTag } from '$hooks/useMembe
 import { useRoomCreators } from '$hooks/useRoomCreators';
 import { useSableCosmetics } from '$hooks/useSableCosmetics';
 
+import { AvatarPresence, PresenceBadge } from '$components/presence';
+import { useUserPresence } from '$hooks/useUserPresence';
+
 type MemberDrawerHeaderProps = {
   room: Room;
 };
@@ -128,6 +131,8 @@ function MemberItem({
     ? mx.mxcUrlToHttp(avatarMxcUrl, 100, 100, 'crop', undefined, false, useAuthentication)
     : undefined;
 
+  const presence = useUserPresence(member.userId);
+
   const { color, font } = useSableCosmetics(member.userId, room);
 
   return (
@@ -139,14 +144,18 @@ function MemberItem({
       radii="400"
       onClick={onClick}
       before={
-        <Avatar size="200">
-          <UserAvatar
-            userId={member.userId}
-            src={avatarUrl ?? undefined}
-            alt={name}
-            renderFallback={() => <Icon size="50" src={Icons.User} filled />}
-          />
-        </Avatar>
+        <AvatarPresence
+          badge={presence && <PresenceBadge presence={presence.presence} size="200" />}
+        >
+          <Avatar size="200">
+            <UserAvatar
+              userId={member.userId}
+              src={avatarUrl ?? undefined}
+              alt={name}
+              renderFallback={() => <Icon size="50" src={Icons.User} filled />}
+            />
+          </Avatar>
+        </AvatarPresence>
       }
       after={
         typing && (
