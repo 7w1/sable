@@ -110,7 +110,10 @@ export function HomeTab() {
       </SidebarItemTooltip>
       {homeUnread && (
         <SidebarItemBadge hasCount={homeUnread.total > 0}>
-          <UnreadBadge highlight={homeUnread.highlight > 0} count={homeUnread.total} />
+          <UnreadBadge
+            highlight={homeUnread.highlight > 0}
+            count={homeUnread.highlight > 0 ? homeUnread.highlight : homeUnread.total}
+          />
         </SidebarItemBadge>
       )}
       {menuAnchor && (

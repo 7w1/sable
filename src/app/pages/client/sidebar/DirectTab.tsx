@@ -108,7 +108,10 @@ export function DirectTab() {
       </SidebarItemTooltip>
       {directUnread && (
         <SidebarItemBadge hasCount={directUnread.total > 0}>
-          <UnreadBadge highlight={directUnread.highlight > 0} count={directUnread.total} />
+          <UnreadBadge
+            highlight={directUnread.highlight > 0}
+            count={directUnread.highlight > 0 ? directUnread.highlight : directUnread.total}
+          />
         </SidebarItemBadge>
       )}
       {menuAnchor && (

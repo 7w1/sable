@@ -242,15 +242,20 @@ export const getUnreadInfo = (room: Room, options?: UnreadInfoOptions): UnreadIn
   let total = room.getUnreadNotificationCount(NotificationCountType.Total);
   const highlight = room.getUnreadNotificationCount(NotificationCountType.Highlight);
 
-  // If our latest notification event is confirmed read, clamp stale non-highlight totals.
+  // If our latest main-timeline notification event is confirmed read, clamp its stale count.
+  // Only apply to the room (non-thread) portion so thread reply counts are preserved.
   if (userId && total > 0 && highlight === 0) {
-    const liveEvents = room.getLiveTimeline().getEvents();
-    const latestNotification = [...liveEvents]
-      .reverse()
-      .find((event) => !event.isSending() && isNotificationEvent(event));
-    const latestNotificationId = latestNotification?.getId();
-    if (latestNotificationId && room.hasUserReadEvent(userId, latestNotificationId)) {
-      total = 0;
+    const roomTotal = room.getRoomUnreadNotificationCount(NotificationCountType.Total);
+    if (roomTotal > 0) {
+      const liveEvents = room.getLiveTimeline().getEvents();
+      const latestNotification = [...liveEvents]
+        .reverse()
+        .find((event) => !event.isSending() && isNotificationEvent(event));
+      const latestNotificationId = latestNotification?.getId();
+      if (latestNotificationId && room.hasUserReadEvent(userId, latestNotificationId)) {
+        // Subtract only the stale main-timeline count; thread totals remain intact.
+        total -= roomTotal;
+      }
     }
   }
 

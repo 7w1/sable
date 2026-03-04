@@ -32,6 +32,7 @@ import { useSyncState } from '$hooks/useSyncState';
 import { useRoomsNotificationPreferencesContext } from '$hooks/useRoomsNotificationPreferences';
 import { getClientSyncDiagnostics } from '$client/initMatrix';
 import { roomToParentsAtom } from './roomToParents';
+import { mDirectAtom } from '../mDirectList';
 
 export type RoomToUnreadAction =
   | {
@@ -122,14 +123,14 @@ const baseRoomToUnread = atom<RoomToUnread>(new Map());
 export const roomToUnreadAtom = atom<RoomToUnread, [RoomToUnreadAction], undefined>(
   (get) => get(baseRoomToUnread),
   (get, set, action) => {
+    const dmRoomIds = get(mDirectAtom);
+    const getEffectiveParents = (roomId: string): Set<string> =>
+      dmRoomIds.has(roomId) ? new Set() : getAllParents(get(roomToParentsAtom), roomId);
+
     if (action.type === 'RESET') {
       const draftRoomToUnread: RoomToUnread = new Map();
       action.unreadInfos.forEach((unreadInfo) => {
-        putUnreadInfo(
-          draftRoomToUnread,
-          getAllParents(get(roomToParentsAtom), unreadInfo.roomId),
-          unreadInfo
-        );
+        putUnreadInfo(draftRoomToUnread, getEffectiveParents(unreadInfo.roomId), unreadInfo);
       });
       set(baseRoomToUnread, draftRoomToUnread);
       return;
@@ -143,7 +144,7 @@ export const roomToUnreadAtom = atom<RoomToUnread, [RoomToUnreadAction], undefin
             produce(get(baseRoomToUnread), (draftRoomToUnread) =>
               deleteUnreadInfo(
                 draftRoomToUnread,
-                getAllParents(get(roomToParentsAtom), unreadInfo.roomId),
+                getEffectiveParents(unreadInfo.roomId),
                 unreadInfo.roomId
               )
             )
@@ -160,11 +161,7 @@ export const roomToUnreadAtom = atom<RoomToUnread, [RoomToUnreadAction], undefin
       set(
         baseRoomToUnread,
         produce(get(baseRoomToUnread), (draftRoomToUnread) =>
-          putUnreadInfo(
-            draftRoomToUnread,
-            getAllParents(get(roomToParentsAtom), unreadInfo.roomId),
-            unreadInfo
-          )
+          putUnreadInfo(draftRoomToUnread, getEffectiveParents(unreadInfo.roomId), unreadInfo)
         )
       );
       return;
@@ -173,11 +170,7 @@ export const roomToUnreadAtom = atom<RoomToUnread, [RoomToUnreadAction], undefin
       set(
         baseRoomToUnread,
         produce(get(baseRoomToUnread), (draftRoomToUnread) =>
-          deleteUnreadInfo(
-            draftRoomToUnread,
-            getAllParents(get(roomToParentsAtom), action.roomId),
-            action.roomId
-          )
+          deleteUnreadInfo(draftRoomToUnread, getEffectiveParents(action.roomId), action.roomId)
         )
       );
     }
