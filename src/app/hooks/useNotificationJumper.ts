@@ -17,9 +17,18 @@ export function NotificationJumper() {
   const performJump = useCallback(() => {
     if (!pending) return;
     if (pending.targetSessionId && pending.targetSessionId !== activeSessionId) {
-      log.log('waiting for target session...', {
+      log.log('waiting for target session atom...', {
         targetSessionId: pending.targetSessionId,
         activeSessionId,
+      });
+      return;
+    }
+
+    // Guard: the mx client context may lag one render behind the atom — wait until it catches up
+    if (pending.targetSessionId && mx.getUserId() !== pending.targetSessionId) {
+      log.log('waiting for mx client to switch to target session...', {
+        targetSessionId: pending.targetSessionId,
+        currentUserId: mx.getUserId(),
       });
       return;
     }

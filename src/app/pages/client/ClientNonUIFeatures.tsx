@@ -115,7 +115,6 @@ function InviteNotifications() {
   const [showNotifications] = useSetting(settingsAtom, 'useInAppNotifications');
   const [usePushNotifications] = useSetting(settingsAtom, 'usePushNotifications');
   const [notificationSound] = useSetting(settingsAtom, 'isNotificationSounds');
-  const forcePushOnMobile = usePushNotifications && mobileOrTablet();
 
   const notify = useCallback(
     (count: number) => {
@@ -140,16 +139,22 @@ function InviteNotifications() {
   }, []);
 
   useEffect(() => {
-    if (forcePushOnMobile) return;
-    if (usePushNotifications && document.visibilityState !== 'visible') return;
-    if (invites.length > perviousInviteLen && mx.getSyncState() === 'SYNCING') {
-      if (showNotifications && notificationPermission('granted')) {
-        notify(invites.length - perviousInviteLen);
-      }
+    if (invites.length <= perviousInviteLen || mx.getSyncState() !== 'SYNCING') return;
 
-      if (notificationSound) {
-        playSound();
-      }
+    // Page hidden: if push is enabled, SW handles the OS notification. If not, nothing to do.
+    if (document.visibilityState !== 'visible') return;
+
+    // Page is visible — show in-app experience.
+    // On mobile with push: iOS-style — play sound only, no OS notification (SW is silent when
+    // the app is visible on mobile, matching foreground behaviour of native chat apps).
+    // On desktop with push: SW skipped (saw a visible client), so we show the OS notification.
+    // Without push: always show OS notification when page is visible.
+    const isVisibleMobileWithPush = usePushNotifications && mobileOrTablet();
+    if (!isVisibleMobileWithPush && showNotifications && notificationPermission('granted')) {
+      notify(invites.length - perviousInviteLen);
+    }
+    if (notificationSound) {
+      playSound();
     }
   }, [
     mx,
@@ -157,7 +162,6 @@ function InviteNotifications() {
     perviousInviteLen,
     showNotifications,
     usePushNotifications,
-    forcePushOnMobile,
     notificationSound,
     notify,
     playSound,
@@ -185,7 +189,6 @@ function MessageNotifications() {
     settingsAtom,
     'showMessageContentInEncryptedNotifications'
   );
-  const forcePushOnMobile = usePushNotifications && mobileOrTablet();
   const nicknames = useAtomValue(nicknamesAtom);
   const nicknamesRef = useRef(nicknames);
   nicknamesRef.current = nicknames;
@@ -250,9 +253,7 @@ function MessageNotifications() {
       removed,
       data
     ) => {
-      if (forcePushOnMobile) return;
       if (mx.getSyncState() !== 'SYNCING') return;
-      if (usePushNotifications && document.visibilityState !== 'visible') return;
       if (document.hasFocus() && (selectedRoomId === room?.roomId || notificationSelected)) return;
 
       if (
@@ -283,7 +284,21 @@ function MessageNotifications() {
         return;
       }
 
-      if (showNotifications && notificationPermission('granted')) {
+      // Page hidden: if push is enabled, SW handles the OS notification. If not, nothing to do.
+      if (document.visibilityState !== 'visible') return;
+
+      // Page is visible — show in-app experience.
+      // On mobile with push: iOS-style — play sound only, no OS notification (SW is silent when
+      // the app is visible on mobile, matching foreground behaviour of native chat apps).
+      // On desktop with push: SW skipped (saw a visible client), so we show the OS notification.
+      // Without push: always show OS notification when page is visible.
+      const isVisibleMobileWithPush = usePushNotifications && mobileOrTablet();
+      if (
+        !isVisibleMobileWithPush &&
+        loudByRule &&
+        showNotifications &&
+        notificationPermission('granted')
+      ) {
         const isEncryptedRoom = !!getStateEvent(room, StateEvent.RoomEncryption);
         const avatarMxc =
           room.getAvatarFallbackMember()?.getMxcAvatarUrl() ?? room.getMxcAvatarUrl();
@@ -305,7 +320,7 @@ function MessageNotifications() {
             showMessageContent,
             showEncryptedMessageContent,
           }),
-          silent: !notificationSound || !loudByRule,
+          silent: !notificationSound,
         });
       }
 
@@ -325,7 +340,6 @@ function MessageNotifications() {
     showMessageContent,
     showEncryptedMessageContent,
     usePushNotifications,
-    forcePushOnMobile,
     playSound,
     notify,
     selectedRoomId,
@@ -360,7 +374,6 @@ type ClientNonUIFeaturesProps = {
 
 function HandleNotificationClick() {
   const navigate = useNavigate();
-  const activeSessionId = useAtomValue(activeSessionIdAtom);
   const setActiveSessionId = useSetAtom(activeSessionIdAtom);
   const setPending = useSetAtom(pendingNotificationAtom);
 
@@ -381,9 +394,9 @@ function HandleNotificationClick() {
       switch (eventType) {
         case EventType.RoomMessage:
         case EventType.RoomMessageEncrypted:
-          if (targetSessionId && targetSessionId !== activeSessionId) {
-            setActiveSessionId(targetSessionId);
-          }
+          // Always set the target session — jotai ignores no-ops if already active.
+          // This ensures we never accidentally navigate under the wrong account.
+          if (targetSessionId) setActiveSessionId(targetSessionId);
           setPending({
             roomId: messageData!.room_id,
             eventId: messageData!.event_id,
@@ -392,9 +405,7 @@ function HandleNotificationClick() {
           return;
         case EventType.RoomMember:
           if (!(messageData?.content?.membership === 'invite')) return;
-          if (targetSessionId && targetSessionId !== activeSessionId) {
-            setActiveSessionId(targetSessionId);
-          }
+          if (targetSessionId) setActiveSessionId(targetSessionId);
           navigate(getInboxInvitesPath());
           break;
         default:
@@ -406,7 +417,7 @@ function HandleNotificationClick() {
     return () => {
       navigator.serviceWorker.removeEventListener('message', handleNotificationClickEvent);
     };
-  }, [activeSessionId, navigate, setActiveSessionId, setPending]);
+  }, [navigate, setActiveSessionId, setPending]);
 
   return null;
 }
@@ -422,7 +433,9 @@ function SyncNotificationSettingsWithServiceWorker() {
 
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return;
-    const preferPushOnMobile = usePushNotifications && mobileOrTablet();
+    // preferPushOnMobile=false: SW skips push when page is visible on all devices.
+    // The in-app path handles the visible case (sound on mobile, OS notification on desktop).
+    const preferPushOnMobile = false;
     const payload = {
       type: 'setNotificationSettings' as const,
       notificationSoundEnabled: notificationSound,
