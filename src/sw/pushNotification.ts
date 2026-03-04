@@ -35,7 +35,9 @@ export const createPushNotifications = (
     // the user is still alerted when the existing tag is replaced.
     const tag = roomId ? `room-${roomId}` : (data?.event_id ?? 'Cinny');
     const renotify = !!roomId;
-    await self.registration.showNotification(title, {
+    // `renotify` is a valid Web API property absent from TypeScript's NotificationOptions type.
+    // Build the options object separately to avoid the excess-property check, then cast.
+    const notifOptions = {
       body,
       icon: icon ?? DEFAULT_NOTIFICATION_ICON,
       badge: badge ?? DEFAULT_NOTIFICATION_BADGE,
@@ -43,7 +45,8 @@ export const createPushNotifications = (
       renotify,
       silent,
       data,
-    });
+    };
+    await self.registration.showNotification(title, notifOptions as NotificationOptions);
   };
 
   const handleRoomMessageNotification = async (pushData: any) => {
