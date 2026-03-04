@@ -89,13 +89,24 @@ function FaviconUpdater() {
     }
     try {
       navigator.setAppBadge(total);
-      if (usePushNotifications && total === 0) {
-        registration
-          .getNotifications()
-          .then((pushNotifications) =>
-            pushNotifications.forEach((pushNotification) => pushNotification.close())
-          );
-        navigator.clearAppBadge();
+      if (usePushNotifications) {
+        if (total === 0) {
+          // All rooms read — clear every notification and the badge.
+          registration.getNotifications().then((notifs) => notifs.forEach((n) => n.close()));
+          navigator.clearAppBadge();
+        } else {
+          // Dismiss notifications for individual rooms that are now fully read.
+          registration.getNotifications().then((notifs) => {
+            notifs.forEach((n) => {
+              const notifRoomId = n.data?.room_id;
+              if (!notifRoomId) return;
+              const roomUnread = roomToUnread.get(notifRoomId);
+              if (!roomUnread || (roomUnread.total === 0 && roomUnread.highlight === 0)) {
+                n.close();
+              }
+            });
+          });
+        }
       }
     } catch {
       // Likely Firefox/Gecko-based and doesn't support badging API

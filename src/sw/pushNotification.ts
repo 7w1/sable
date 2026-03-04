@@ -29,11 +29,18 @@ export const createPushNotifications = (
     icon?: string,
     badge?: string
   ) => {
+    const roomId: string | undefined = data?.room_id;
+    // Group by room so new messages in the same room replace the previous
+    // notification rather than stacking individually. renotify: true ensures
+    // the user is still alerted when the existing tag is replaced.
+    const tag = roomId ? `room-${roomId}` : (data?.event_id ?? 'Cinny');
+    const renotify = !!roomId;
     await self.registration.showNotification(title, {
       body,
       icon: icon ?? DEFAULT_NOTIFICATION_ICON,
       badge: badge ?? DEFAULT_NOTIFICATION_BADGE,
-      tag: data?.event_id ?? 'Cinny',
+      tag,
+      renotify,
       silent,
       data,
     });
