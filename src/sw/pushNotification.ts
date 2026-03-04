@@ -150,13 +150,15 @@ export const createPushNotifications = (
     switch (eventType) {
       case EventType.RoomMessage:
       case EventType.Sticker:
-        return handleRoomMessageNotification(pushData);
+        await handleRoomMessageNotification(pushData);
+        break;
       case EventType.RoomMessageEncrypted:
-        return handleEncryptedMessageNotification(pushData);
+        await handleEncryptedMessageNotification(pushData);
+        break;
       case EventType.RoomMember:
         if (!(pushData?.content?.membership === 'invite')) break;
-        return handleInvitationNotification(pushData);
-
+        await handleInvitationNotification(pushData);
+        break;
       default:
         // no voip support in app anyway
         break;
