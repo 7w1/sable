@@ -128,32 +128,17 @@ export const createPushNotifications = (
     await showNotificationWithData('New Invitation', body, data, resolveSilent(pushData?.silent));
   };
 
-  const fallbackNotification = async (pushData: any) => {
-    const body = pushData?.content?.body;
-    let title;
-    if (body) {
-      title = pushData?.sender_display_name
-        ? `${pushData.sender_display_name}${pushData?.room_name ? ` in ${pushData.room_name}` : ''}`
-        : 'New Notification';
-    } else {
-      title = 'You have a new Notification';
-    }
-    const data = {
-      type: pushData?.type,
-      room_id: pushData?.room_id,
-      event_id: pushData?.event_id,
-      user_id: pushData?.user_id,
-      timestamp: Date.now(),
-      ...pushData.data,
-    };
-    await showNotificationWithData(title, body, data, resolveSilent(pushData?.silent));
-  };
+  const isLoudByRule = (pushData: any): boolean => Boolean(pushData?.tweaks?.sound);
 
   const handlePushNotificationPushData = async (pushData: any) => {
     const eventType = pushData?.type as EventType | undefined;
     if (!eventType) {
       console.warn('no event type');
     }
+
+    // Only fire OS notifications for loud-rule events (tweaks.sound present).
+    // Silent-rule events only update the unread badge via the Matrix client sync.
+    if (!isLoudByRule(pushData)) return;
 
     switch (eventType) {
       case EventType.RoomMessage:
@@ -169,8 +154,6 @@ export const createPushNotifications = (
         // no voip support in app anyway
         break;
     }
-
-    return fallbackNotification(pushData);
   };
 
   return { handlePushNotificationPushData };
