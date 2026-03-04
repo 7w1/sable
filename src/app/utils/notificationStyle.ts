@@ -3,6 +3,16 @@ export const DEFAULT_NOTIFICATION_BADGE = '/public/res/apple/apple-touch-icon-72
 export const DEFAULT_MESSAGE_PREVIEW = 'new message';
 export const ENCRYPTED_MESSAGE_PREVIEW = 'Encrypted message';
 
+const MESSAGE_TYPE_FALLBACK: Record<string, string> = {
+  'm.emote': 'sent an emote',
+  'm.notice': 'sent a notice',
+  'm.image': 'sent an image',
+  'm.video': 'sent a video',
+  'm.audio': 'sent audio',
+  'm.file': 'sent a file',
+  'm.location': 'shared a location',
+};
+
 type RoomMessageNotificationInput = {
   roomName?: string;
   username?: string;
@@ -40,6 +50,18 @@ const getBodyFromContent = (content: unknown): string | undefined => {
   return normalized.length > 0 ? normalized : undefined;
 };
 
+const getEventTypeFallbackText = (eventType?: string, content?: unknown): string => {
+  if (eventType === 'm.sticker') return 'sent a sticker';
+  if (eventType === 'm.room.encrypted') return ENCRYPTED_MESSAGE_PREVIEW;
+  if (eventType !== 'm.room.message') return DEFAULT_MESSAGE_PREVIEW;
+
+  if (!content || typeof content !== 'object') return DEFAULT_MESSAGE_PREVIEW;
+  const { msgtype } = content as Record<string, unknown>;
+  if (typeof msgtype !== 'string') return DEFAULT_MESSAGE_PREVIEW;
+
+  return MESSAGE_TYPE_FALLBACK[msgtype] ?? DEFAULT_MESSAGE_PREVIEW;
+};
+
 export const resolveNotificationPreviewText = ({
   content,
   eventType,
@@ -59,7 +81,9 @@ export const resolveNotificationPreviewText = ({
   const body = getBodyFromContent(content);
   if (body) return body;
 
-  return encryptedContext ? ENCRYPTED_MESSAGE_PREVIEW : DEFAULT_MESSAGE_PREVIEW;
+  return encryptedContext
+    ? ENCRYPTED_MESSAGE_PREVIEW
+    : getEventTypeFallbackText(eventType, content);
 };
 
 export const buildRoomMessageNotification = ({

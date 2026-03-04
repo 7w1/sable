@@ -38,6 +38,8 @@ import { startClient, stopClient } from '$client/initMatrix';
 import { useClientConfig } from '$hooks/useClientConfig';
 
 const log = createLogger('BackgroundNotifications');
+const isClientReadyForNotifications = (state: SyncState | string | null): boolean =>
+  state === SyncState.Prepared || state === SyncState.Syncing || state === SyncState.Catchup;
 
 const startBackgroundClient = async (
   session: Session,
@@ -65,12 +67,12 @@ const startBackgroundClient = async (
 const waitForSync = (mx: MatrixClient): Promise<void> =>
   new Promise((resolve) => {
     const state = mx.getSyncState();
-    if (state === SyncState.Syncing) {
+    if (isClientReadyForNotifications(state)) {
       resolve();
       return;
     }
     const onSync = (newState: SyncState) => {
-      if (newState === SyncState.Syncing) {
+      if (isClientReadyForNotifications(newState)) {
         mx.removeListener(ClientEvent.Sync, onSync);
         resolve();
       }
@@ -178,7 +180,7 @@ export function BackgroundNotifications() {
             removed: boolean,
             data: { liveEvent: boolean }
           ) => {
-            if (mx.getSyncState() !== 'SYNCING') return;
+            if (!isClientReadyForNotifications(mx.getSyncState())) return;
             if (!room || !data?.liveEvent || room.isSpaceRoom()) return;
             if (!isNotificationEvent(mEvent)) return;
 
@@ -218,7 +220,7 @@ export function BackgroundNotifications() {
             }
 
             const notificationPayload = buildRoomMessageNotification({
-              roomName: room.name ?? 'Unknown',
+              roomName: room.name ?? room.getCanonicalAlias() ?? room.roomId,
               roomAvatar,
               username: senderName,
               previewText: resolveNotificationPreviewText({
