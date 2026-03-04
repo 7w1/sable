@@ -1,5 +1,5 @@
-import { MouseEventHandler, forwardRef, useState, MouseEvent } from 'react';
-import { EventType, Room } from '$types/matrix-sdk';
+import { MouseEventHandler, forwardRef, useState, MouseEvent, useEffect } from 'react';
+import { EventType, Room, RoomEvent as RoomEventEnum } from '$types/matrix-sdk';
 import {
   Avatar,
   Box,
@@ -25,7 +25,7 @@ import { useNavigate } from 'react-router-dom';
 import { NavButton, NavItem, NavItemContent, NavItemOptions } from '$components/nav';
 import { UnreadBadge, UnreadBadgeCenter } from '$components/unread-badge';
 import { RoomAvatar, RoomIcon } from '$components/room-avatar';
-import { getDirectRoomAvatarUrl, getRoomAvatarUrl } from '$utils/room';
+import { getDirectRoomAvatarUrl, getRoomAvatarUrl, roomHaveUnread } from '$utils/room';
 import { nameInitials } from '$utils/common';
 import { useMatrixClient } from '$hooks/useMatrixClient';
 import { useRoomUnread } from '$state/hooks/unread';
@@ -62,6 +62,28 @@ import { useRoomName } from '$hooks/useRoomMeta';
 import { useAtomValue } from 'jotai';
 import { nicknamesAtom } from '$state/nicknames';
 import { RoomNavUser } from './RoomNavUser';
+
+/**
+ * Reactively checks whether a room has unread messages, even if the
+ * push-rule notification count is zero (e.g. mentions-only rooms with
+ * new regular messages).
+ */
+function useRoomHasUnread(room: Room): boolean {
+  const mx = useMatrixClient();
+  const [hasUnread, setHasUnread] = useState(() => roomHaveUnread(mx, room));
+
+  useEffect(() => {
+    const update = () => setHasUnread(roomHaveUnread(mx, room));
+    room.on(RoomEventEnum.Timeline, update);
+    room.on(RoomEventEnum.Receipt, update);
+    return () => {
+      room.removeListener(RoomEventEnum.Timeline, update);
+      room.removeListener(RoomEventEnum.Receipt, update);
+    };
+  }, [room, mx]);
+
+  return hasUnread;
+}
 
 type RoomNavItemMenuProps = {
   room: Room;
@@ -243,6 +265,7 @@ export function RoomNavItem({
   const { focusWithinProps } = useFocusWithin({ onFocusWithinChange: setHover });
   const [menuAnchor, setMenuAnchor] = useState<RectCords>();
   const unread = useRoomUnread(room.roomId, roomToUnreadAtom);
+  const hasRoomUnread = useRoomHasUnread(room);
   const typingMember = useRoomTypingMember(room.roomId).filter(
     (receipt) => receipt.userId !== mx.getUserId()
   );
@@ -318,6 +341,10 @@ export function RoomNavItem({
   };
 
   const optionsVisible = hover || !!menuAnchor;
+  let unreadCount = 0;
+  if (unread) {
+    unreadCount = unread.highlight > 0 ? unread.highlight : unread.total;
+  }
   const ariaLabel = [
     roomName,
     room.isCallRoom()
@@ -338,7 +365,7 @@ export function RoomNavItem({
       <NavItem
         variant="Background"
         radii="400"
-        highlight={unread !== undefined}
+        highlight={unread !== undefined || hasRoomUnread}
         aria-selected={selected}
         data-hover={!!menuAnchor}
         onContextMenu={handleContextMenu}
@@ -368,7 +395,10 @@ export function RoomNavItem({
                 ) : (
                   <RoomIcon
                     style={{
-                      opacity: unread || isActiveCall ? config.opacity.P500 : config.opacity.P300,
+                      opacity:
+                        unread || hasRoomUnread || isActiveCall
+                          ? config.opacity.P500
+                          : config.opacity.P300,
                     }}
                     filled={selected || isActiveCall}
                     size="100"
@@ -379,7 +409,7 @@ export function RoomNavItem({
               </Avatar>
               <Box as="span" grow="Yes">
                 <Text
-                  priority={unread || isActiveCall ? '500' : '300'}
+                  priority={unread || hasRoomUnread || isActiveCall ? '500' : '300'}
                   as="span"
                   size="Inherit"
                   truncate
@@ -392,9 +422,9 @@ export function RoomNavItem({
                   <TypingIndicator size="300" disableAnimation />
                 </Badge>
               )}
-              {!optionsVisible && unread && (
+              {!optionsVisible && (unread || hasRoomUnread) && (
                 <UnreadBadgeCenter>
-                  <UnreadBadge highlight={unread.highlight > 0} count={unread.total} />
+                  <UnreadBadge highlight={!!unread && unread.highlight > 0} count={unreadCount} />
                 </UnreadBadgeCenter>
               )}
               {!optionsVisible && notificationMode !== RoomNotificationMode.Unset && (
