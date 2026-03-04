@@ -342,7 +342,7 @@ export function Search({ requestClose }: SearchProps) {
                                 <UnreadBadgeCenter>
                                   <UnreadBadge
                                     highlight={unread.highlight > 0}
-                                    count={unread.total}
+                                    count={unread.highlight > 0 ? unread.highlight : unread.total}
                                   />
                                 </UnreadBadgeCenter>
                               )}

@@ -466,7 +466,10 @@ function SpaceTab({
           </SidebarItemTooltip>
           {unread && (
             <SidebarItemBadge hasCount={unread.total > 0}>
-              <UnreadBadge highlight={unread.highlight > 0} count={unread.total} />
+              <UnreadBadge
+                highlight={unread.highlight > 0}
+                count={unread.highlight > 0 ? unread.highlight : unread.total}
+              />
             </SidebarItemBadge>
           )}
           {menuAnchor && (
@@ -598,7 +601,10 @@ function ClosedSpaceFolder({
           </SidebarItemTooltip>
           {unread && (
             <SidebarItemBadge hasCount={unread.total > 0}>
-              <UnreadBadge highlight={unread.highlight > 0} count={unread.total} />
+              <UnreadBadge
+                highlight={unread.highlight > 0}
+                count={unread.highlight > 0 ? unread.highlight : unread.total}
+              />
             </SidebarItemBadge>
           )}
         </SidebarItem>
