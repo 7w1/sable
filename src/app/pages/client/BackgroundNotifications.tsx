@@ -29,16 +29,16 @@ import { NotificationType, StateEvent } from '$types/matrix/room';
 import { createLogger } from '$utils/debug';
 import LogoSVG from '$public/res/svg/cinny.svg';
 import { nicknamesAtom } from '$state/nicknames';
-import { useMatrixClient } from '$hooks/useMatrixClient';
 import {
   buildRoomMessageNotification,
   resolveNotificationPreviewText,
 } from '$utils/notificationStyle';
-import { mobileOrTablet } from '$utils/user-agent';
 import { startClient, stopClient } from '$client/initMatrix';
 import { useClientConfig } from '$hooks/useClientConfig';
 
 const log = createLogger('BackgroundNotifications');
+const isClientReadyForNotifications = (state: SyncState | string | null): boolean =>
+  state === SyncState.Prepared || state === SyncState.Syncing || state === SyncState.Catchup;
 
 const startBackgroundClient = async (
   session: Session,
@@ -66,12 +66,12 @@ const startBackgroundClient = async (
 const waitForSync = (mx: MatrixClient): Promise<void> =>
   new Promise((resolve) => {
     const state = mx.getSyncState();
-    if (state === SyncState.Syncing) {
+    if (isClientReadyForNotifications(state)) {
       resolve();
       return;
     }
     const onSync = (newState: SyncState) => {
-      if (newState === SyncState.Syncing) {
+      if (isClientReadyForNotifications(newState)) {
         mx.removeListener(ClientEvent.Sync, onSync);
         resolve();
       }
@@ -92,11 +92,19 @@ export function BackgroundNotifications() {
     settingsAtom,
     'showMessageContentInEncryptedNotifications'
   );
-  const forcePushOnMobile = usePushNotifications && mobileOrTablet();
-  const activeMx = useMatrixClient();
+  const shouldRunBackgroundNotifications = showNotifications || usePushNotifications;
   const nicknames = useAtomValue(nicknamesAtom);
   const nicknamesRef = useRef(nicknames);
   nicknamesRef.current = nicknames;
+  // Refs so handleTimeline callbacks always read current settings without stale closures
+  const showNotificationsRef = useRef(showNotifications);
+  showNotificationsRef.current = showNotifications;
+  const notificationSoundRef = useRef(notificationSound);
+  notificationSoundRef.current = notificationSound;
+  const showMessageContentRef = useRef(showMessageContent);
+  showMessageContentRef.current = showMessageContent;
+  const showEncryptedMessageContentRef = useRef(showEncryptedMessageContent);
+  showEncryptedMessageContentRef.current = showEncryptedMessageContent;
   const clientsRef = useRef<Map<string, MatrixClient>>(new Map());
   const notifiedEventsRef = useRef<Set<string>>(new Set());
   const setPending = useSetAtom(pendingNotificationAtom);
@@ -116,13 +124,14 @@ export function BackgroundNotifications() {
     badge?: string;
     /** If `true` the notification plays no sound. */
     silent?: boolean;
+    /** Arbitrary payload attached to the notification. */
+    data?: unknown;
     /** Callback when the user taps/clicks the notification. */
     onClick?: () => void;
   }
 
   useEffect(() => {
-    if (forcePushOnMobile) return undefined;
-    if (!showNotifications) return undefined;
+    if (!shouldRunBackgroundNotifications) return undefined;
 
     const { current } = clientsRef;
     const activeIds = new Set(inactiveSessions.map((s) => s.userId));
@@ -134,6 +143,7 @@ export function BackgroundNotifications() {
           badge: opts.badge,
           body: opts.body,
           silent: opts.silent ?? false,
+          data: opts.data,
         });
         if (opts.onClick) {
           const cb = opts.onClick;
@@ -176,18 +186,17 @@ export function BackgroundNotifications() {
             removed: boolean,
             data: { liveEvent: boolean }
           ) => {
-            if (mx.getSyncState() !== 'SYNCING') return;
+            if (!isClientReadyForNotifications(mx.getSyncState())) return;
             if (!room || !data?.liveEvent || room.isSpaceRoom()) return;
             if (!isNotificationEvent(mEvent)) return;
 
             const notifType = getNotificationType(mx, room.roomId);
             if (notifType === NotificationType.Mute) return;
 
-            const activeRoom = activeMx.getRoom(room.roomId);
-            if (activeRoom?.getMyMembership() === 'join') return;
-
             const eventId = mEvent.getId();
-            if (!eventId || notifiedEventsRef.current.has(eventId)) return;
+            if (!eventId) return;
+            const dedupeId = `${session.userId}:${eventId}`;
+            if (notifiedEventsRef.current.has(dedupeId)) return;
 
             const sender = mEvent.getSender();
             if (!sender || sender === mx.getUserId()) return;
@@ -206,28 +215,34 @@ export function BackgroundNotifications() {
               ? (mxcUrlToHttp(mx, avatarMxc, false, 96, 96, 'crop') ?? undefined)
               : LogoSVG;
 
-            const isHighlight = pushActions.tweaks?.highlight === true;
+            const loudByRule = Boolean(pushActions.tweaks?.sound);
+            // Silent-rule events: update badges only, no OS notification or sound
+            if (!loudByRule) return;
+
             const isEncryptedRoom = !!getStateEvent(room, StateEvent.RoomEncryption);
 
-            notifiedEventsRef.current.add(eventId);
+            notifiedEventsRef.current.add(dedupeId);
             // Cap the set so it doesn't grow unbounded
             if (notifiedEventsRef.current.size > 200) {
               const first = notifiedEventsRef.current.values().next().value;
               if (first) notifiedEventsRef.current.delete(first);
             }
 
+            // Respect in-app notification setting (read from ref to avoid stale closure)
+            if (!showNotificationsRef.current) return;
+
             const notificationPayload = buildRoomMessageNotification({
-              roomName: room.name ?? 'Unknown',
+              roomName: room.name ?? room.getCanonicalAlias() ?? room.roomId,
               roomAvatar,
               username: senderName,
               previewText: resolveNotificationPreviewText({
                 content: mEvent.getContent(),
                 eventType: mEvent.getType(),
                 isEncryptedRoom,
-                showMessageContent,
-                showEncryptedMessageContent,
+                showMessageContent: showMessageContentRef.current,
+                showEncryptedMessageContent: showEncryptedMessageContentRef.current,
               }),
-              silent: !notificationSound || !isHighlight,
+              silent: !notificationSoundRef.current,
               eventId,
               data: {
                 type: mEvent.getType(),
@@ -243,10 +258,12 @@ export function BackgroundNotifications() {
               badge: notificationPayload.options.badge,
               body: notificationPayload.options.body,
               silent: notificationPayload.options.silent ?? undefined,
+              data: notificationPayload.options.data,
               onClick: () => {
                 window.focus();
+                // Always switch to the background account – jotai ignores no-op updates
+                setActiveSessionId(session.userId);
                 setPending({ roomId: room.roomId, eventId, targetSessionId: session.userId });
-                if (session.userId !== activeSessionId) setActiveSessionId(session.userId);
               },
             });
           };
@@ -265,13 +282,7 @@ export function BackgroundNotifications() {
   }, [
     clientConfig.slidingSync,
     inactiveSessions,
-    forcePushOnMobile,
-    showNotifications,
-    notificationSound,
-    showMessageContent,
-    showEncryptedMessageContent,
-    activeMx,
-    activeSessionId,
+    shouldRunBackgroundNotifications,
     setActiveSessionId,
     setPending,
   ]);
