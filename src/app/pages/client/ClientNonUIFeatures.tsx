@@ -1,7 +1,7 @@
 import { useAtomValue, useSetAtom } from 'jotai';
 import { ReactNode, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { EventType, RoomEvent, RoomEventHandlerMap } from '$types/matrix-sdk';
+import { EventType, PushProcessor, RoomEvent, RoomEventHandlerMap } from '$types/matrix-sdk';
 import { roomToUnreadAtom, unreadEqual, unreadInfoToUnread } from '$state/room/roomToUnread';
 import LogoSVG from '$public/res/svg/cinny.svg';
 import LogoUnreadSVG from '$public/res/svg/cinny-unread.svg';
@@ -202,6 +202,7 @@ function MessageNotifications() {
       roomId,
       eventId,
       previewText,
+      silent,
     }: {
       roomName: string;
       roomAvatar?: string;
@@ -209,13 +210,14 @@ function MessageNotifications() {
       roomId: string;
       eventId: string;
       previewText: string;
+      silent: boolean;
     }) => {
       const payload = buildRoomMessageNotification({
         roomName,
         roomAvatar,
         username,
         previewText,
-        silent: true,
+        silent,
         eventId,
       });
       const noti = new window.Notification(payload.title, payload.options);
@@ -240,6 +242,7 @@ function MessageNotifications() {
   }, []);
 
   useEffect(() => {
+    const pushProcessor = new PushProcessor(mx);
     const handleTimelineEvent: RoomEventHandlerMap[RoomEvent.Timeline] = (
       mEvent,
       room,
@@ -265,6 +268,9 @@ function MessageNotifications() {
       const sender = mEvent.getSender();
       const eventId = mEvent.getId();
       if (!sender || !eventId || mEvent.getSender() === mx.getUserId()) return;
+      const pushActions = pushProcessor.actionsForEvent(mEvent);
+      if (!pushActions?.notify) return;
+      const loudByRule = Boolean(pushActions.tweaks?.sound);
       const unreadInfo = getUnreadInfo(room);
       const cachedUnreadInfo = unreadCacheRef.current.get(room.roomId);
       unreadCacheRef.current.set(room.roomId, unreadInfo);
@@ -299,10 +305,11 @@ function MessageNotifications() {
             showMessageContent,
             showEncryptedMessageContent,
           }),
+          silent: !notificationSound || !loudByRule,
         });
       }
 
-      if (notificationSound) {
+      if (notificationSound && loudByRule) {
         playSound();
       }
     };

@@ -13,6 +13,7 @@ import {
   MatrixEvent,
   MsgType,
   NotificationCountType,
+  PushProcessor,
   RelationType,
   Room,
   RoomMember,
@@ -228,20 +229,42 @@ export const roomHaveUnread = (mx: MatrixClient, room: Room) => {
   return false;
 };
 
-type UnreadInfoOptions = {
-  applyFixup?: boolean;
+const getUnreadByPushRules = (room: Room, userId: string): { total: number; highlight: number } => {
+  const liveEvents = room.getLiveTimeline().getEvents();
+  const readUpToId = room.getEventReadUpTo(userId);
+  if (!readUpToId) return { total: 0, highlight: 0 };
+
+  const pushProcessor = new PushProcessor(room.client);
+  let total = 0;
+  let highlight = 0;
+
+  for (let i = liveEvents.length - 1; i >= 0; i -= 1) {
+    const event = liveEvents[i];
+    if (!event) break;
+    if (event.getId() === readUpToId) break;
+    if (event.getSender() !== userId && isNotificationEvent(event)) {
+      const pushActions = pushProcessor.actionsForEvent(event);
+      if (pushActions?.notify) {
+        total += 1;
+        if (pushActions.tweaks?.highlight === true) {
+          highlight += 1;
+        }
+      }
+    }
+  }
+
+  return { total, highlight };
 };
 
-export const getUnreadInfo = (room: Room, options?: UnreadInfoOptions): UnreadInfo => {
+export const getUnreadInfo = (room: Room): UnreadInfo => {
   const userId = room.client.getUserId();
-  if (userId && options?.applyFixup) {
+  if (userId) {
     // Reconcile known notification-count drift (notably with Sliding Sync / mixed receipts).
     room.fixupNotifications(userId);
   }
 
   let total = room.getUnreadNotificationCount(NotificationCountType.Total);
   let highlight = room.getUnreadNotificationCount(NotificationCountType.Highlight);
-  let syntheticDotUnread = false;
 
   // If our latest notification event is confirmed read, clamp stale non-highlight totals.
   if (userId && total > 0 && highlight === 0) {
@@ -256,13 +279,14 @@ export const getUnreadInfo = (room: Room, options?: UnreadInfoOptions): UnreadIn
   }
 
   // Fallback for cases where SDK counters are stale/zero but unread-by-receipt state still exists.
-  // Represent as a dot badge (count=0) rather than a numeric badge.
-  if (total === 0 && highlight === 0 && roomHaveUnread(room.client, room)) {
-    highlight = 1;
-    syntheticDotUnread = true;
+  // Recompute from push rules so highlight remains accurate to mention/keyword rules.
+  if (userId && total === 0 && highlight === 0 && roomHaveUnread(room.client, room)) {
+    const fallback = getUnreadByPushRules(room, userId);
+    total = fallback.total;
+    highlight = fallback.highlight;
   }
 
-  const resolvedTotal = syntheticDotUnread ? total : Math.max(total, highlight);
+  const resolvedTotal = Math.max(total, highlight);
 
   return {
     roomId: room.roomId,
@@ -271,14 +295,14 @@ export const getUnreadInfo = (room: Room, options?: UnreadInfoOptions): UnreadIn
   };
 };
 
-export const getUnreadInfos = (mx: MatrixClient, options?: UnreadInfoOptions): UnreadInfo[] =>
+export const getUnreadInfos = (mx: MatrixClient): UnreadInfo[] =>
   mx.getRooms().reduce<UnreadInfo[]>((unread, room) => {
     if (room.isSpaceRoom()) return unread;
     if (room.getMyMembership() !== 'join') return unread;
     if (getNotificationType(mx, room.roomId) === NotificationType.Mute) return unread;
 
     if (roomHaveNotification(room) || roomHaveUnread(mx, room)) {
-      const unreadInfo = getUnreadInfo(room, options);
+      const unreadInfo = getUnreadInfo(room);
       if (unreadInfo.total > 0 || unreadInfo.highlight > 0) {
         unread.push(unreadInfo);
       }

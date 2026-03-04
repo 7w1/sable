@@ -29,7 +29,6 @@ import { NotificationType, StateEvent } from '$types/matrix/room';
 import { createLogger } from '$utils/debug';
 import LogoSVG from '$public/res/svg/cinny.svg';
 import { nicknamesAtom } from '$state/nicknames';
-import { useMatrixClient } from '$hooks/useMatrixClient';
 import {
   buildRoomMessageNotification,
   resolveNotificationPreviewText,
@@ -93,7 +92,7 @@ export function BackgroundNotifications() {
     'showMessageContentInEncryptedNotifications'
   );
   const forcePushOnMobile = usePushNotifications && mobileOrTablet();
-  const activeMx = useMatrixClient();
+  const shouldRunBackgroundNotifications = showNotifications || usePushNotifications;
   const nicknames = useAtomValue(nicknamesAtom);
   const nicknamesRef = useRef(nicknames);
   nicknamesRef.current = nicknames;
@@ -116,13 +115,15 @@ export function BackgroundNotifications() {
     badge?: string;
     /** If `true` the notification plays no sound. */
     silent?: boolean;
+    /** Arbitrary payload attached to the notification. */
+    data?: unknown;
     /** Callback when the user taps/clicks the notification. */
     onClick?: () => void;
   }
 
   useEffect(() => {
     if (forcePushOnMobile) return undefined;
-    if (!showNotifications) return undefined;
+    if (!shouldRunBackgroundNotifications) return undefined;
 
     const { current } = clientsRef;
     const activeIds = new Set(inactiveSessions.map((s) => s.userId));
@@ -134,6 +135,7 @@ export function BackgroundNotifications() {
           badge: opts.badge,
           body: opts.body,
           silent: opts.silent ?? false,
+          data: opts.data,
         });
         if (opts.onClick) {
           const cb = opts.onClick;
@@ -183,11 +185,10 @@ export function BackgroundNotifications() {
             const notifType = getNotificationType(mx, room.roomId);
             if (notifType === NotificationType.Mute) return;
 
-            const activeRoom = activeMx.getRoom(room.roomId);
-            if (activeRoom?.getMyMembership() === 'join') return;
-
             const eventId = mEvent.getId();
-            if (!eventId || notifiedEventsRef.current.has(eventId)) return;
+            if (!eventId) return;
+            const dedupeId = `${session.userId}:${eventId}`;
+            if (notifiedEventsRef.current.has(dedupeId)) return;
 
             const sender = mEvent.getSender();
             if (!sender || sender === mx.getUserId()) return;
@@ -206,10 +207,10 @@ export function BackgroundNotifications() {
               ? (mxcUrlToHttp(mx, avatarMxc, false, 96, 96, 'crop') ?? undefined)
               : LogoSVG;
 
-            const isHighlight = pushActions.tweaks?.highlight === true;
+            const loudByRule = Boolean(pushActions.tweaks?.sound);
             const isEncryptedRoom = !!getStateEvent(room, StateEvent.RoomEncryption);
 
-            notifiedEventsRef.current.add(eventId);
+            notifiedEventsRef.current.add(dedupeId);
             // Cap the set so it doesn't grow unbounded
             if (notifiedEventsRef.current.size > 200) {
               const first = notifiedEventsRef.current.values().next().value;
@@ -227,7 +228,7 @@ export function BackgroundNotifications() {
                 showMessageContent,
                 showEncryptedMessageContent,
               }),
-              silent: !notificationSound || !isHighlight,
+              silent: !notificationSound || !loudByRule,
               eventId,
               data: {
                 type: mEvent.getType(),
@@ -243,10 +244,11 @@ export function BackgroundNotifications() {
               badge: notificationPayload.options.badge,
               body: notificationPayload.options.body,
               silent: notificationPayload.options.silent ?? undefined,
+              data: notificationPayload.options.data,
               onClick: () => {
                 window.focus();
-                setPending({ roomId: room.roomId, eventId, targetSessionId: session.userId });
                 if (session.userId !== activeSessionId) setActiveSessionId(session.userId);
+                setPending({ roomId: room.roomId, eventId, targetSessionId: session.userId });
               },
             });
           };
@@ -266,11 +268,11 @@ export function BackgroundNotifications() {
     clientConfig.slidingSync,
     inactiveSessions,
     forcePushOnMobile,
+    shouldRunBackgroundNotifications,
     showNotifications,
     notificationSound,
     showMessageContent,
     showEncryptedMessageContent,
-    activeMx,
     activeSessionId,
     setActiveSessionId,
     setPending,
