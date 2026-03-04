@@ -272,7 +272,10 @@ self.addEventListener('notificationclick', (event: NotificationEvent) => {
 
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      const focusedClient = clientList.find((client): client is WindowClient => 'focus' in client);
+      // Prefer a visible (foreground) tab; fall back to any open window client.
+      const focusedClient =
+        clientList.find((c) => c.visibilityState === 'visible') ??
+        clientList.find((c): c is WindowClient => 'focus' in c);
       if (focusedClient) {
         return focusedClient.focus().then(() => {
           postMessageToClient(focusedClient);
