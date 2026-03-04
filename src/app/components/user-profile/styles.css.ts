@@ -31,16 +31,37 @@ export const UserHeroCoverFallback = style({
   transform: 'scale(2)',
 });
 
-export const UserHeroAvatarContainer = style({
+export const UserHeroAvatarStatusContainer = style({
   position: 'relative',
   height: toRem(29),
+  width: '100%',
+});
+export const UserHeroAvatarContainer = style({
+  position: 'relative',
+  paddingLeft: config.space.S400,
 });
 export const UserAvatarContainer = style({
-  position: 'absolute',
-  left: config.space.S400,
+  position: 'relative',
   top: 0,
   transform: 'translateY(-50%)',
   backgroundColor: color.Surface.Container,
+});
+export const UserHeroStatusContainer = style({
+  position: 'relative',
+  transform: 'translateY(-50%)',
+  textAlign: 'justify',
+  display: 'grid',
+  width: '100%',
+  paddingLeft: '2%',
+});
+export const UserHeroStatusTooltip = style({
+  maxWidth: '98%',
+  justifySelf: 'left',
+  cursor: 'pointer',
+  ':hover': {
+    filter: 'brightness(0.8)',
+    transform: 'translateY(-1px)',
+  },
 });
 export const UserHeroAvatar = style({
   outline: `${config.borderWidth.B600} solid ${color.Surface.Container}`,

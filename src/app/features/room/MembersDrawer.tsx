@@ -30,6 +30,8 @@ import { MatrixClient, Room, RoomMember } from '$types/matrix-sdk';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import classNames from 'classnames';
 
+import { AvatarPresence, PresenceBadge } from '$components/presence';
+import { useUserPresence } from '$hooks/useUserPresence';
 import { useMatrixClient } from '$hooks/useMatrixClient';
 import { UseStateProvider } from '$components/UseStateProvider';
 import { SearchItemStrGetter, UseAsyncSearchOptions, useAsyncSearch } from '$hooks/useAsyncSearch';
@@ -128,6 +130,7 @@ function MemberItem({
     ? mx.mxcUrlToHttp(avatarMxcUrl, 100, 100, 'crop', undefined, false, useAuthentication)
     : undefined;
 
+  const presence = useUserPresence(member.userId);
   const { color, font } = useSableCosmetics(member.userId, room);
 
   return (
@@ -139,14 +142,18 @@ function MemberItem({
       radii="400"
       onClick={onClick}
       before={
-        <Avatar size="200">
-          <UserAvatar
-            userId={member.userId}
-            src={avatarUrl ?? undefined}
-            alt={name}
-            renderFallback={() => <Icon size="50" src={Icons.User} filled />}
-          />
-        </Avatar>
+        <AvatarPresence
+          badge={presence && <PresenceBadge presence={presence.presence} size="200" />}
+        >
+          <Avatar size="200">
+            <UserAvatar
+              userId={member.userId}
+              src={avatarUrl ?? undefined}
+              alt={name}
+              renderFallback={() => <Icon size="50" src={Icons.User} filled />}
+            />
+          </Avatar>
+        </AvatarPresence>
       }
       after={
         typing && (
@@ -156,10 +163,15 @@ function MemberItem({
         )
       }
     >
-      <Box grow="Yes">
+      <Box direction="Column" grow="Yes">
         <Text size="T400" truncate style={{ color, fontFamily: font }}>
           {name}
         </Text>
+        {presence?.status && (
+          <Text size="T300" truncate style={{ color: config.opacity.P300, fontFamily: font }}>
+            {presence.status}
+          </Text>
+        )}
       </Box>
     </MenuItem>
   );

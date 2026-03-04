@@ -154,6 +154,7 @@ function UserExtendedSection({
             borderRadius: config.radii.R400,
             maxHeight: '200px',
             marginTop: config.space.S0,
+            overflowY: 'auto',
           }}
         >
           <Box style={{ padding: config.space.S200, wordBreak: 'break-word' }}>

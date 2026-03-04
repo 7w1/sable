@@ -9,6 +9,8 @@ import {
   OverlayBackdrop,
   OverlayCenter,
   Text,
+  Tooltip,
+  toRem,
 } from 'folds';
 import classNames from 'classnames';
 import FocusTrap from 'focus-trap-react';
@@ -34,6 +36,7 @@ type UserHeroProps = {
 };
 export function UserHero({ userId, avatarUrl, bannerUrl, presence }: UserHeroProps) {
   const [viewAvatar, setViewAvatar] = useState<string>();
+  const [isFullStatus, setIsFullStatus] = useState(false);
 
   const cachedBannerUrl = useBlobCache(bannerUrl);
   const cachedAvatarUrl = useBlobCache(avatarUrl);
@@ -58,51 +61,80 @@ export function UserHero({ userId, avatarUrl, bannerUrl, presence }: UserHeroPro
           />
         )}
       </div>
-      <div className={css.UserHeroAvatarContainer}>
-        <AvatarPresence
-          className={css.UserAvatarContainer}
-          badge={
-            presence && <PresenceBadge presence={presence.presence} status={presence.status} />
-          }
-        >
-          <Avatar
-            as={avatarUrl ? 'button' : 'div'}
-            onClick={avatarUrl ? () => setViewAvatar(avatarUrl) : undefined}
-            className={css.UserHeroAvatar}
-            size="500"
+      <Box direction="Row" className={css.UserHeroAvatarStatusContainer}>
+        <div className={css.UserHeroAvatarContainer}>
+          <AvatarPresence
+            className={css.UserAvatarContainer}
+            badge={presence && <PresenceBadge presence={presence.presence} />}
           >
-            <UserAvatar
-              className={css.UserHeroAvatarImg}
-              userId={userId}
-              src={avatarUrl}
-              alt={userId}
-              renderFallback={() => <Icon size="500" src={Icons.User} filled />}
-            />
-          </Avatar>
-        </AvatarPresence>
-        {viewAvatar && (
-          <Overlay open backdrop={<OverlayBackdrop />}>
-            <OverlayCenter>
-              <FocusTrap
-                focusTrapOptions={{
-                  initialFocus: false,
-                  onDeactivate: () => setViewAvatar(undefined),
-                  clickOutsideDeactivates: true,
-                  escapeDeactivates: stopPropagation,
+            <Avatar
+              as={avatarUrl ? 'button' : 'div'}
+              onClick={avatarUrl ? () => setViewAvatar(avatarUrl) : undefined}
+              className={css.UserHeroAvatar}
+              size="500"
+            >
+              <UserAvatar
+                className={css.UserHeroAvatarImg}
+                userId={userId}
+                src={avatarUrl}
+                alt={userId}
+                renderFallback={() => <Icon size="500" src={Icons.User} filled />}
+              />
+            </Avatar>
+          </AvatarPresence>
+          {viewAvatar && (
+            <Overlay open backdrop={<OverlayBackdrop />}>
+              <OverlayCenter>
+                <FocusTrap
+                  focusTrapOptions={{
+                    initialFocus: false,
+                    onDeactivate: () => setViewAvatar(undefined),
+                    clickOutsideDeactivates: true,
+                    escapeDeactivates: stopPropagation,
+                  }}
+                >
+                  <Modal size="500" onContextMenu={(evt: any) => evt.stopPropagation()}>
+                    <ImageViewer
+                      src={viewAvatar}
+                      alt={userId}
+                      requestClose={() => setViewAvatar(undefined)}
+                    />
+                  </Modal>
+                </FocusTrap>
+              </OverlayCenter>
+            </Overlay>
+          )}
+        </div>
+        {presence?.status?.length && (
+          <div className={css.UserHeroStatusContainer}>
+            <Tooltip
+              onClick={() => setIsFullStatus(!isFullStatus)}
+              className={css.UserHeroStatusTooltip}
+              style={{
+                maxHeight: isFullStatus ? toRem(105) : toRem(48),
+              }}
+            >
+              <Text
+                size="T200"
+                style={{
+                  overflow: isFullStatus ? 'scroll' : 'hidden',
+                  height: '100%',
+                  wordBreak: 'break-word',
                 }}
               >
-                <Modal size="500" onContextMenu={(evt: any) => evt.stopPropagation()}>
-                  <ImageViewer
-                    src={viewAvatar}
-                    alt={userId}
-                    requestClose={() => setViewAvatar(undefined)}
-                  />
-                </Modal>
-              </FocusTrap>
-            </OverlayCenter>
-          </Overlay>
+                {presence.status}
+              </Text>
+              {presence.status.length > 70 && (
+                <Icon
+                  size="50"
+                  style={{ position: 'relative', left: '2.5%' }}
+                  src={isFullStatus ? Icons.ChevronTop : Icons.ChevronBottom}
+                />
+              )}
+            </Tooltip>
+          </div>
         )}
-      </div>
+      </Box>
     </Box>
   );
 }

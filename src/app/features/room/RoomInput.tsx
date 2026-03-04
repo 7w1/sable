@@ -395,7 +395,7 @@ export const RoomInput = forwardRef<HTMLDivElement, RoomInputProps>(
       } else if (commandName) {
         const commandContent = commands[commandName as Command];
         if (commandContent) {
-          commandContent.exe(plainText);
+          commandContent.exe(plainText, customHtml);
         }
         resetEditor(editor);
         resetEditorHistory(editor);

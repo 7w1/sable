@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect, ChangeEvent } from 'react';
-import { Box, IconButton, Icon, Icons, Input } from 'folds';
+import { Box, IconButton, Button, Icon, Icons, Input, Text } from 'folds';
 import { SettingTile } from '$components/setting-tile';
 
 interface IntlWithSupportedValues {
@@ -24,6 +24,11 @@ export function TimezoneEditor({ current, onSave }: TimezoneEditorProps) {
     const systemTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
     setVal(systemTz);
     onSave(systemTz);
+  };
+
+  const handleReset = () => {
+    setVal('');
+    onSave('');
   };
 
   const handleManualSave = () => {
@@ -64,14 +69,25 @@ export function TimezoneEditor({ current, onSave }: TimezoneEditorProps) {
               </option>
             ))}
           </datalist>
+          <Button
+            variant="Secondary"
+            fill="Soft"
+            size="300"
+            radii="300"
+            outlined
+            onClick={handleSync}
+          >
+            <Text size="B300">System</Text>
+          </Button>
           <IconButton
             size="300"
-            variant="Secondary"
-            onClick={handleSync}
+            variant="Critical"
+            fill="None"
+            onClick={handleReset}
             radii="300"
-            title="Sync with system"
+            title="Reset"
           >
-            <Icon src={Icons.Reload} size="100" />
+            <Icon src={Icons.Cross} size="100" />
           </IconButton>
         </Box>
       }
