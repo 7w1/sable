@@ -33,7 +33,6 @@ import {
   buildRoomMessageNotification,
   resolveNotificationPreviewText,
 } from '$utils/notificationStyle';
-import { mobileOrTablet } from '$utils/user-agent';
 import { startClient, stopClient } from '$client/initMatrix';
 import { useClientConfig } from '$hooks/useClientConfig';
 
@@ -93,11 +92,19 @@ export function BackgroundNotifications() {
     settingsAtom,
     'showMessageContentInEncryptedNotifications'
   );
-  const forcePushOnMobile = usePushNotifications && mobileOrTablet();
   const shouldRunBackgroundNotifications = showNotifications || usePushNotifications;
   const nicknames = useAtomValue(nicknamesAtom);
   const nicknamesRef = useRef(nicknames);
   nicknamesRef.current = nicknames;
+  // Refs so handleTimeline callbacks always read current settings without stale closures
+  const showNotificationsRef = useRef(showNotifications);
+  showNotificationsRef.current = showNotifications;
+  const notificationSoundRef = useRef(notificationSound);
+  notificationSoundRef.current = notificationSound;
+  const showMessageContentRef = useRef(showMessageContent);
+  showMessageContentRef.current = showMessageContent;
+  const showEncryptedMessageContentRef = useRef(showEncryptedMessageContent);
+  showEncryptedMessageContentRef.current = showEncryptedMessageContent;
   const clientsRef = useRef<Map<string, MatrixClient>>(new Map());
   const notifiedEventsRef = useRef<Set<string>>(new Set());
   const setPending = useSetAtom(pendingNotificationAtom);
@@ -124,7 +131,6 @@ export function BackgroundNotifications() {
   }
 
   useEffect(() => {
-    if (forcePushOnMobile) return undefined;
     if (!shouldRunBackgroundNotifications) return undefined;
 
     const { current } = clientsRef;
@@ -210,6 +216,9 @@ export function BackgroundNotifications() {
               : LogoSVG;
 
             const loudByRule = Boolean(pushActions.tweaks?.sound);
+            // Silent-rule events: update badges only, no OS notification or sound
+            if (!loudByRule) return;
+
             const isEncryptedRoom = !!getStateEvent(room, StateEvent.RoomEncryption);
 
             notifiedEventsRef.current.add(dedupeId);
@@ -219,6 +228,9 @@ export function BackgroundNotifications() {
               if (first) notifiedEventsRef.current.delete(first);
             }
 
+            // Respect in-app notification setting (read from ref to avoid stale closure)
+            if (!showNotificationsRef.current) return;
+
             const notificationPayload = buildRoomMessageNotification({
               roomName: room.name ?? room.getCanonicalAlias() ?? room.roomId,
               roomAvatar,
@@ -227,10 +239,10 @@ export function BackgroundNotifications() {
                 content: mEvent.getContent(),
                 eventType: mEvent.getType(),
                 isEncryptedRoom,
-                showMessageContent,
-                showEncryptedMessageContent,
+                showMessageContent: showMessageContentRef.current,
+                showEncryptedMessageContent: showEncryptedMessageContentRef.current,
               }),
-              silent: !notificationSound || !loudByRule,
+              silent: !notificationSoundRef.current,
               eventId,
               data: {
                 type: mEvent.getType(),
@@ -249,7 +261,8 @@ export function BackgroundNotifications() {
               data: notificationPayload.options.data,
               onClick: () => {
                 window.focus();
-                if (session.userId !== activeSessionId) setActiveSessionId(session.userId);
+                // Always switch to the background account – jotai ignores no-op updates
+                setActiveSessionId(session.userId);
                 setPending({ roomId: room.roomId, eventId, targetSessionId: session.userId });
               },
             });
@@ -269,13 +282,7 @@ export function BackgroundNotifications() {
   }, [
     clientConfig.slidingSync,
     inactiveSessions,
-    forcePushOnMobile,
     shouldRunBackgroundNotifications,
-    showNotifications,
-    notificationSound,
-    showMessageContent,
-    showEncryptedMessageContent,
-    activeSessionId,
     setActiveSessionId,
     setPending,
   ]);
