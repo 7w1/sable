@@ -128,9 +128,15 @@ export const createPushNotifications = (
     await showNotificationWithData('New Invitation', body, data, resolveSilent(pushData?.silent));
   };
 
+  const isLoudByRule = (pushData: any): boolean => Boolean(pushData?.tweaks?.sound);
+
   const handlePushNotificationPushData = async (pushData: any) => {
     const eventType = pushData?.type as EventType | undefined;
     if (!eventType) return;
+
+    // Only fire OS notifications for loud-rule events (tweaks.sound present).
+    // Silent-rule events only update the unread badge via the Matrix client sync.
+    if (!isLoudByRule(pushData)) return;
 
     switch (eventType) {
       case EventType.RoomMessage:
