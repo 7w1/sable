@@ -211,7 +211,7 @@ export function PasswordLoginForm({ defaultUsername, defaultEmail }: PasswordLog
           required
           outlined
           // disable auto-capitalization, which is usually undesirable for username input.
-          autoCapitalize='off'
+          autoCapitalize="off"
           after={<UsernameHint server={server} />}
         />
         {loginState.status === AsyncStatus.Error && (
