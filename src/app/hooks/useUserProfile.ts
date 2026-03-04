@@ -17,6 +17,7 @@ export type UserProfile = {
   pronouns?: any[];
   timezone?: string;
   bio?: string;
+  status?: string;
   bannerUrl?: string;
   nameColor?: string;
   extended?: Record<string, any>;
@@ -33,6 +34,7 @@ const normalizeInfo = (info: any): UserProfile => {
     'moe.sable.app.bio',
     'chat.commet.profile_bio',
     'chat.commet.profile_banner',
+    'chat.commet.profile_status',
     'moe.sable.app.name_color',
   ];
 
@@ -49,6 +51,7 @@ const normalizeInfo = (info: any): UserProfile => {
     pronouns: info['io.fsky.nyx.pronouns'],
     timezone: info['us.cloke.msc4175.tz'] || info['m.tz'],
     bio: info['moe.sable.app.bio'] || info['chat.commet.profile_bio'],
+    status: info['chat.commet.profile_status'],
     bannerUrl: info['chat.commet.profile_banner'],
     nameColor: info['moe.sable.app.name_color'],
     extended,

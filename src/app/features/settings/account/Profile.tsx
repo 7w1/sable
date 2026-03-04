@@ -45,10 +45,12 @@ import { CompactUploadCardRenderer } from '$components/upload-card';
 import { useCapabilities } from '$hooks/useCapabilities';
 import { profilesCacheAtom } from '$state/userRoomProfile';
 import { SequenceCardStyle } from '$features/settings/styles.css';
+import { useUserPresence } from '$hooks/useUserPresence';
 import { TimezoneEditor } from './TimezoneEditor';
 import { PronounEditor } from './PronounEditor';
 import { BioEditor } from './BioEditor';
 import { NameColorEditor } from './NameColorEditor';
+import { StatusEditor } from './StatusEditor';
 
 type PronounSet = {
   summary: string;
@@ -479,6 +481,8 @@ function ProfileExtended({ profile, userId }: ProfileProps) {
   const setGlobalProfiles = useSetAtom(profilesCacheAtom);
 
   const pronouns = (profile.pronouns as PronounSet[]) || [];
+  const presence = useUserPresence(userId);
+  const currentStatus = presence?.status || '';
 
   // Unknown fields / unimplemented non-matrix-spec fields
   // Only renders them, can't edit or set
@@ -496,9 +500,29 @@ function ProfileExtended({ profile, userId }: ProfileProps) {
     [mx, userId, setGlobalProfiles]
   );
 
+  const handleSaveStatus = useCallback(
+    async (newStatus: string) => {
+      const currentState = presence?.presence || 'online';
+
+      await mx.setPresence({
+        presence: currentState,
+        status_msg: newStatus,
+      });
+    },
+    [mx, presence]
+  );
+
   return (
     <Box direction="Column" gap="100">
       <Text size="L400">Extended Profile</Text>
+      <SequenceCard
+        className={SequenceCardStyle}
+        variant="SurfaceVariant"
+        direction="Column"
+        gap="400"
+      >
+        <StatusEditor current={currentStatus} onSave={handleSaveStatus} />
+      </SequenceCard>
       <SequenceCard
         className={SequenceCardStyle}
         variant="SurfaceVariant"

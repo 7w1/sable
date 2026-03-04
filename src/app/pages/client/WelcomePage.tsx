@@ -19,7 +19,7 @@ export function WelcomePage() {
               <span>
                 Yet another matrix client fork.{' '}
                 <a href="https://github.com/7w1/sable" target="_blank" rel="noreferrer noopener">
-                  v1.3.1
+                  v1.3.2
                 </a>
               </span>
             }

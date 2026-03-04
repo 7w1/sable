@@ -171,13 +171,11 @@ export function AccountSwitcherTab() {
       setMenuAnchor(undefined);
       setBusyUserIds((prev) => new Set(prev).add(session.userId));
       try {
-        setSessions({ type: 'DELETE', session });
-        const remaining = sessions.filter((s) => s.userId !== session.userId);
-        if (activeSessionId === session.userId) {
-          setActiveSessionId(remaining[0]?.userId ?? undefined);
-        }
         if (session.userId === mx.getUserId()) {
           await logoutClient(mx, session);
+          setSessions({ type: 'DELETE', session });
+          const remaining = sessions.filter((s) => s.userId !== session.userId);
+          setActiveSessionId(remaining[0]?.userId ?? undefined);
           window.location.reload();
         } else {
           try {
@@ -186,7 +184,14 @@ export function AccountSwitcherTab() {
           } catch (err) {
             log.error('failed to logout background session, IndexedDB may remain', err);
           }
+          setSessions({ type: 'DELETE', session });
+          if (activeSessionId === session.userId) {
+            const remaining = sessions.filter((s) => s.userId !== session.userId);
+            setActiveSessionId(remaining[0]?.userId ?? undefined);
+          }
         }
+      } catch (err) {
+        log.error('Logout failed', err);
       } finally {
         setBusyUserIds((prev) => {
           const next = new Set(prev);

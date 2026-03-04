@@ -25,6 +25,7 @@ import {
   Tooltip,
   TooltipProvider,
   config,
+  toRem,
 } from 'folds';
 import { MatrixClient, Room, RoomMember } from '$types/matrix-sdk';
 import { useVirtualizer } from '@tanstack/react-virtual';
@@ -125,9 +126,11 @@ function MemberItem({
     getMemberDisplayName(room, member.userId, nicknames) ??
     getMxIdLocalPart(member.userId) ??
     member.userId;
+
+  // Increased the request size to 128x128 to maintain quality for the larger avatar
   const avatarMxcUrl = member.getMxcAvatarUrl();
   const avatarUrl = avatarMxcUrl
-    ? mx.mxcUrlToHttp(avatarMxcUrl, 100, 100, 'crop', undefined, false, useAuthentication)
+    ? mx.mxcUrlToHttp(avatarMxcUrl, 128, 128, 'crop', undefined, false, useAuthentication)
     : undefined;
 
   const presence = useUserPresence(member.userId);
@@ -142,18 +145,28 @@ function MemberItem({
       radii="400"
       onClick={onClick}
       before={
-        <AvatarPresence
-          badge={presence && <PresenceBadge presence={presence.presence} size="200" />}
+        <div
+          style={{
+            position: 'relative',
+            width: toRem(40),
+            height: toRem(40),
+            transform: 'scale(0.85)',
+            transformOrigin: 'center',
+          }}
         >
-          <Avatar size="200">
-            <UserAvatar
-              userId={member.userId}
-              src={avatarUrl ?? undefined}
-              alt={name}
-              renderFallback={() => <Icon size="50" src={Icons.User} filled />}
-            />
-          </Avatar>
-        </AvatarPresence>
+          <AvatarPresence
+            badge={presence && <PresenceBadge presence={presence.presence} size="200" />}
+          >
+            <Avatar size="300" radii="400">
+              <UserAvatar
+                userId={member.userId}
+                src={avatarUrl ?? undefined}
+                alt={name}
+                renderFallback={() => <Icon size="100" src={Icons.User} filled />}
+              />
+            </Avatar>
+          </AvatarPresence>
+        </div>
       }
       after={
         typing && (
@@ -163,12 +176,20 @@ function MemberItem({
         )
       }
     >
-      <Box direction="Column" grow="Yes">
-        <Text size="T400" truncate style={{ color, fontFamily: font }}>
+      <Box direction="Column" grow="Yes" gap="0">
+        <Text size="T300" truncate style={{ color, fontFamily: font, lineHeight: '1.2' }}>
           {name}
         </Text>
         {presence?.status && (
-          <Text size="T300" truncate style={{ color: config.opacity.P300, fontFamily: font }}>
+          <Text
+            size="T200"
+            truncate
+            style={{
+              opacity: config.opacity.P300,
+              fontFamily: font,
+              marginTop: '-2px',
+            }}
+          >
             {presence.status}
           </Text>
         )}

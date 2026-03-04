@@ -1075,6 +1075,7 @@ export function RoomTimeline({
         delete cleanExtended['io.fsky.nyx.pronouns'];
         delete cleanExtended['moe.sable.app.bio'];
         delete cleanExtended['chat.commet.profile_bio'];
+        delete cleanExtended['chat.commet.profile_status'];
         delete cleanExtended['us.cloke.msc4175.tz'];
         delete cleanExtended['m.tz'];
         delete cleanExtended['chat.commet.profile_banner'];

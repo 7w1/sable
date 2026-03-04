@@ -12,7 +12,10 @@ The web app is available at [app.sable.moe](https://app.sable.moe/) and gets upd
 You can also download our desktop app for windows and linux from [releases](https://github.com/7w1/sable/releases/latest).
 
 ## Self-hosting
-You can either run the prebuilt container image or build Sable yourself.
+You have a few options for self hosting, you can:
+1. Run the prebuilt docker container.
+2. Deploy on a site like GitLab Pages. Jae has a [guide here](https://docs.j4.lc/Public+documentation/Tutorials/Deploying+Sable+on+GitLab+Pages).
+3. Build it yourself.
 
 ### Docker
 
@@ -67,7 +70,7 @@ After that, you can copy the dist/ directory to your server and serve it.
 Execute the following commands to start a development server:
 ```sh
 npm ci # Installs all dependencies
-npm start # Serve a development version
+npm run dev # Serve a development version
 ```
 
 To build the app:

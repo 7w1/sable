@@ -41,6 +41,7 @@ const KNOWN_KEYS = [
   'moe.sable.app.bio',
   'chat.commet.profile_bio',
   'chat.commet.profile_banner',
+  'chat.commet.profile_status',
   'io.fsky.nyx.pronouns',
   'us.cloke.msc4175.tz',
   'm.tz',
