@@ -240,8 +240,7 @@ export const getUnreadInfo = (room: Room, options?: UnreadInfoOptions): UnreadIn
   }
 
   let total = room.getUnreadNotificationCount(NotificationCountType.Total);
-  let highlight = room.getUnreadNotificationCount(NotificationCountType.Highlight);
-  let syntheticDotUnread = false;
+  const highlight = room.getUnreadNotificationCount(NotificationCountType.Highlight);
 
   // If our latest notification event is confirmed read, clamp stale non-highlight totals.
   if (userId && total > 0 && highlight === 0) {
@@ -255,19 +254,10 @@ export const getUnreadInfo = (room: Room, options?: UnreadInfoOptions): UnreadIn
     }
   }
 
-  // Fallback for cases where SDK counters are stale/zero but unread-by-receipt state still exists.
-  // Represent as a dot badge (count=0) rather than a numeric badge.
-  if (total === 0 && highlight === 0 && roomHaveUnread(room.client, room)) {
-    highlight = 1;
-    syntheticDotUnread = true;
-  }
-
-  const resolvedTotal = syntheticDotUnread ? total : Math.max(total, highlight);
-
   return {
     roomId: room.roomId,
     highlight,
-    total: resolvedTotal,
+    total: Math.max(total, highlight),
   };
 };
 
