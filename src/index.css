@@ -73,6 +73,10 @@
   --font-monospace: 'Space Mono', monospace;
 }
 
+.cinny-font {
+  --font-secondary: 'Inter Variable', var(--font-emoji), sans-serif;
+}
+
 html {
   height: 100%;
   overflow: hidden;
@@ -123,7 +127,8 @@ label {
   padding: 0;
 }
 button,
-textarea {
+textarea,
+input {
   margin: 0;
   padding: 0;
   background-color: transparent;

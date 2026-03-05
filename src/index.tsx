@@ -2,6 +2,8 @@ import { createRoot } from 'react-dom/client';
 import { enableMapSet } from 'immer';
 import '@fontsource-variable/nunito';
 import '@fontsource-variable/nunito/wght-italic.css';
+import '@fontsource-variable/inter';
+import '@fontsource-variable/inter/wght-italic.css';
 import '@fontsource/space-mono/400.css';
 import '@fontsource/space-mono/700.css';
 import '@fontsource/space-mono/400-italic.css';

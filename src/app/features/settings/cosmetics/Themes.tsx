@@ -328,6 +328,7 @@ function PageZoomInput() {
 export function Appearance() {
   const [twitterEmoji, setTwitterEmoji] = useSetting(settingsAtom, 'twitterEmoji');
   const [showUnreadCounts, setShowUnreadCounts] = useSetting(settingsAtom, 'showUnreadCounts');
+  const [useCinnyFont, setUseCinnyFont] = useSetting(settingsAtom, 'useCinnyFont');
 
   return (
     <Box direction="Column" gap="700">
@@ -335,6 +336,14 @@ export function Appearance() {
 
       <Box direction="Column" gap="100">
         <Text size="L400">Visual Tweaks</Text>
+
+        <SequenceCard className={SequenceCardStyle} variant="SurfaceVariant" direction="Column">
+          <SettingTile
+            title="Use Inter"
+            description="Use Inter (the font used in Cinny) instead of Nunito."
+            after={<Switch variant="Primary" value={useCinnyFont} onChange={setUseCinnyFont} />}
+          />
+        </SequenceCard>
 
         <SequenceCard className={SequenceCardStyle} variant="SurfaceVariant" direction="Column">
           <SettingTile
