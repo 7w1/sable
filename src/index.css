@@ -20,7 +20,7 @@
   --mx-uc-8: hsl(94, 100%, 35%);
 
   --font-emoji: 'Twemoji_DISABLED';
-  --font-secondary: 'Inter Variable', var(--font-emoji), sans-serif;
+  --font-secondary: 'Nunito Variable', var(--font-emoji), sans-serif;
   --font-monospace: 'Space Mono', monospace;
 }
 
@@ -37,7 +37,7 @@
   --mx-uc-7: hsl(40, 100%, 75%);
   --mx-uc-8: hsl(0, 100%, 75%);
 
-  --font-secondary: 'Inter Variable', var(--font-emoji), sans-serif;
+  --font-secondary: 'Nunito Variable', var(--font-emoji), sans-serif;
   --font-monospace: 'Space Mono', monospace;
 }
 
@@ -53,7 +53,7 @@
   --mx-uc-7: #fabd2f;
   --mx-uc-8: #cc241d;
 
-  --font-secondary: 'Inter Variable', var(--font-emoji), sans-serif;
+  --font-secondary: 'Nunito Variable', var(--font-emoji), sans-serif;
   --font-monospace: 'Space Mono', monospace;
 }
 
@@ -69,12 +69,12 @@
   --mx-uc-7: hsl(40, 100%, 75%);
   --mx-uc-8: hsl(0, 100%, 75%);
 
-  --font-secondary: 'Inter Variable', var(--font-emoji), sans-serif;
+  --font-secondary: 'Nunito Variable', var(--font-emoji), sans-serif;
   --font-monospace: 'Space Mono', monospace;
 }
 
 .cinny-font {
-  --font-secondary: 'Nunito Variable', var(--font-emoji), sans-serif;
+  --font-secondary: 'Inter Variable', var(--font-emoji), sans-serif;
 }
 
 html {
