@@ -41,6 +41,10 @@
   --font-monospace: 'Space Mono', monospace;
 }
 
+.butter-theme {
+  --font-secondary: 'Inter Variable', var(--font-emoji), sans-serif;
+}
+
 .gruvdark-theme {
   --tc-link: #83a598;
 
