@@ -35,6 +35,8 @@ const normalizeInfo = (info: any): UserProfile => {
     'm.tz',
     'moe.sable.app.bio',
     'chat.commet.profile_bio',
+    // for more compatibility with existing profiles, even if it's not ideal.
+    'xyz.extera.about',
     'chat.commet.profile_banner',
     'chat.commet.profile_status',
     'moe.sable.app.name_color',
@@ -53,7 +55,8 @@ const normalizeInfo = (info: any): UserProfile => {
     // prioritize the MSC4247 key but fall back to the older fsky one, to maximize the chance of showing pronouns if they're set.
     pronouns: info['m.pronouns'] || info['io.fsky.nyx.pronouns'],
     timezone: info['us.cloke.msc4175.tz'] || info['m.tz'],
-    bio: info['moe.sable.app.bio'] || info['chat.commet.profile_bio'],
+    // prefer sable bio but fall back to commet and extera about, which are more widely used at the moment, to maximize the chance of showing something useful.
+    bio: info['moe.sable.app.bio'] || info['chat.commet.profile_bio'] || info['xyz.extera.about'],
     status: info['chat.commet.profile_status'],
     bannerUrl: info['chat.commet.profile_banner'],
     nameColor: info['moe.sable.app.name_color'],

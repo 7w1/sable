@@ -569,10 +569,14 @@ function ProfileExtended({ profile, userId }: ProfileProps) {
           value={
             profile.extended?.['moe.sable.app.bio'] ||
             profile.extended?.['chat.commet.profile_bio'] ||
+            // setting it also as extera about for better compatibility with existing profiles
+            profile.extended?.['xyz.extera.about'] ||
             profile.bio
           }
           onSave={(htmlBio) => {
             handleSaveField('moe.sable.app.bio', htmlBio);
+            // remove html tags for the plaintext version for extera about
+            handleSaveField('xyz.extera.about', htmlBio.replace(/<[^>]*>/g, ''));
 
             const cleanedHtml = htmlBio.replace(/<br\/><\/blockquote>/g, '</blockquote>');
             handleSaveField('chat.commet.profile_bio', {
