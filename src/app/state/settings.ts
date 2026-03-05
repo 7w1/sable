@@ -63,6 +63,7 @@ export interface Settings {
   renderGlobalNameColors: boolean;
 
   // Sable features!
+  useCinnyFont: boolean;
   mobileGestures: boolean;
   rightSwipeAction: RightSwipeAction;
   hideMembershipInReadOnly: boolean;
@@ -117,6 +118,7 @@ const defaultSettings: Settings = {
   renderGlobalNameColors: true,
 
   // Sable features!
+  useCinnyFont: false,
   mobileGestures: true,
   rightSwipeAction: RightSwipeAction.Reply,
   hideMembershipInReadOnly: true,

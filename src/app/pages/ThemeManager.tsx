@@ -13,6 +13,7 @@ import { settingsAtom } from '$state/settings';
 
 export function UnAuthRouteThemeManager() {
   const systemThemeKind = useSystemThemeKind();
+  const [useCinnyFont] = useSetting(settingsAtom, 'useCinnyFont');
 
   useEffect(() => {
     document.body.className = '';
@@ -23,7 +24,10 @@ export function UnAuthRouteThemeManager() {
     if (systemThemeKind === ThemeKind.Light) {
       document.body.classList.add(...LightTheme.classNames);
     }
-  }, [systemThemeKind]);
+    if (useCinnyFont) {
+      document.body.classList.add('cinny-font');
+    }
+  }, [systemThemeKind, useCinnyFont]);
 
   return null;
 }
@@ -31,6 +35,7 @@ export function UnAuthRouteThemeManager() {
 export function AuthRouteThemeManager({ children }: { children: ReactNode }) {
   const activeTheme = useActiveTheme();
   const [monochromeMode] = useSetting(settingsAtom, 'monochromeMode');
+  const [useCinnyFont] = useSetting(settingsAtom, 'useCinnyFont');
 
   useEffect(() => {
     document.body.className = '';
@@ -38,12 +43,16 @@ export function AuthRouteThemeManager({ children }: { children: ReactNode }) {
 
     document.body.classList.add(...activeTheme.classNames);
 
+    if (useCinnyFont) {
+      document.body.classList.add('cinny-font');
+    }
+
     if (monochromeMode) {
       document.body.style.filter = 'grayscale(1)';
     } else {
       document.body.style.filter = '';
     }
-  }, [activeTheme, monochromeMode]);
+  }, [activeTheme, monochromeMode, useCinnyFont]);
 
   return <ThemeContextProvider value={activeTheme}>{children}</ThemeContextProvider>;
 }
