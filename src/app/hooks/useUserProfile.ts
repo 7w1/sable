@@ -30,7 +30,7 @@ const normalizeInfo = (info: any): UserProfile => {
     'displayname',
     'io.fsky.nyx.pronouns',
     // MSC4247 user pronouns key, for when it eventually gets accepted
-    'm.pronouns',
+    'org.matrix.msc4247.pronouns',
     'us.cloke.msc4175.tz',
     'm.tz',
     'moe.sable.app.bio',
@@ -53,7 +53,7 @@ const normalizeInfo = (info: any): UserProfile => {
     avatarUrl: info.avatar_url,
     displayName: info.displayname,
     // prioritize the MSC4247 key but fall back to the older fsky one, to maximize the chance of showing pronouns if they're set.
-    pronouns: info['m.pronouns'] || info['io.fsky.nyx.pronouns'],
+    pronouns: info['org.matrix.msc4247.pronouns'] || info['io.fsky.nyx.pronouns'],
     timezone: info['us.cloke.msc4175.tz'] || info['m.tz'],
     // prefer sable bio but fall back to commet and extera about, which are more widely used at the moment, to maximize the chance of showing something useful.
     bio: info['moe.sable.app.bio'] || info['chat.commet.profile_bio'] || info['xyz.extera.about'],

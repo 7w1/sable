@@ -546,7 +546,7 @@ function ProfileExtended({ profile, userId }: ProfileProps) {
             handleSaveField('io.fsky.nyx.pronouns', p);
             // also save it under the MSC4247 key for better compatibility with other clients,
             // even if it's NOT finalized yet, to maximize the chance of pronouns showing up if they're set.
-            handleSaveField('m.pronouns', p);
+            handleSaveField('org.matrix.msc4247.pronouns', p);
           }}
         />
       </SequenceCard>
