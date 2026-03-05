@@ -340,7 +340,7 @@ export function Appearance() {
         <SequenceCard className={SequenceCardStyle} variant="SurfaceVariant" direction="Column">
           <SettingTile
             title="Use Inter"
-            description="Use Inter (the font used in Cinny font) instead of Nunito."
+            description="Use Inter (the font used in Cinny) instead of Nunito."
             after={<Switch variant="Primary" value={useCinnyFont} onChange={setUseCinnyFont} />}
           />
         </SequenceCard>
