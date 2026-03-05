@@ -542,7 +542,12 @@ function ProfileExtended({ profile, userId }: ProfileProps) {
       >
         <PronounEditor
           current={pronouns}
-          onSave={(p) => handleSaveField('io.fsky.nyx.pronouns', p)}
+          onSave={(p) => {
+            handleSaveField('io.fsky.nyx.pronouns', p);
+            // also save it under the MSC4247 key for better compatibility with other clients,
+            // even if it's NOT finalized yet, to maximize the chance of pronouns showing up if they're set.
+            handleSaveField('m.pronouns', p);
+          }}
         />
       </SequenceCard>
       <SequenceCard
