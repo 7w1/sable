@@ -88,6 +88,8 @@ export interface Settings {
 
   // furry stuff
   renderAnimals: boolean;
+
+  closeToTray: boolean;
 }
 
 const defaultSettings: Settings = {
@@ -162,6 +164,8 @@ const defaultSettings: Settings = {
 
   // furry stuff
   renderAnimals: true,
+
+  closeToTray: true,
 };
 
 export const getSettings = () => {
