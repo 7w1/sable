@@ -15,16 +15,13 @@ export const isIntersectingScrollView = (
   scrollElement: HTMLElement,
   childElement: HTMLElement
 ): boolean => {
-  const scrollTop = scrollElement.offsetTop + scrollElement.scrollTop;
-  const scrollBottom = scrollTop + scrollElement.offsetHeight;
-
-  const childTop = childElement.offsetTop;
-  const childBottom = childTop + childElement.clientHeight;
-
-  if (childTop >= scrollTop && childTop < scrollBottom) return true;
-  if (childBottom > scrollTop && childBottom <= scrollBottom) return true;
-  if (childTop < scrollTop && childBottom > scrollBottom) return true;
-  return false;
+  // Use getBoundingClientRect so both elements are in the same viewport-relative
+  // coordinate space. The original offsetTop-based implementation mixed the scroll
+  // container's page coordinates with the child's offsetParent-relative coordinates,
+  // causing false negatives when the scroll container was not at the page origin.
+  const scrollRect = scrollElement.getBoundingClientRect();
+  const childRect = childElement.getBoundingClientRect();
+  return childRect.bottom > scrollRect.top && childRect.top < scrollRect.bottom;
 };
 
 export const isInScrollView = (scrollElement: HTMLElement, childElement: HTMLElement): boolean => {
