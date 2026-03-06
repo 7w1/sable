@@ -162,7 +162,11 @@ function InviteNotifications() {
     // Without push: always show OS notification when page is visible.
     const isVisibleMobileWithPush = usePushNotifications && mobileOrTablet();
     if (!isVisibleMobileWithPush && showNotifications && notificationPermission('granted')) {
-      notify(invites.length - perviousInviteLen);
+      try {
+        notify(invites.length - perviousInviteLen);
+      } catch {
+        // window.Notification may be unavailable in sandboxed environments (e.g. Flatpak).
+      }
     }
     if (notificationSound) {
       playSound();
@@ -189,6 +193,10 @@ function InviteNotifications() {
 function MessageNotifications() {
   const audioRef = useRef<HTMLAudioElement>(null);
   const notifiedEventsRef = useRef<Set<string>>(new Set());
+  // Record mount time so we can distinguish live events from historical backfill
+  // on sliding sync proxies that don't set num_live (which causes liveEvent=false
+  // for all events, including actually-new messages).
+  const clientStartTimeRef = useRef(Date.now());
   const mx = useMatrixClient();
   const useAuthentication = useMediaAuthentication();
   const [showNotifications] = useSetting(settingsAtom, 'useInAppNotifications');
@@ -225,9 +233,20 @@ function MessageNotifications() {
       if (mx.getSyncState() !== 'SYNCING') return;
       if (document.hasFocus() && (selectedRoomId === room?.roomId || notificationSelected)) return;
 
+      // Older sliding sync proxies (e.g. matrix-sliding-sync used by Flatpak packages)
+      // omit num_live, which causes every event to arrive with fromCache=true and
+      // liveEvent=false — silently blocking all notifications. Fall back to an age
+      // check: treat the event as potentially live when it was sent within 60 s of
+      // this component mounting. Also skip if the user already has a read receipt
+      // covering it (message was read on another device before this session).
+      const isHistoricalEvent =
+        !data.liveEvent &&
+        (mEvent.getTs() < clientStartTimeRef.current - 60 * 1000 ||
+          (!!room && room.hasUserReadEvent(mx.getSafeUserId(), mEvent.getId()!)));
+
       if (
         !room ||
-        !data.liveEvent ||
+        isHistoricalEvent ||
         room.isSpaceRoom() ||
         !isNotificationEvent(mEvent) ||
         getNotificationType(mx, room.roomId) === NotificationType.Mute
