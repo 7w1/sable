@@ -22,7 +22,6 @@ import {
   clearCacheAndReload,
   clearLoginData,
   clearMismatchedStores,
-  getClientSyncDiagnostics,
   initClient,
   logoutClient,
   startClient,
@@ -270,16 +269,6 @@ export function ClientRoot({ children }: ClientRootProps) {
       setLoading(false);
     }
   }, [mx]);
-
-  // For sliding sync, dismiss the loading screen as soon as the sync engine has
-  // started — rooms appear progressively via spidering, so there is no need to
-  // wait for a PREPARED event. Classic sync still waits for PREPARED/SYNCING.
-  useEffect(() => {
-    if (!mx || startState.status !== AsyncStatus.Success) return;
-    if (getClientSyncDiagnostics(mx).transport === 'sliding') {
-      setLoading(false);
-    }
-  }, [mx, startState.status]);
 
   useSyncState(
     mx,
