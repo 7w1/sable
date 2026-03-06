@@ -14,15 +14,36 @@ import { createLogger } from '$utils/debug';
 
 const log = createLogger('slidingSync');
 
-const LIST_JOINED = 'joined';
+// List keys — matches Element Web's 5-list strategy
+// Multiple lists ensure invites/favourites/DMs populate immediately rather than
+// waiting for the slower untagged spider to reach them.
+const LIST_SPACES = 'spaces';
 const LIST_INVITES = 'invites';
+const LIST_FAVOURITES = 'favourites';
+const LIST_DIRECTS = 'directs';
+const LIST_UNTAGGED = 'untagged';
+
+// Named custom subscription for unencrypted rooms.
+// Lazy-loads members so large rooms (e.g. Matrix HQ) don't stall the initial load.
+// Registered at construction time alongside the encrypted default subscription.
+const UNENCRYPTED_SUBSCRIPTION_NAME = 'unencrypted';
+
 const DEFAULT_LIST_PAGE_SIZE = 250;
-const DEFAULT_TIMELINE_LIMIT = 30;
-const TIMELINE_LIMIT_LOW = 10;
-const TIMELINE_LIMIT_MEDIUM = 15;
-const TIMELINE_LIMIT_HIGH = 30;
+// Timeline limit used only for the active-room subscription (not list entries).
+// Tiers match common network/device capability ranges:
+//   LOW  (30) — constrained connection/device: still fills a screen without paginating
+//   MED  (50) — standard; matches Element Web's flat default
+//   HIGH (100) — fast connection + desktop: rich initial scroll buffer
+const DEFAULT_TIMELINE_LIMIT = 50;
+const TIMELINE_LIMIT_LOW = 30;
+const TIMELINE_LIMIT_MEDIUM = 50;
+const TIMELINE_LIMIT_HIGH = 100;
+// List entries carry only the last message for preview (matches Element Web)
+const LIST_TIMELINE_LIMIT = 1;
 const DEFAULT_POLL_TIMEOUT_MS = 10000;
 const DEFAULT_MAX_ROOMS = 5000;
+// Initial window per list when first connecting (expanded by spidering on each response)
+const INITIAL_RANGE_SIZE = 20;
 
 export type SlidingSyncConfig = {
   enabled?: boolean;
@@ -32,7 +53,6 @@ export type SlidingSyncConfig = {
   timelineLimit?: number;
   pollTimeoutMs?: number;
   maxRooms?: number;
-  includeInviteList?: boolean;
   probeTimeoutMs?: number;
 };
 
@@ -123,59 +143,136 @@ const resolveAdaptiveTimelineLimit = (
   return Math.min(pageSize, TIMELINE_LIMIT_HIGH);
 };
 
-const buildDefaultSubscription = (timelineLimit: number): MSC3575RoomSubscription => ({
+// Lean required_state for list sidebar entries.
+// Matches Element Web's REQUIRED_STATE_LIST exactly, plus Sable-specific cosmetics
+// and m.room.name (needed for sidebar display names in rooms without a canonical alias).
+// Lazy member loading is intentionally absent — it belongs only in room subscriptions
+// so that the sidebar list entries stay as bandwidth-efficient as possible.
+const LIST_REQUIRED_STATE: MSC3575RoomSubscription['required_state'] = [
+  [EventType.RoomMember, MSC3575_STATE_KEY_ME], // know we're in the room
+  [EventType.RoomCreate, ''], // isSpaceRoom() checks
+  [EventType.RoomName, ''], // room display name (Sable needs this for sidebar)
+  [EventType.RoomAvatar, ''], // sidebar / list avatar
+  [EventType.RoomCanonicalAlias, ''], // room name fallback
+  [EventType.RoomEncryption, ''], // E2E lock icon
+  [EventType.RoomTombstone, ''], // hide replaced rooms
+  [EventType.RoomJoinRules, ''], // public/private icon
+  [EventType.SpaceChild, '*'], // space child membership
+  [EventType.SpaceParent, '*'], // space parent membership
+  [EventType.RoomPowerLevels, ''], // permission checks before room opens
+  // Sable cosmetics — needed in the sidebar before a room is opened
+  [StateEvent.RoomCosmeticsColor, '*'],
+  [StateEvent.RoomCosmeticsFont, '*'],
+  [StateEvent.RoomCosmeticsPronouns, '*'],
+];
+
+// include_old_rooms state shared by all list entries.
+// Fetches minimal state for tombstoned / replaced predecessor rooms so the SDK
+// can correctly hide them and resolve successor room chains.
+const LIST_INCLUDE_OLD_ROOMS: MSC3575RoomSubscription = {
+  timeline_limit: 0,
+  required_state: LIST_REQUIRED_STATE,
+};
+
+// Default (encrypted) subscription — used as the SlidingSync constructor default.
+// Requests all state events: the E2E layer needs full member state for key distribution
+// and defaulting to the safe/complete set avoids missed events when room encryption
+// status is not yet known (e.g. on first load after a hard refresh).
+// Matches Element Web's ENCRYPTED_SUBSCRIPTION / constructor default strategy.
+const buildEncryptedSubscription = (timelineLimit: number): MSC3575RoomSubscription => ({
+  timeline_limit: timelineLimit,
+  required_state: [['*', '*']],
+});
+
+// Custom subscription for unencrypted rooms, registered under UNENCRYPTED_SUBSCRIPTION_NAME.
+// Lazy-loads members so large public rooms don't stall the initial room open.
+// Matches Element Web's UNENCRYPTED_SUBSCRIPTION strategy.
+const buildUnencryptedSubscription = (timelineLimit: number): MSC3575RoomSubscription => ({
   timeline_limit: timelineLimit,
   required_state: [
+    // Everything from the list state
+    ...LIST_REQUIRED_STATE,
+    // Lazy-load members — keeps large rooms fast; encrypted rooms use ['*','*'] instead
     [EventType.RoomMember, MSC3575_STATE_KEY_ME],
     [EventType.RoomMember, MSC3575_STATE_KEY_LAZY],
-    [EventType.RoomCreate, ''],
-    [EventType.RoomName, ''],
-    [EventType.RoomAvatar, ''],
-    [EventType.RoomCanonicalAlias, ''],
-    [EventType.RoomEncryption, ''],
-    [EventType.RoomTombstone, ''],
-    [EventType.RoomJoinRules, ''],
+    // Additional state only needed when viewing the room
     [EventType.RoomHistoryVisibility, ''],
     [EventType.RoomPowerLevels, ''],
+    // Room topic — displayed in room header, lobby hero, and room intro
+    [StateEvent.RoomTopic, ''],
+    // Pinned events — used by pin indicator, pin menu, and message highlight
+    [StateEvent.RoomPinnedEvents, ''],
     [StateEvent.PoniesRoomEmotes, '*'],
     [StateEvent.RoomWidget, '*'],
     [StateEvent.GroupCallPrefix, '*'],
-    [EventType.SpaceChild, '*'],
-    [EventType.SpaceParent, '*'],
-    [StateEvent.RoomCosmeticsColor, '*'],
-    [StateEvent.RoomCosmeticsFont, '*'],
-    [StateEvent.RoomCosmeticsPronouns, '*'],
   ],
 });
 
-const buildLists = (
-  pageSize: number,
-  timelineLimit: number,
-  includeInviteList: boolean,
-  requiredState: MSC3575RoomSubscription['required_state']
-): Map<string, MSC3575List> => {
+// Build the five priority lists that mirror Element Web's sssLists exactly.
+// Each list starts at a small initial range and is expanded by the spidering
+// loop in expandListsToKnownCount() on every successful lifecycle response.
+// Multiple priority lists ensure invites/favourites/DMs appear immediately
+// rather than waiting for the untagged spider to reach them.
+const buildLists = (): Map<string, MSC3575List> => {
   const lists = new Map<string, MSC3575List>();
-  lists.set(LIST_JOINED, {
-    ranges: [[0, Math.max(0, pageSize - 1)]],
-    timeline_limit: timelineLimit,
-    required_state: requiredState,
-    slow_get_all_rooms: true,
+
+  // Spaces — needed to build the space tree immediately; no message preview needed
+  lists.set(LIST_SPACES, {
+    ranges: [[0, INITIAL_RANGE_SIZE - 1]],
+    timeline_limit: 0,
+    required_state: LIST_REQUIRED_STATE,
+    include_old_rooms: LIST_INCLUDE_OLD_ROOMS,
+    filters: {
+      room_types: ['m.space'],
+    },
+  });
+
+  // Invites — high priority so they appear before spidering finishes
+  lists.set(LIST_INVITES, {
+    ranges: [[0, INITIAL_RANGE_SIZE - 1]],
+    timeline_limit: LIST_TIMELINE_LIMIT,
+    required_state: LIST_REQUIRED_STATE,
+    include_old_rooms: LIST_INCLUDE_OLD_ROOMS,
+    filters: {
+      is_invite: true,
+    },
+  });
+
+  // Favourites — separate list so starred rooms load with priority
+  lists.set(LIST_FAVOURITES, {
+    ranges: [[0, INITIAL_RANGE_SIZE - 1]],
+    timeline_limit: LIST_TIMELINE_LIMIT,
+    required_state: LIST_REQUIRED_STATE,
+    include_old_rooms: LIST_INCLUDE_OLD_ROOMS,
+    filters: {
+      tags: ['m.favourite'],
+    },
+  });
+
+  // Direct messages — separate list so DMs load with priority
+  // Excludes favourites and low-priority DMs (they appear in those lists instead)
+  lists.set(LIST_DIRECTS, {
+    ranges: [[0, INITIAL_RANGE_SIZE - 1]],
+    timeline_limit: LIST_TIMELINE_LIMIT,
+    required_state: LIST_REQUIRED_STATE,
+    include_old_rooms: LIST_INCLUDE_OLD_ROOMS,
+    filters: {
+      is_dm: true,
+      is_invite: false,
+      not_tags: ['m.favourite', 'm.lowpriority'],
+    },
+  });
+
+  // Everything else — SSS de-dupes invites/DMs/favourites from here automatically
+  lists.set(LIST_UNTAGGED, {
+    ranges: [[0, INITIAL_RANGE_SIZE - 1]],
+    timeline_limit: LIST_TIMELINE_LIMIT,
+    required_state: LIST_REQUIRED_STATE,
+    include_old_rooms: LIST_INCLUDE_OLD_ROOMS,
     filters: {
       is_invite: false,
     },
   });
-
-  if (includeInviteList) {
-    lists.set(LIST_INVITES, {
-      ranges: [[0, Math.max(0, pageSize - 1)]],
-      timeline_limit: timelineLimit,
-      required_state: requiredState,
-      slow_get_all_rooms: true,
-      filters: {
-        is_invite: true,
-      },
-    });
-  }
 
   return lists;
 };
@@ -206,6 +303,9 @@ export class SlidingSyncManager {
 
   private readonly onLifecycle: (state: SlidingSyncState, resp: unknown, err?: Error) => void;
 
+  /** Room ID of the currently-open room, used to pick encryption-aware subscriptions. */
+  private activeRoomId?: string;
+
   public readonly slidingSync: SlidingSync;
 
   public readonly probeTimeoutMs: number;
@@ -229,17 +329,25 @@ export class SlidingSyncManager {
     this.adaptiveTimeline = adaptiveTimeline;
     this.deviceDiagnostics = signals;
     this.configuredTimelineLimit = config.timelineLimit;
-    const includeInviteList = config.includeInviteList !== false;
 
-    const subscription = buildDefaultSubscription(timelineLimit);
-    const lists = buildLists(
-      listPageSize,
-      timelineLimit,
-      includeInviteList,
-      subscription.required_state
-    );
+    // Encrypted subscription is the constructor default — it requests all state
+    // events ([*,*]) which is the safest choice when room encryption status is
+    // not yet known (e.g. first load, hard refresh). Unencrypted rooms get a
+    // leaner named custom subscription applied per-room via setActiveRoom().
+    // Matches Element Web's ENCRYPTED_SUBSCRIPTION default + addCustomSubscription strategy.
+    const lists = buildLists();
     this.listKeys = Array.from(lists.keys());
-    this.slidingSync = new SlidingSync(proxyBaseUrl, lists, subscription, mx, pollTimeoutMs);
+    this.slidingSync = new SlidingSync(
+      proxyBaseUrl,
+      lists,
+      buildEncryptedSubscription(timelineLimit),
+      mx,
+      pollTimeoutMs
+    );
+    this.slidingSync.addCustomSubscription(
+      UNENCRYPTED_SUBSCRIPTION_NAME,
+      buildUnencryptedSubscription(timelineLimit)
+    );
 
     this.onLifecycle = (state, resp, err) => {
       if (this.disposed || err || !resp || state !== SlidingSyncState.Complete) return;
@@ -347,16 +455,59 @@ export class SlidingSyncManager {
     });
   }
 
+  /**
+   * Returns true if the room is known to be encrypted, false if known to be
+   * unencrypted, or null if the room is not yet in the client's room store.
+   * Callers should default to the safe (encrypted) subscription when null.
+   */
+  private isRoomEncrypted(roomId: string): boolean | null {
+    const room = this.mx.getRoom(roomId);
+    if (!room) return null; // unknown room — default to safe encrypted subscription
+    return !!room.currentState.getStateEvents(EventType.RoomEncryption, '');
+  }
+
+  /**
+   * Notify the manager that the user has navigated to a room.
+   *
+   * Matches Element Web's setRoomVisible strategy:
+   * - Encrypted rooms (or rooms where encryption status is unknown) get the default
+   *   encrypted subscription: required_state [['*','*']] for full member state.
+   * - Unencrypted rooms get the lean UNENCRYPTED_SUBSCRIPTION (lazy-loaded members)
+   *   registered as a per-room custom subscription.
+   *
+   * The subscription set grows as rooms are visited (EW does the same) — previously
+   * visited rooms remain subscribed so their state stays fresh.
+   */
+  public setActiveRoom(roomId: string): void {
+    if (this.disposed) return;
+    this.activeRoomId = roomId;
+
+    const subs = this.slidingSync.getRoomSubscriptions();
+    subs.add(roomId);
+
+    // Encrypted rooms fall through to the default (encrypted) subscription.
+    // Default to safety for unknown rooms (e.g. hard refresh before room data arrives).
+    if (this.isRoomEncrypted(roomId) === false) {
+      this.slidingSync.useCustomSubscription(roomId, UNENCRYPTED_SUBSCRIPTION_NAME);
+    }
+
+    this.slidingSync.modifyRoomSubscriptions(subs);
+  }
+
   private applyTimelineLimit(timelineLimit: number): void {
-    this.slidingSync.modifyRoomSubscriptionInfo(buildDefaultSubscription(timelineLimit));
-    this.listKeys.forEach((key) => {
-      const existing = this.slidingSync.getListParams(key);
-      if (!existing) return;
-      this.slidingSync.setList(key, {
-        ...existing,
-        timeline_limit: timelineLimit,
-      });
-    });
+    // Update both the default (encrypted) subscription and the named unencrypted custom
+    // subscription so that the adaptive limit takes effect on the next resend.
+    // List entries intentionally stay at LIST_TIMELINE_LIMIT (1).
+    this.slidingSync.modifyRoomSubscriptionInfo(buildEncryptedSubscription(timelineLimit));
+    this.slidingSync.addCustomSubscription(
+      UNENCRYPTED_SUBSCRIPTION_NAME,
+      buildUnencryptedSubscription(timelineLimit)
+    );
+    // Resend updated subscriptions to all currently-subscribed rooms
+    const subs = this.slidingSync.getRoomSubscriptions();
+    if (subs.size > 0) {
+      this.slidingSync.modifyRoomSubscriptions(subs);
+    }
   }
 
   public static async probe(

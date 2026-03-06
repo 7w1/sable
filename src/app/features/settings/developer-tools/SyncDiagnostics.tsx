@@ -155,6 +155,10 @@ export function SyncDiagnostics() {
           <Text size="T300">
             Sliding server-enabled: {diagnostics.slidingEnabledOnServer ? 'yes' : 'no'}
           </Text>
+          <Text size="T300">
+            Server native sliding sync (MSC3575):{' '}
+            {diagnostics.serverNativeSlidingSync ? 'supported' : 'not supported'}
+          </Text>
           <Text size="T300">Sliding session opt-in: {diagnostics.sessionOptIn ? 'yes' : 'no'}</Text>
           <Text size="T300">Sliding requested: {diagnostics.slidingRequested ? 'yes' : 'no'}</Text>
           <Text size="T300">Sync reason: {formatSyncReason(diagnostics.reason)}</Text>

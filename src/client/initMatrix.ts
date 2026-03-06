@@ -36,6 +36,7 @@ type SyncTransportMeta = {
   transport: SyncTransport;
   slidingConfigured: boolean;
   slidingEnabledOnServer: boolean;
+  serverNativeSlidingSync: boolean;
   sessionOptIn: boolean;
   slidingRequested: boolean;
   fallbackFromSliding: boolean;
@@ -348,10 +349,15 @@ export const startClient = async (mx: MatrixClient, config?: StartClientConfig) 
   const slidingRequested = slidingEnabledOnServer && config?.sessionSlidingSyncOptIn === true;
   const proxyBaseUrl = slidingConfig?.proxyBaseUrl ?? config?.baseUrl;
   const hasSlidingProxy = typeof proxyBaseUrl === 'string' && proxyBaseUrl.trim().length > 0;
+  const serverNativeSlidingSync = slidingEnabledOnServer
+    ? await mx.doesServerSupportUnstableFeature('org.matrix.simplified_msc3575').catch(() => false)
+    : false;
   log.log('startClient sliding config', {
     userId: mx.getUserId(),
     enabled: slidingConfig?.enabled,
     enabledOnServer: slidingEnabledOnServer,
+    serverNativeSlidingSync,
+    nativeSlidingProxyUrl: slidingConfig?.proxyBaseUrl ? 'proxy' : 'homeserver-native',
     sessionOptIn: config?.sessionSlidingSyncOptIn === true,
     requestedEnabled: slidingRequested,
     proxyBaseUrl,
@@ -363,6 +369,7 @@ export const startClient = async (mx: MatrixClient, config?: StartClientConfig) 
       transport: 'classic',
       slidingConfigured: slidingEnabledOnServer,
       slidingEnabledOnServer,
+      serverNativeSlidingSync,
       sessionOptIn: config?.sessionSlidingSyncOptIn === true,
       slidingRequested,
       fallbackFromSliding,
@@ -373,6 +380,19 @@ export const startClient = async (mx: MatrixClient, config?: StartClientConfig) 
       pollTimeout: FAST_SYNC_POLL_TIMEOUT_MS,
     });
   };
+
+  if (!slidingEnabledOnServer || !slidingRequested) {
+    await startClassicSync(
+      false,
+      slidingEnabledOnServer ? 'session_opt_out' : 'sliding_disabled_server'
+    );
+    return;
+  }
+
+  if (!hasSlidingProxy) {
+    await startClassicSync(false, 'missing_proxy');
+    return;
+  }
 
   const shouldBootstrapClassicOnColdCache = async (): Promise<boolean> => {
     if (slidingConfig?.bootstrapClassicOnColdCache === false) return false;
@@ -396,19 +416,6 @@ export const startClient = async (mx: MatrixClient, config?: StartClientConfig) 
     return !hasWarmCache;
   };
 
-  if (!slidingEnabledOnServer || !slidingRequested) {
-    await startClassicSync(
-      false,
-      slidingEnabledOnServer ? 'session_opt_out' : 'sliding_disabled_server'
-    );
-    return;
-  }
-
-  if (!hasSlidingProxy) {
-    await startClassicSync(false, 'missing_proxy');
-    return;
-  }
-
   if (await shouldBootstrapClassicOnColdCache()) {
     log.log('startClient cold-cache bootstrap: using classic sync for this run', mx.getUserId());
     await startClassicSync(false, 'cold_cache_bootstrap');
@@ -421,7 +428,6 @@ export const startClient = async (mx: MatrixClient, config?: StartClientConfig) 
   const resolvedProxyBaseUrl = proxyBaseUrl;
   const manager = new SlidingSyncManager(mx, resolvedProxyBaseUrl, {
     ...(slidingConfig ?? {}),
-    includeInviteList: true,
     pollTimeoutMs: slidingConfig?.pollTimeoutMs ?? FAST_SYNC_POLL_TIMEOUT_MS,
   });
   const supported = await SlidingSyncManager.probe(
@@ -448,6 +454,7 @@ export const startClient = async (mx: MatrixClient, config?: StartClientConfig) 
     transport: 'sliding',
     slidingConfigured: true,
     slidingEnabledOnServer,
+    serverNativeSlidingSync,
     sessionOptIn: config?.sessionSlidingSyncOptIn === true,
     slidingRequested,
     fallbackFromSliding: false,
@@ -478,6 +485,7 @@ export const getClientSyncDiagnostics = (mx: MatrixClient): ClientSyncDiagnostic
     transport: 'classic',
     slidingConfigured: false,
     slidingEnabledOnServer: false,
+    serverNativeSlidingSync: false,
     sessionOptIn: false,
     slidingRequested: false,
     fallbackFromSliding: false,
@@ -488,6 +496,17 @@ export const getClientSyncDiagnostics = (mx: MatrixClient): ClientSyncDiagnostic
     syncState: mx.getSyncState(),
     sliding: slidingSyncByClient.get(mx)?.getDiagnostics(),
   };
+};
+
+/**
+ * Notify the sliding sync manager that the active room has changed.
+ * This allows the manager to update the room subscription to be
+ * encryption-aware: encrypted rooms receive `required_state: [['*','*']]`
+ * so the E2E layer has full member state for key distribution.
+ * No-op when sliding sync is not active.
+ */
+export const setSlidingSyncActiveRoom = (mx: MatrixClient, roomId: string): void => {
+  slidingSyncByClient.get(mx)?.setActiveRoom(roomId);
 };
 
 /**

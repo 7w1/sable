@@ -426,6 +426,12 @@ export function DeveloperTools({ requestClose }: DeveloperToolsProps) {
                                   {syncDiagnostics.slidingEnabledOnServer ? 'yes' : 'no'}
                                 </Text>
                                 <Text size="T200">
+                                  Server native sliding sync (MSC3575):{' '}
+                                  {syncDiagnostics.serverNativeSlidingSync
+                                    ? 'supported'
+                                    : 'not supported'}
+                                </Text>
+                                <Text size="T200">
                                   Sliding session opt-in:{' '}
                                   {syncDiagnostics.sessionOptIn ? 'yes' : 'no'}
                                 </Text>

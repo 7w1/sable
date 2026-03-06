@@ -38,6 +38,7 @@ import {
   resolveNotificationPreviewText,
 } from '$utils/notificationStyle';
 import { mobileOrTablet } from '$utils/user-agent';
+import { setSlidingSyncActiveRoom } from '$client/initMatrix';
 import { getInboxInvitesPath } from '../pathUtils';
 import { BackgroundNotifications } from './BackgroundNotifications';
 
@@ -547,6 +548,24 @@ function SyncNotificationSettingsWithServiceWorker() {
   return null;
 }
 
+/**
+ * Watches for active room changes and notifies the sliding sync manager so it
+ * can apply an encryption-aware room subscription: encrypted rooms get
+ * `required_state: [['*','*']]` for full E2E member state; unencrypted rooms
+ * use the lean default subscription.
+ */
+function SlidingSyncActiveRoomSync() {
+  const mx = useMatrixClient();
+  const selectedRoomId = useSelectedRoom();
+
+  useEffect(() => {
+    if (!selectedRoomId) return;
+    setSlidingSyncActiveRoom(mx, selectedRoomId);
+  }, [mx, selectedRoomId]);
+
+  return null;
+}
+
 export function ClientNonUIFeatures({ children }: ClientNonUIFeaturesProps) {
   return (
     <>
@@ -558,6 +577,7 @@ export function ClientNonUIFeatures({ children }: ClientNonUIFeaturesProps) {
       <MessageNotifications />
       <BackgroundNotifications />
       <SyncNotificationSettingsWithServiceWorker />
+      <SlidingSyncActiveRoomSync />
       <NotificationBanner />
       {children}
     </>
