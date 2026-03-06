@@ -158,6 +158,10 @@ export const CustomEditor = forwardRef<HTMLDivElement, CustomEditorProps>(
                 onKeyDown={handleKeydown}
                 onKeyUp={onKeyUp}
                 onPaste={onPaste}
+                // automatically capitalize the first letter of sentences on mobile, which is usually desirable in message editors.
+                autoCapitalize="sentences"
+                autoCorrect="true"
+                spellCheck
                 // keeps focus after pressing send.
                 onBlur={() => {
                   if (mobileOrTablet()) ReactEditor.focus(editor);
