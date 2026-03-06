@@ -9,15 +9,9 @@ import {
   RoomStateEvent,
   SyncState,
 } from '$types/matrix-sdk';
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { Membership, RoomToParents, StateEvent } from '$types/matrix/room';
-import {
-  getRoomToParents,
-  getSpaceChildren,
-  isSpace,
-  isValidChild,
-  mapParentWithChildren,
-} from '$utils/room';
+import { getRoomToParents, isSpace, mapParentWithChildren } from '$utils/room';
 import { useSyncState } from '$hooks/useSyncState';
 
 export type RoomToParentsAction =
@@ -99,6 +93,9 @@ export const useBindRoomToParentsAtom = (
     () => setRoomToParents({ type: 'INITIALIZE', roomToParents: getRoomToParents(mx) }),
     [mx, setRoomToParents]
   );
+  // Tracks whether a batched microtask flush is already queued. Using a ref
+  // (not state) so scheduling never causes a re-render of the binding component.
+  const pendingBatchRef = useRef(false);
 
   useSyncState(
     mx,
@@ -118,40 +115,39 @@ export const useBindRoomToParentsAtom = (
   useEffect(() => {
     resetRoomToParents();
 
-    const handleAddRoom = (room: Room) => {
-      if (isSpace(room) && room.getMyMembership() === Membership.Join) {
-        setRoomToParents({ type: 'PUT', parent: room.roomId, children: getSpaceChildren(room) });
+    // Batch rapid space topology changes into a single atom update. During initial
+    // sliding sync load, m.space.child events arrive in bursts (one per child per space).
+    // Each individual dispatch creates a new immer Map and triggers all roomToParents
+    // consumers to re-run their selectors. Coalescing into one INITIALIZE per microtask
+    // batch collapses N atom updates into 1 without any perceptible delay.
+    const scheduleBatchedReset = () => {
+      if (!pendingBatchRef.current) {
+        pendingBatchRef.current = true;
+        queueMicrotask(() => {
+          pendingBatchRef.current = false;
+          resetRoomToParents();
+        });
       }
     };
 
-    const handleMembershipChange = (room: Room, membership: string) => {
-      if (isSpace(room) && membership !== Membership.Join) {
-        setRoomToParents({ type: 'DELETE', roomId: room.roomId });
-        return;
+    const handleAddRoom = (room: Room) => {
+      if (isSpace(room) && room.getMyMembership() === Membership.Join) {
+        scheduleBatchedReset();
       }
-      if (isSpace(room) && membership === Membership.Join) {
-        setRoomToParents({ type: 'PUT', parent: room.roomId, children: getSpaceChildren(room) });
-      }
+    };
+
+    const handleMembershipChange = (room: Room) => {
+      if (isSpace(room)) scheduleBatchedReset();
     };
 
     const handleStateChange = (mEvent: MatrixEvent) => {
       if (mEvent.getType() === StateEvent.SpaceChild) {
-        const childId = mEvent.getStateKey();
-        const roomId = mEvent.getRoomId();
-        if (childId && roomId) {
-          const parentRoom = mx.getRoom(roomId);
-          if (!parentRoom || parentRoom.getMyMembership() !== Membership.Join) return;
-          if (isValidChild(mEvent)) {
-            setRoomToParents({ type: 'PUT', parent: roomId, children: [childId] });
-          } else {
-            setRoomToParents({ type: 'REMOVE_CHILD', parent: roomId, child: childId });
-          }
-        }
+        scheduleBatchedReset();
       }
     };
 
-    const handleDeleteRoom = (roomId: string) => {
-      setRoomToParents({ type: 'DELETE', roomId });
+    const handleDeleteRoom = () => {
+      scheduleBatchedReset();
     };
 
     mx.on(ClientEvent.Room, handleAddRoom);
