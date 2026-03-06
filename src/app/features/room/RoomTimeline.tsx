@@ -583,10 +583,14 @@ const getRoomUnreadInfo = (room: Room, scrollTo = false) => {
   const readUptoEventId = room.getEventReadUpTo(room.client.getUserId() ?? '');
   if (!readUptoEventId) return undefined;
   const evtTimeline = getEventTimeline(room, readUptoEventId);
-  const latestTimeline = evtTimeline && getFirstLinkedTimeline(evtTimeline, Direction.Forward);
+  // inLiveTimeline = true only when the read-upto event is literally inside the
+  // current live timeline object (not merely connected to it via the paginated
+  // chain). If the event lives in an older linked timeline we treat it as stale
+  // and fall back to scroll-to-bottom, which avoids landing partway up history
+  // when the room has stale server notification counts or an old read receipt.
   return {
     readUptoEventId,
-    inLiveTimeline: latestTimeline === room.getLiveTimeline(),
+    inLiveTimeline: evtTimeline !== undefined && evtTimeline === getLiveTimeline(room),
     scrollTo,
   };
 };
