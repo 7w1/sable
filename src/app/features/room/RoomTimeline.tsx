@@ -582,15 +582,26 @@ const getRoomUnreadInfo = (room: Room, scrollTo = false) => {
 
   const readUptoEventId = room.getEventReadUpTo(room.client.getUserId() ?? '');
   if (!readUptoEventId) return undefined;
+  const liveTimeline = getLiveTimeline(room);
   const evtTimeline = getEventTimeline(room, readUptoEventId);
-  // inLiveTimeline = true only when the read-upto event is literally inside the
-  // current live timeline object (not merely connected to it via the paginated
-  // chain). If the event lives in an older linked timeline we treat it as stale
-  // and fall back to scroll-to-bottom, which avoids landing partway up history
-  // when the room has stale server notification counts or an old read receipt.
+
+  // inLiveTimeline = true only when ALL of these hold:
+  //   1. The read-upto event is in the current live timeline (not a paginated predecessor).
+  //   2. There is at least one event AFTER it in the live timeline (i.e. actual unread
+  //      content exists to scroll to). If the readUpto event is the last event we should
+  //      land at the bottom, not position the last-read message at the top of the viewport.
+  // Stale server notification counts can cause roomHaveNotification=true even when the
+  // user has read everything, so we must not rely solely on that signal.
+  let inLiveTimeline = false;
+  if (evtTimeline !== undefined && evtTimeline === liveTimeline) {
+    const liveEvents = liveTimeline.getEvents();
+    const readIdx = liveEvents.findIndex((e) => e.getId() === readUptoEventId);
+    inLiveTimeline = readIdx >= 0 && readIdx < liveEvents.length - 1;
+  }
+
   return {
     readUptoEventId,
-    inLiveTimeline: evtTimeline !== undefined && evtTimeline === getLiveTimeline(room),
+    inLiveTimeline,
     scrollTo,
   };
 };
