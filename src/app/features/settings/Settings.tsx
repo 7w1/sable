@@ -35,6 +35,7 @@ import { Account } from './account';
 import { General } from './general';
 import { Cosmetics } from './cosmetics/Cosmetics';
 import { Experimental } from './experimental/Experimental';
+import { KeyboardShortcuts } from './keyboard-shortcuts';
 
 export enum SettingsPages {
   GeneralPage,
@@ -46,6 +47,7 @@ export enum SettingsPages {
   DeveloperToolsPage,
   ExperimentalPage,
   AboutPage,
+  KeyboardShortcutsPage,
 }
 
 type SettingsMenuItem = {
@@ -103,6 +105,11 @@ const useSettingsMenuItems = (): SettingsMenuItem[] =>
         page: SettingsPages.AboutPage,
         name: 'About',
         icon: Icons.Info,
+      },
+      {
+        page: SettingsPages.KeyboardShortcutsPage,
+        name: 'Keyboard Shortcuts',
+        icon: Icons.BlockCode,
       },
     ],
     []
@@ -259,6 +266,9 @@ export function Settings({ initialPage, requestClose }: SettingsProps) {
         <Experimental requestClose={handlePageRequestClose} />
       )}
       {activePage === SettingsPages.AboutPage && <About requestClose={handlePageRequestClose} />}
+      {activePage === SettingsPages.KeyboardShortcutsPage && (
+        <KeyboardShortcuts requestClose={handlePageRequestClose} />
+      )}
     </PageRoot>
   );
 }

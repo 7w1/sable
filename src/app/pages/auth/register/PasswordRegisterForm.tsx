@@ -258,10 +258,11 @@ export function PasswordRegisterForm({
     <>
       <Box as="form" onSubmit={handleSubmit} direction="Inherit" gap="400">
         <Box direction="Column" gap="100">
-          <Text as="label" size="L400" priority="300">
+          <Text as="label" htmlFor="register-username-input" size="L400" priority="300">
             Username
           </Text>
           <Input
+            id="register-username-input"
             variant="Background"
             defaultValue={defaultUsername}
             name="usernameInput"
@@ -283,10 +284,11 @@ export function PasswordRegisterForm({
           {(match, doMatch, passRef, confPassRef) => (
             <>
               <Box direction="Column" gap="100">
-                <Text as="label" size="L400" priority="300">
+                <Text as="label" htmlFor="register-password-input" size="L400" priority="300">
                   Password
                 </Text>
                 <PasswordInput
+                  id="register-password-input"
                   ref={passRef}
                   onChange={doMatch}
                   name="passwordInput"
@@ -313,10 +315,11 @@ export function PasswordRegisterForm({
                 )}
               </Box>
               <Box direction="Column" gap="100">
-                <Text as="label" size="L400" priority="300">
+                <Text as="label" htmlFor="register-confirm-password-input" size="L400" priority="300">
                   Confirm Password
                 </Text>
                 <PasswordInput
+                  id="register-confirm-password-input"
                   ref={confPassRef}
                   onChange={doMatch}
                   name="confirmPasswordInput"
@@ -332,12 +335,13 @@ export function PasswordRegisterForm({
         </ConfirmPasswordMatch>
         {hasStageInFlows(uiaFlows, AuthType.RegistrationToken) && (
           <Box direction="Column" gap="100">
-            <Text as="label" size="L400" priority="300">
+            <Text as="label" htmlFor="register-token-input" size="L400" priority="300">
               {requiredStageInFlows(uiaFlows, AuthType.RegistrationToken)
                 ? 'Registration Token'
                 : 'Registration Token (Optional)'}
             </Text>
             <Input
+              id="register-token-input"
               variant="Background"
               defaultValue={defaultRegisterToken}
               name="tokenInput"
@@ -349,10 +353,11 @@ export function PasswordRegisterForm({
         )}
         {hasStageInFlows(uiaFlows, AuthType.Email) && (
           <Box direction="Column" gap="100">
-            <Text as="label" size="L400" priority="300">
+            <Text as="label" htmlFor="register-email-input" size="L400" priority="300">
               {requiredStageInFlows(uiaFlows, AuthType.Email) ? 'Email' : 'Email (Optional)'}
             </Text>
             <Input
+              id="register-email-input"
               variant="Background"
               defaultValue={defaultEmail}
               name="emailInput"
