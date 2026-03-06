@@ -315,7 +315,12 @@ export function PasswordRegisterForm({
                 )}
               </Box>
               <Box direction="Column" gap="100">
-                <Text as="label" htmlFor="register-confirm-password-input" size="L400" priority="300">
+                <Text
+                  as="label"
+                  htmlFor="register-confirm-password-input"
+                  size="L400"
+                  priority="300"
+                >
                   Confirm Password
                 </Text>
                 <PasswordInput

@@ -230,7 +230,14 @@ export function PasswordLoginForm({ defaultUsername, defaultEmail }: PasswordLog
         <Text as="label" htmlFor="login-password-input" size="L400" priority="300">
           Password
         </Text>
-        <PasswordInput id="login-password-input" name="passwordInput" variant="Background" size="500" outlined required />
+        <PasswordInput
+          id="login-password-input"
+          name="passwordInput"
+          variant="Background"
+          size="500"
+          outlined
+          required
+        />
         <Box alignItems="Start" justifyContent="SpaceBetween" gap="200">
           {loginState.status === AsyncStatus.Error && (
             <>

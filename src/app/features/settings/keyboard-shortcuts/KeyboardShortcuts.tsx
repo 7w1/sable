@@ -89,7 +89,12 @@ function ShortcutRow({ keys, description }: ShortcutEntry) {
               </span>
             ))}
             {i < parts.length - 1 && (
-              <Text as="span" size="T200" priority="300" style={{ margin: `0 ${config.space.S100}` }}>
+              <Text
+                as="span"
+                size="T200"
+                priority="300"
+                style={{ margin: `0 ${config.space.S100}` }}
+              >
                 {' / '}
               </Text>
             )}
@@ -114,7 +119,11 @@ export function KeyboardShortcuts({ requestClose }: KeyboardShortcutsProps) {
             </Text>
           </Box>
           <Box shrink="No">
-            <IconButton onClick={requestClose} variant="Surface" aria-label="Close keyboard shortcuts">
+            <IconButton
+              onClick={requestClose}
+              variant="Surface"
+              aria-label="Close keyboard shortcuts"
+            >
               <Icon src={Icons.Cross} />
             </IconButton>
           </Box>

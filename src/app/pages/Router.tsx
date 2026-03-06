@@ -23,6 +23,7 @@ import { getFallbackSession, MATRIX_SESSIONS_KEY, Sessions } from '$state/sessio
 import { getLocalStorageItem } from '$state/utils/atomWithLocalStorage';
 import { NotificationJumper } from '$hooks/useNotificationJumper';
 import { SearchModalRenderer } from '$features/search';
+import { GlobalKeyboardShortcuts } from '$components/GlobalKeyboardShortcuts';
 import { AuthLayout, Login, Register, ResetPassword } from './auth';
 import {
   DIRECT_PATH,
@@ -73,7 +74,6 @@ import { Create } from './client/create';
 import { CallProvider } from './client/call/CallProvider';
 import { PersistentCallContainer } from './client/call/PersistentCallContainer';
 import { ToRoomEvent } from './client/ToRoomEvent';
-import { GlobalKeyboardShortcuts } from '$components/GlobalKeyboardShortcuts';
 
 /**
  * Returns true if there is at least one stored session.

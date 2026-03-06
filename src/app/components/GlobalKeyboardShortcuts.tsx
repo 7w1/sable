@@ -15,16 +15,8 @@ import { roomToParentsAtom } from '$state/room/roomToParents';
 import { mDirectAtom } from '$state/mDirectList';
 import { roomToUnreadAtom } from '$state/room/roomToUnread';
 import { useKeyDown } from '$hooks/useKeyDown';
-import {
-  getDirectRoomPath,
-  getHomeRoomPath,
-  getSpaceRoomPath,
-} from '$pages/pathUtils';
-import {
-  HOME_ROOM_PATH,
-  DIRECT_ROOM_PATH,
-  SPACE_ROOM_PATH,
-} from '$pages/paths';
+import { getDirectRoomPath, getHomeRoomPath, getSpaceRoomPath } from '$pages/pathUtils';
+import { HOME_ROOM_PATH, DIRECT_ROOM_PATH, SPACE_ROOM_PATH } from '$pages/paths';
 import { getCanonicalAliasOrRoomId } from '$utils/matrix';
 import { announce } from '$utils/announce';
 
@@ -45,11 +37,15 @@ export function GlobalKeyboardShortcuts() {
   const roomIdOrAlias = roomMatch?.params.roomIdOrAlias
     ? decodeURIComponent(roomMatch.params.roomIdOrAlias)
     : undefined;
-  const currentRoomId = roomIdOrAlias
-    ? roomIdOrAlias.startsWith('!')
-      ? roomIdOrAlias
-      : mx.getRooms().find((r) => r.getCanonicalAlias() === roomIdOrAlias)?.roomId ?? null
-    : null;
+  let currentRoomId: string | null = null;
+  if (roomIdOrAlias) {
+    if (roomIdOrAlias.startsWith('!')) {
+      currentRoomId = roomIdOrAlias;
+    } else {
+      currentRoomId =
+        mx.getRooms().find((r) => r.getCanonicalAlias() === roomIdOrAlias)?.roomId ?? null;
+    }
+  }
 
   /** Navigate to a room by ID and announce it to screen readers. */
   const navigateToRoom = useCallback(
@@ -81,7 +77,7 @@ export function GlobalKeyboardShortcuts() {
       if (!isKeyHotkey('alt+n', evt)) return;
       const unreadEntries = Array.from(roomToUnread.entries())
         .filter(([id, u]) => u.total > 0 && id !== currentRoomId)
-        .sort((a, b) => (b[1].highlight - a[1].highlight) || (b[1].total - a[1].total));
+        .sort((a, b) => b[1].highlight - a[1].highlight || b[1].total - a[1].total);
       if (unreadEntries.length === 0) return;
       evt.preventDefault();
       unreadIndexRef.current = 0;
@@ -99,7 +95,7 @@ export function GlobalKeyboardShortcuts() {
       if (!isDown && !isUp) return;
       const unreadEntries = Array.from(roomToUnread.entries())
         .filter(([, u]) => u.total > 0)
-        .sort((a, b) => (b[1].highlight - a[1].highlight) || (b[1].total - a[1].total));
+        .sort((a, b) => b[1].highlight - a[1].highlight || b[1].total - a[1].total);
       if (unreadEntries.length === 0) return;
       evt.preventDefault();
       if (isDown) {
