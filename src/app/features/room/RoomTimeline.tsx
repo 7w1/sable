@@ -438,10 +438,12 @@ const useTimelinePagination = (
 
 const useLiveEventArrive = (room: Room, onArrive: (mEvent: MatrixEvent) => void) => {
   useEffect(() => {
-    // Capture the live timeline and registration time. Events appended to the
-    // live timeline AFTER this point can be genuinely new even when
-    // liveEvent=false (older sliding sync proxies that omit num_live).
-    const liveTimeline = getLiveTimeline(room);
+    // Capture the registration time. Events appended to the live timeline AFTER
+    // this point can be genuinely new even when liveEvent=false (older sliding
+    // sync proxies that omit num_live).
+    // NOTE: we intentionally do NOT capture liveTimeline here — after a
+    // TimelineRefresh the SDK replaces the live timeline object, so we must
+    // call getLiveTimeline(room) at handler invocation time to stay current.
     const registeredAt = Date.now();
     const handleTimelineEvent: EventTimelineSetHandlerMap[RoomEvent.Timeline] = (
       mEvent: MatrixEvent,
@@ -460,7 +462,7 @@ const useLiveEventArrive = (room: Room, onArrive: (mEvent: MatrixEvent) => void)
         data.liveEvent ||
         (!toStartOfTimeline &&
           !removed &&
-          data.timeline === liveTimeline &&
+          data.timeline === getLiveTimeline(room) &&
           mEvent.getTs() >= registeredAt - 60_000);
       if (!isLive) return;
       onArrive(mEvent);
@@ -506,15 +508,53 @@ const useRelationUpdate = (room: Room, onRelation: () => void) => {
   }, [room, onRelation]);
 };
 
+// Detects subscription backfill on the live timeline that does NOT trigger a
+// TimelineRefresh (i.e. limited=false responses). Triggers a lightweight
+// re-render so useVirtualPaginator picks up the updated event count and so that
+// the "stuck on old range" safety effect can recalibrate.
+const useSubscriptionBackfill = (room: Room, onBackfill: () => void) => {
+  useEffect(() => {
+    let debounceTimer: ReturnType<typeof setTimeout> | undefined;
+    const handleTimelineEvent: EventTimelineSetHandlerMap[RoomEvent.Timeline] = (
+      _mEvent: MatrixEvent,
+      eventRoom: Room | undefined,
+      toStartOfTimeline: boolean | undefined,
+      removed: boolean,
+      data: IRoomTimelineData
+    ) => {
+      // Ignore already-handled live events and backward-paginated events.
+      if (eventRoom?.roomId !== room.roomId) return;
+      if (data.liveEvent || toStartOfTimeline || removed) return;
+      // This is a non-live forward event (subscription backfill).
+      // Debounce to batch multiple events in the same response into one render.
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => onBackfill(), 0);
+    };
+
+    room.on(RoomEvent.Timeline, handleTimelineEvent);
+    return () => {
+      clearTimeout(debounceTimer);
+      room.removeListener(RoomEvent.Timeline, handleTimelineEvent);
+    };
+  }, [room, onBackfill]);
+};
+
 const useLiveTimelineRefresh = (room: Room, onRefresh: () => void) => {
   useEffect(() => {
+    let cancelled = false;
     const handleTimelineRefresh: RoomEventHandlerMap[RoomEvent.TimelineRefresh] = (r: Room) => {
       if (r.roomId !== room.roomId) return;
-      onRefresh();
+      // Defer one tick: the SDK fires TimelineRefresh before adding subscription
+      // events to the new live timeline. Running after the current synchronous
+      // batch ensures getInitialTimeline() captures all delivered events.
+      setTimeout(() => {
+        if (!cancelled) onRefresh();
+      }, 0);
     };
 
     room.on(RoomEvent.TimelineRefresh, handleTimelineRefresh);
     return () => {
+      cancelled = true;
       room.removeListener(RoomEvent.TimelineRefresh, handleTimelineRefresh);
     };
   }, [room, onRefresh]);
@@ -834,10 +874,49 @@ export function RoomTimeline({
   useLiveTimelineRefresh(
     room,
     useCallback(() => {
-      if (liveTimelineLinked || timeline.linkedTimelines.length === 0) {
+      // liveTimelineLinked becomes false after a TimelineRefresh because our
+      // stored linkedTimelines still reference the OLD live timeline while the
+      // SDK has already created a new one (e.g. setActiveRoom subscription fires
+      // with limited=true). Detect this explicitly so the refresh always runs.
+      const currentLive = getLiveTimeline(room);
+      const ourLast = timeline.linkedTimelines[timeline.linkedTimelines.length - 1];
+      const liveTimelineReplaced = ourLast !== undefined && ourLast !== currentLive;
+      if (liveTimelineLinked || timeline.linkedTimelines.length === 0 || liveTimelineReplaced) {
         setTimeline(getInitialTimeline(room));
+        // Scroll to bottom when the live timeline was replaced (initial
+        // subscription load) so the user lands on the latest messages.
+        if (liveTimelineReplaced) {
+          scrollToBottomRef.current.count += 1;
+          scrollToBottomRef.current.smooth = false;
+        }
       }
-    }, [room, liveTimelineLinked, timeline.linkedTimelines.length])
+    }, [room, liveTimelineLinked, timeline.linkedTimelines])
+  );
+
+  // Safety net for non-limited subscription responses (limited=false): the SDK
+  // appends events to the existing live timeline without firing TimelineRefresh,
+  // so the component's stored range never learns about the new events. When
+  // backfill is detected, re-anchor the range to the SDK's true end.
+  useSubscriptionBackfill(
+    room,
+    useCallback(() => {
+      setTimeline((ct) => {
+        const newEnd = getTimelinesEventsCount(ct.linkedTimelines);
+        if (newEnd <= ct.range.end) return ct; // no growth, nothing to do
+        return {
+          ...ct,
+          range: {
+            start: Math.max(newEnd - PAGINATION_LIMIT, 0),
+            end: newEnd,
+          },
+        };
+      });
+      // If the user was scrolled to the bottom before backfill, keep them there.
+      if (atBottomRef.current) {
+        scrollToBottomRef.current.count += 1;
+        scrollToBottomRef.current.smooth = false;
+      }
+    }, [])
   );
 
   // Re-render when non-live Replace relations arrive (bundled/historical edits
