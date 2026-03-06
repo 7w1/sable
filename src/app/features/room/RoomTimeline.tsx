@@ -888,22 +888,33 @@ export function RoomTimeline({
       const currentLive = getLiveTimeline(room);
       const ourLast = timeline.linkedTimelines[timeline.linkedTimelines.length - 1];
       const liveTimelineReplaced = ourLast !== undefined && ourLast !== currentLive;
-      if (liveTimelineLinked || timeline.linkedTimelines.length === 0 || liveTimelineReplaced) {
+
+      if (liveTimelineReplaced || timeline.linkedTimelines.length === 0) {
+        // Initial subscription landing or empty timeline: always reset and
+        // pick the correct scroll target.
         setTimeline(getInitialTimeline(room));
-        // Subscription has delivered its first batch — stop suppressing the
-        // backward-pagination indicator.
         setIsSettling(false);
-        if (liveTimelineReplaced) {
-          if (unreadInfo?.inLiveTimeline) {
-            // Re-trigger unread scroll: the event is on the live timeline so
-            // it's now accessible in the full-events timeline.
-            setUnreadInfo((cur) => (cur ? { ...cur, scrollTo: true } : cur));
-          } else {
-            // No unread (or unread is in older paginated history) — land at
-            // the bottom so the user sees the latest messages.
-            scrollToBottomRef.current.count += 1;
-            scrollToBottomRef.current.smooth = false;
-          }
+        if (unreadInfo?.inLiveTimeline) {
+          // Re-trigger unread scroll so it fires against the full timeline.
+          setUnreadInfo((cur) => (cur ? { ...cur, scrollTo: true } : cur));
+        } else {
+          scrollToBottomRef.current.count += 1;
+          scrollToBottomRef.current.smooth = false;
+        }
+      } else if (liveTimelineLinked) {
+        if (atLiveEndRef.current) {
+          // User is at the live end — safe to reset the range so new events
+          // delivered with limited=true are included.
+          setTimeline(getInitialTimeline(room));
+        } else {
+          // User has scrolled up into history while still on the live
+          // timeline. A limited=true batch arrived but we must NOT jump the
+          // viewport. Only refresh the linkedTimelines reference so backward
+          // pagination stays coherent; the visible range is preserved.
+          setTimeline((ct) => ({
+            ...ct,
+            linkedTimelines: getLinkedTimelines(currentLive),
+          }));
         }
       }
     }, [room, liveTimelineLinked, timeline.linkedTimelines, unreadInfo])
@@ -2168,7 +2179,7 @@ export function RoomTimeline({
           <Spinner variant="Secondary" size="400" />
         </Box>
       );
-    } else if (timelineItems.length === 0) {
+    } else if (timelineItems.length === 0 && !isSettling) {
       frontPaginationJSX =
         messageLayout === MessageLayout.Compact ? (
           <>
