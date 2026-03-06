@@ -895,9 +895,15 @@ export function RoomTimeline({
         // pick the correct scroll target.
         setTimeline(getInitialTimeline(room));
         isSettlingRef.current = false;
-        if (unreadInfo?.inLiveTimeline) {
-          // Re-trigger unread scroll so it fires against the full timeline.
-          setUnreadInfo((cur) => (cur ? { ...cur, scrollTo: true } : cur));
+        // Re-evaluate unread state NOW, after the subscription has delivered
+        // events into the timeline. At mount time the readUptoEventId may not
+        // have been present in any local timeline (cold cache / clear cache),
+        // causing the initialised unreadInfo to have inLiveTimeline=false even
+        // when the user does have unreads. Using the closed-over stale value
+        // would scroll to bottom instead of to the unread position.
+        const freshUnread = getRoomUnreadInfo(room);
+        if (freshUnread?.inLiveTimeline) {
+          setUnreadInfo({ ...freshUnread, scrollTo: true });
         } else {
           scrollToBottomRef.current.count += 1;
           scrollToBottomRef.current.smooth = false;
@@ -913,7 +919,7 @@ export function RoomTimeline({
       // liveTimelineLinked && !atLiveEndRef.current: user has scrolled up into
       // history. Do nothing — preserve their scroll position. The new events
       // will become visible when they next scroll to the live end.
-    }, [room, liveTimelineLinked, timeline.linkedTimelines, unreadInfo])
+    }, [room, liveTimelineLinked, timeline.linkedTimelines])
   );
 
   // Safety net for non-limited subscription responses (limited=false): the SDK
