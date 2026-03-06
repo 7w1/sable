@@ -676,10 +676,11 @@ export function RoomTimeline({
 
   // True from mount until the first subscription response settles (either a
   // TimelineRefresh for limited responses, or the first backfill batch for
-  // non-limited responses). Used to suppress the backward-pagination spinner
-  // and placeholder skeletons that would otherwise flash before real content
-  // arrives.
-  const [isSettling, setIsSettling] = useState(true);
+  // non-limited responses). Stored as a ref (not state) so that:
+  //   • the transition to false does not cause an extra render cycle on its own
+  //     (it always coincides with a setTimeline update which already re-renders)
+  //   • the ResizeObserver closure can read it without stale-capture problems
+  const isSettlingRef = useRef(true);
 
   const linkifyOpts = useMemo<LinkifyOpts>(
     () => ({
@@ -893,7 +894,7 @@ export function RoomTimeline({
         // Initial subscription landing or empty timeline: always reset and
         // pick the correct scroll target.
         setTimeline(getInitialTimeline(room));
-        setIsSettling(false);
+        isSettlingRef.current = false;
         if (unreadInfo?.inLiveTimeline) {
           // Re-trigger unread scroll so it fires against the full timeline.
           setUnreadInfo((cur) => (cur ? { ...cur, scrollTo: true } : cur));
@@ -903,8 +904,11 @@ export function RoomTimeline({
         }
       } else if (liveTimelineLinked && atLiveEndRef.current) {
         // User is at the live end — safe to reset the range so new limited=true
-        // events are included in the window.
+        // events are included in the window. Also trigger a bottom scroll so
+        // the user isn't left stranded above the newly-appended events.
         setTimeline(getInitialTimeline(room));
+        scrollToBottomRef.current.count += 1;
+        scrollToBottomRef.current.smooth = false;
       }
       // liveTimelineLinked && !atLiveEndRef.current: user has scrolled up into
       // history. Do nothing — preserve their scroll position. The new events
@@ -921,7 +925,7 @@ export function RoomTimeline({
     useCallback(() => {
       // Non-limited response has settled — stop suppressing the back-pagination
       // indicator now that real events are present.
-      setIsSettling(false);
+      isSettlingRef.current = false;
       setTimeline((ct) => {
         const newEnd = getTimelinesEventsCount(ct.linkedTimelines);
         if (newEnd <= ct.range.end) return ct; // no growth, nothing to do
@@ -938,7 +942,7 @@ export function RoomTimeline({
         scrollToBottomRef.current.count += 1;
         scrollToBottomRef.current.smooth = false;
       }
-    }, []) // setIsSettling is a stable setter, intentionally omitted
+    }, []) // setTimeline is a stable setter, intentionally omitted
   );
 
   // Re-render when non-live Replace relations arrive (bundled/historical edits
@@ -1105,6 +1109,10 @@ export function RoomTimeline({
     };
 
     const forceScroll = () => {
+      // Do not compete with the subscription-settle scroll during initial load.
+      // Once the first batch of events lands (isSettlingRef.current becomes false)
+      // the ResizeObserver may freely maintain scroll-to-bottom for image loads.
+      if (isSettlingRef.current) return;
       // if the user isn't scrolling jump down to latest content
       if (!userIsScrollingUp) {
         scrollToBottom(scrollEl, 'instant');
@@ -2168,7 +2176,7 @@ export function RoomTimeline({
           <Spinner variant="Secondary" size="400" />
         </Box>
       );
-    } else if (timelineItems.length === 0 && !isSettling) {
+    } else if (timelineItems.length === 0 && !isSettlingRef.current) {
       frontPaginationJSX =
         messageLayout === MessageLayout.Compact ? (
           <>
