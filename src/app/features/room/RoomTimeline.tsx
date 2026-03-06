@@ -668,7 +668,10 @@ export function RoomTimeline({
 
   const imagePackRooms: Room[] = useImagePackRooms(room.roomId, roomToParents);
 
-  const [unreadInfo, setUnreadInfo] = useState(() => getRoomUnreadInfo(room, true));
+  // scrollTo=false: we never auto-scroll to the unread position on open — the
+  // user always lands at the live end and uses "Jump to Unread" to navigate.
+  // inLiveTimeline/readUptoEventId are still set so the unread divider renders.
+  const [unreadInfo, setUnreadInfo] = useState(() => getRoomUnreadInfo(room, false));
   const readUptoEventIdRef = useRef<string>();
   if (unreadInfo) {
     readUptoEventIdRef.current = unreadInfo.readUptoEventId;
@@ -912,28 +915,27 @@ export function RoomTimeline({
       const liveTimelineReplaced = ourLast !== undefined && ourLast !== currentLive;
 
       if (liveTimelineReplaced || timeline.linkedTimelines.length === 0) {
-        // Initial subscription landing or empty timeline: always reset and
-        // pick the correct scroll target.
+        // Initial subscription landing or empty timeline: reset to the full
+        // event window and scroll to the live end.
+        // We never auto-scroll to the unread position here — the user always
+        // lands at the bottom; "Jump to Unread" is the explicit navigation.
+        // We do re-evaluate unreadInfo so the divider renders at the correct
+        // position now that the subscription has delivered the full event set
+        // (the mount-time 5-event cache may not have had the read marker).
         setTimeline(getInitialTimeline(room));
         isSettlingRef.current = false;
-        // Re-evaluate unread state NOW, after the subscription has delivered
-        // events into the timeline. At mount time the readUptoEventId may not
-        // have been present in any local timeline (cold cache / clear cache),
-        // causing the initialised unreadInfo to have inLiveTimeline=false even
-        // when the user does have unreads. Using the closed-over stale value
-        // would scroll to bottom instead of to the unread position.
         const freshUnread = getRoomUnreadInfo(room);
-        if (freshUnread?.inLiveTimeline) {
-          setUnreadInfo({ ...freshUnread, scrollTo: true });
-        } else {
-          scrollToBottomRef.current.count += 1;
-          scrollToBottomRef.current.smooth = false;
-        }
+        if (freshUnread) setUnreadInfo({ ...freshUnread, scrollTo: false });
+        scrollToBottomRef.current.count += 1;
+        scrollToBottomRef.current.smooth = false;
       } else if (liveTimelineLinked && atLiveEndRef.current) {
         // User is at the live end — safe to reset the range so new limited=true
         // events are included in the window. Also trigger a bottom scroll so
         // the user isn't left stranded above the newly-appended events.
         setTimeline(getInitialTimeline(room));
+        // Subscription has responded — clear the settling flag so the
+        // ResizeObserver forceScroll can maintain bottom position as images load.
+        isSettlingRef.current = false;
         scrollToBottomRef.current.count += 1;
         scrollToBottomRef.current.smooth = false;
       }
@@ -989,6 +991,26 @@ export function RoomTimeline({
     if (getLiveTimeline(room).getEvents().length === 0) return;
     setTimeline(getInitialTimeline(room));
   }, [eventId, room, timeline.linkedTimelines.length]);
+
+  // Safety net: if the subscription never fires TimelineRefresh or backfill
+  // (e.g. a fully-synced room with no new events), isSettlingRef would stay
+  // true indefinitely, permanently suppressing the ResizeObserver forceScroll
+  // that keeps the view pinned to the bottom as images load.
+  // After a short grace period, force-clear settling so image loads are handled.
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    if (!eventId) {
+      timer = setTimeout(() => {
+        if (!isSettlingRef.current) return;
+        isSettlingRef.current = false;
+        const scrollEl = scrollRef.current;
+        if (scrollEl && atBottomRef.current) {
+          scrollToBottom(scrollEl, 'instant');
+        }
+      }, 500);
+    }
+    return () => clearTimeout(timer);
+  }, [room, eventId]);
 
   // Stay at bottom when room editor resize
   useResizeObserver(
@@ -1146,14 +1168,24 @@ export function RoomTimeline({
       }
     };
 
+    // Cancel-and-reschedule pattern: a burst of rapid resizes (e.g. many
+    // encrypted messages decrypting in sequence) will be collapsed into a
+    // single forceScroll call once the burst settles, eliminating the
+    // rapid scroll-up / snap-to-bottom flicker visible during initial decrypt.
+    let pendingRaf: ReturnType<typeof requestAnimationFrame> | undefined;
     const resizeObserver = new ResizeObserver(() => {
-      requestAnimationFrame(forceScroll);
+      if (pendingRaf !== undefined) cancelAnimationFrame(pendingRaf);
+      pendingRaf = requestAnimationFrame(() => {
+        pendingRaf = undefined;
+        forceScroll();
+      });
     });
 
     scrollEl.addEventListener('scroll', handleScroll, { passive: true });
     resizeObserver.observe(contentEl);
 
     return () => {
+      if (pendingRaf !== undefined) cancelAnimationFrame(pendingRaf);
       resizeObserver.disconnect();
       scrollEl.removeEventListener('scroll', handleScroll);
     };
