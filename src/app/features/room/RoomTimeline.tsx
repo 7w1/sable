@@ -901,22 +901,14 @@ export function RoomTimeline({
           scrollToBottomRef.current.count += 1;
           scrollToBottomRef.current.smooth = false;
         }
-      } else if (liveTimelineLinked) {
-        if (atLiveEndRef.current) {
-          // User is at the live end — safe to reset the range so new events
-          // delivered with limited=true are included.
-          setTimeline(getInitialTimeline(room));
-        } else {
-          // User has scrolled up into history while still on the live
-          // timeline. A limited=true batch arrived but we must NOT jump the
-          // viewport. Only refresh the linkedTimelines reference so backward
-          // pagination stays coherent; the visible range is preserved.
-          setTimeline((ct) => ({
-            ...ct,
-            linkedTimelines: getLinkedTimelines(currentLive),
-          }));
-        }
+      } else if (liveTimelineLinked && atLiveEndRef.current) {
+        // User is at the live end — safe to reset the range so new limited=true
+        // events are included in the window.
+        setTimeline(getInitialTimeline(room));
       }
+      // liveTimelineLinked && !atLiveEndRef.current: user has scrolled up into
+      // history. Do nothing — preserve their scroll position. The new events
+      // will become visible when they next scroll to the live end.
     }, [room, liveTimelineLinked, timeline.linkedTimelines, unreadInfo])
   );
 
@@ -2081,10 +2073,7 @@ export function RoomTimeline({
   };
 
   let backPaginationJSX: ReactNode | undefined;
-  // Suppress all back-pagination UI while the initial subscription response
-  // hasn't arrived yet. This prevents the loading spinner and skeleton
-  // placeholders from flashing in before any real messages are rendered.
-  if (!isSettling && (canPaginateBack || !rangeAtStart || backwardStatus !== 'idle')) {
+  if (canPaginateBack || !rangeAtStart || backwardStatus !== 'idle') {
     if (backwardStatus === 'error') {
       backPaginationJSX = (
         <Box
