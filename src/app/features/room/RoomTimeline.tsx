@@ -906,15 +906,19 @@ export function RoomTimeline({
   useLiveTimelineRefresh(
     room,
     useCallback(() => {
-      // liveTimelineLinked becomes false after a TimelineRefresh because our
-      // stored linkedTimelines still reference the OLD live timeline while the
-      // SDK has already created a new one (e.g. setActiveRoom subscription fires
-      // with limited=true). Detect this explicitly so the refresh always runs.
+      // Use the always-fresh ref so this callback never captures a stale
+      // linkedTimelines snapshot and never needs to be re-registered due to
+      // timeline state changes. Re-registering the listener on every render
+      // has two costs: (a) the old listener is torn down and the new one is
+      // set up between renders, creating a brief window where a TimelineRefresh
+      // could be missed; (b) React's closure captures a stale liveTimelineLinked
+      // value, causing the wrong branch to execute.
+      const currentLinkedTimelines = linkedTimelinesRef.current;
       const currentLive = getLiveTimeline(room);
-      const ourLast = timeline.linkedTimelines[timeline.linkedTimelines.length - 1];
+      const ourLast = currentLinkedTimelines[currentLinkedTimelines.length - 1];
       const liveTimelineReplaced = ourLast !== undefined && ourLast !== currentLive;
 
-      if (liveTimelineReplaced || timeline.linkedTimelines.length === 0) {
+      if (liveTimelineReplaced || currentLinkedTimelines.length === 0) {
         // Initial subscription landing or empty timeline: reset to the full
         // event window and scroll to the live end.
         // We never auto-scroll to the unread position here — the user always
@@ -928,7 +932,7 @@ export function RoomTimeline({
         if (freshUnread) setUnreadInfo({ ...freshUnread, scrollTo: false });
         scrollToBottomRef.current.count += 1;
         scrollToBottomRef.current.smooth = false;
-      } else if (liveTimelineLinked && atLiveEndRef.current) {
+      } else if (atLiveEndRef.current) {
         // User is at the live end — safe to reset the range so new limited=true
         // events are included in the window. Also trigger a bottom scroll so
         // the user isn't left stranded above the newly-appended events.
@@ -939,10 +943,10 @@ export function RoomTimeline({
         scrollToBottomRef.current.count += 1;
         scrollToBottomRef.current.smooth = false;
       }
-      // liveTimelineLinked && !atLiveEndRef.current: user has scrolled up into
-      // history. Do nothing — preserve their scroll position. The new events
+      // !atLiveEndRef.current: user has scrolled up into history.
+      // Do nothing — preserve their scroll position. The new events
       // will become visible when they next scroll to the live end.
-    }, [room, liveTimelineLinked, timeline.linkedTimelines])
+    }, [room]) // linkedTimelinesRef and atLiveEndRef are refs — stable, no dep needed
   );
 
   // Safety net for non-limited subscription responses (limited=false): the SDK
@@ -2139,6 +2143,18 @@ export function RoomTimeline({
     return eventJSX;
   };
 
+  // During the initial settling window (before the subscription delivers its
+  // first batch), suppress the back-anchor observer so it doesn't trigger a
+  // backward pagination on the single list-preview event. Once the subscription
+  // lands (isSettlingRef.current = false) the null→real-ref swap causes the
+  // IntersectionObserver to observe the anchor and back-pagination works normally.
+  const settledObserveBackAnchor = useCallback<(el: HTMLElement | null) => void>(
+    (el) => {
+      observeBackAnchor(isSettlingRef.current ? null : el);
+    },
+    [observeBackAnchor]
+  );
+
   let backPaginationJSX: ReactNode | undefined;
   if (canPaginateBack || !rangeAtStart || backwardStatus !== 'idle') {
     if (backwardStatus === 'error') {
@@ -2184,7 +2200,7 @@ export function RoomTimeline({
             <MessageBase>
               <CompactPlaceholder />
             </MessageBase>
-            <MessageBase ref={observeBackAnchor}>
+            <MessageBase ref={settledObserveBackAnchor}>
               <CompactPlaceholder />
             </MessageBase>
           </>
@@ -2196,13 +2212,13 @@ export function RoomTimeline({
             <MessageBase>
               <DefaultPlaceholder />
             </MessageBase>
-            <MessageBase ref={observeBackAnchor}>
+            <MessageBase ref={settledObserveBackAnchor}>
               <DefaultPlaceholder />
             </MessageBase>
           </>
         );
     } else {
-      backPaginationJSX = <div ref={observeBackAnchor} style={{ height: 1 }} />;
+      backPaginationJSX = <div ref={settledObserveBackAnchor} style={{ height: 1 }} />;
     }
   }
 

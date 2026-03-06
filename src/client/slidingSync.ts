@@ -347,16 +347,69 @@ export class SlidingSyncManager {
     });
   }
 
+  /**
+   * Returns true if the room is known to be encrypted, false if known to be
+   * unencrypted, or null if the room is not yet in the client's room store.
+   * Callers should default to the safe (encrypted) subscription when null.
+   */
+  private isRoomEncrypted(roomId: string): boolean | null {
+    const room = this.mx.getRoom(roomId);
+    if (!room) return null; // unknown room — default to safe encrypted subscription
+    return !!room.currentState.getStateEvents(EventType.RoomEncryption, '');
+  }
+
+  /**
+   * Notify the manager that the user has navigated to a room.
+   *
+   * Matches Element Web's setRoomVisible strategy:
+   * - Encrypted rooms (or rooms where encryption status is unknown) get the default
+   *   encrypted subscription: required_state [['*','*']] for full member state.
+   * - Unencrypted rooms get the lean UNENCRYPTED_SUBSCRIPTION (lazy-loaded members)
+   *   registered as a per-room custom subscription.
+   *
+   * The subscription set grows as rooms are visited (EW does the same) — previously
+   * visited rooms remain subscribed so their state stays fresh.
+   */
+  public setActiveRoom(roomId: string): void {
+    if (this.disposed) return;
+    this.activeRoomId = roomId;
+
+    const subs = this.slidingSync.getRoomSubscriptions();
+
+    if (subs.has(roomId)) {
+      // Room is already subscribed with a room-level subscription — no network
+      // round-trip needed. Sending modifyRoomSubscriptions again would cause
+      // the server to reply with limited=true (since it treats re-sending as a
+      // fresh subscription request), which in turn fires SDK TimelineRefresh and
+      // resets the virtual paginator, making the room appear to jump to the top.
+      return;
+    }
+
+    subs.add(roomId);
+
+    // Encrypted rooms fall through to the default (encrypted) subscription.
+    // Default to safety for unknown rooms (e.g. hard refresh before room data arrives).
+    if (this.isRoomEncrypted(roomId) === false) {
+      this.slidingSync.useCustomSubscription(roomId, UNENCRYPTED_SUBSCRIPTION_NAME);
+    }
+
+    this.slidingSync.modifyRoomSubscriptions(subs);
+  }
+
   private applyTimelineLimit(timelineLimit: number): void {
-    this.slidingSync.modifyRoomSubscriptionInfo(buildDefaultSubscription(timelineLimit));
-    this.listKeys.forEach((key) => {
-      const existing = this.slidingSync.getListParams(key);
-      if (!existing) return;
-      this.slidingSync.setList(key, {
-        ...existing,
-        timeline_limit: timelineLimit,
-      });
-    });
+    // Update both the default (encrypted) subscription and the named unencrypted custom
+    // subscription so that the adaptive limit takes effect on the next resend.
+    // List entries intentionally stay at LIST_TIMELINE_LIMIT (1).
+    this.slidingSync.modifyRoomSubscriptionInfo(buildEncryptedSubscription(timelineLimit));
+    this.slidingSync.addCustomSubscription(
+      UNENCRYPTED_SUBSCRIPTION_NAME,
+      buildUnencryptedSubscription(timelineLimit)
+    );
+    // Resend updated subscriptions to all currently-subscribed rooms
+    const subs = this.slidingSync.getRoomSubscriptions();
+    if (subs.size > 0) {
+      this.slidingSync.modifyRoomSubscriptions(subs);
+    }
   }
 
   public static async probe(
