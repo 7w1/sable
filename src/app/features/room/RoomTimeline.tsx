@@ -674,6 +674,13 @@ export function RoomTimeline({
   >();
   const alive = useAlive();
 
+  // True from mount until the first subscription response settles (either a
+  // TimelineRefresh for limited responses, or the first backfill batch for
+  // non-limited responses). Used to suppress the backward-pagination spinner
+  // and placeholder skeletons that would otherwise flash before real content
+  // arrives.
+  const [isSettling, setIsSettling] = useState(true);
+
   const linkifyOpts = useMemo<LinkifyOpts>(
     () => ({
       ...LINKIFY_OPTS,
@@ -883,14 +890,23 @@ export function RoomTimeline({
       const liveTimelineReplaced = ourLast !== undefined && ourLast !== currentLive;
       if (liveTimelineLinked || timeline.linkedTimelines.length === 0 || liveTimelineReplaced) {
         setTimeline(getInitialTimeline(room));
-        // Scroll to bottom when the live timeline was replaced (initial
-        // subscription load) so the user lands on the latest messages.
+        // Subscription has delivered its first batch — stop suppressing the
+        // backward-pagination indicator.
+        setIsSettling(false);
         if (liveTimelineReplaced) {
-          scrollToBottomRef.current.count += 1;
-          scrollToBottomRef.current.smooth = false;
+          if (unreadInfo?.inLiveTimeline) {
+            // Re-trigger unread scroll: the event is on the live timeline so
+            // it's now accessible in the full-events timeline.
+            setUnreadInfo((cur) => (cur ? { ...cur, scrollTo: true } : cur));
+          } else {
+            // No unread (or unread is in older paginated history) — land at
+            // the bottom so the user sees the latest messages.
+            scrollToBottomRef.current.count += 1;
+            scrollToBottomRef.current.smooth = false;
+          }
         }
       }
-    }, [room, liveTimelineLinked, timeline.linkedTimelines])
+    }, [room, liveTimelineLinked, timeline.linkedTimelines, unreadInfo])
   );
 
   // Safety net for non-limited subscription responses (limited=false): the SDK
@@ -900,6 +916,9 @@ export function RoomTimeline({
   useSubscriptionBackfill(
     room,
     useCallback(() => {
+      // Non-limited response has settled — stop suppressing the back-pagination
+      // indicator now that real events are present.
+      setIsSettling(false);
       setTimeline((ct) => {
         const newEnd = getTimelinesEventsCount(ct.linkedTimelines);
         if (newEnd <= ct.range.end) return ct; // no growth, nothing to do
@@ -916,7 +935,7 @@ export function RoomTimeline({
         scrollToBottomRef.current.count += 1;
         scrollToBottomRef.current.smooth = false;
       }
-    }, [])
+    }, []) // setIsSettling is a stable setter, intentionally omitted
   );
 
   // Re-render when non-live Replace relations arrive (bundled/historical edits
@@ -2051,7 +2070,10 @@ export function RoomTimeline({
   };
 
   let backPaginationJSX: ReactNode | undefined;
-  if (canPaginateBack || !rangeAtStart || backwardStatus !== 'idle') {
+  // Suppress all back-pagination UI while the initial subscription response
+  // hasn't arrived yet. This prevents the loading spinner and skeleton
+  // placeholders from flashing in before any real messages are rendered.
+  if (!isSettling && (canPaginateBack || !rangeAtStart || backwardStatus !== 'idle')) {
     if (backwardStatus === 'error') {
       backPaginationJSX = (
         <Box
