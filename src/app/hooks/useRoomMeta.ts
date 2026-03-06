@@ -49,21 +49,20 @@ export const useRoomName = (room: Room): string => {
     updateName();
 
     room.on(RoomEvent.Name, updateName);
-    // Only subscribe to member events for DM rooms. For group rooms the name
-    // doesn't depend on member state, and with sliding sync lazy member loading
-    // RoomStateEvent.Members fires for every member as they arrive, causing
-    // needless re-renders across all mounted room nav items.
-    if (dmUserId) {
-      room.on(RoomStateEvent.Members, updateName);
-    }
+    // Subscribe to member events for all rooms. With sliding sync, member info
+    // arrives lazily — for DM rooms, guessDMUserId() can return undefined on
+    // first render (before member state loads), so a conditional guard would
+    // prevent DM names from ever updating to the member's display name.
+    // React bails out of re-renders when setState is called with the same value,
+    // so the cost for non-DM rooms (whose names don't change on member events)
+    // is negligible.
+    room.on(RoomStateEvent.Members, updateName);
 
     return () => {
       room.removeListener(RoomEvent.Name, updateName);
-      if (dmUserId) {
-        room.removeListener(RoomStateEvent.Members, updateName);
-      }
+      room.removeListener(RoomStateEvent.Members, updateName);
     };
-  }, [room, dmNickname, dmUserId]);
+  }, [room, dmNickname]);
 
   return name;
 };
