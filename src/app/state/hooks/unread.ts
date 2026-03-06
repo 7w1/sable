@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import { RoomToUnread, Unread } from '$types/matrix/room';
@@ -34,7 +34,14 @@ export const useRoomsUnread = (
     (roomToUnread: RoomToUnread) => getRoomsUnread(rooms, roomToUnread),
     [rooms]
   );
-  return useAtomValue(selectAtom(roomToUnreadAtm, selector, compareUnreadEqual));
+  // Memoize the derived atom so the Jotai subscription is stable across renders.
+  // Without useMemo, selectAtom creates a new atom object on every render, causing
+  // Jotai to tear down and re-create the subscription on each parent re-render.
+  const derivedAtom = useMemo(
+    () => selectAtom(roomToUnreadAtm, selector, compareUnreadEqual),
+    [roomToUnreadAtm, selector]
+  );
+  return useAtomValue(derivedAtom);
 };
 
 export const useRoomUnread = (
@@ -42,5 +49,9 @@ export const useRoomUnread = (
   roomToUnreadAtm: typeof roomToUnreadAtom
 ): Unread | undefined => {
   const selector = useCallback((roomToUnread: RoomToUnread) => roomToUnread.get(roomId), [roomId]);
-  return useAtomValue(selectAtom(roomToUnreadAtm, selector, compareUnreadEqual));
+  const derivedAtom = useMemo(
+    () => selectAtom(roomToUnreadAtm, selector, compareUnreadEqual),
+    [roomToUnreadAtm, selector]
+  );
+  return useAtomValue(derivedAtom);
 };
