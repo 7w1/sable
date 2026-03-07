@@ -361,50 +361,29 @@ export class SlidingSyncManager {
   /**
    * Notify the manager that the user has navigated to a room.
    *
-   * Matches Element Web's setRoomVisible strategy:
-   * - Encrypted rooms (or rooms where encryption status is unknown) get the default
-   *   encrypted subscription: required_state [['*','*']] for full member state.
-   * - Unencrypted rooms get the lean UNENCRYPTED_SUBSCRIPTION (lazy-loaded members)
-   *   registered as a per-room custom subscription.
-   *
-   * The subscription set grows as rooms are visited (EW does the same) — previously
-   * visited rooms remain subscribed so their state stays fresh.
+   * The subscription set grows as rooms are visited — previously visited rooms
+   * remain subscribed so their state stays fresh.
    */
   public setActiveRoom(roomId: string): void {
     if (this.disposed) return;
-    this.activeRoomId = roomId;
 
     const subs = this.slidingSync.getRoomSubscriptions();
 
     if (subs.has(roomId)) {
-      // Room is already subscribed with a room-level subscription — no network
-      // round-trip needed. Sending modifyRoomSubscriptions again would cause
-      // the server to reply with limited=true (since it treats re-sending as a
-      // fresh subscription request), which in turn fires SDK TimelineRefresh and
-      // resets the virtual paginator, making the room appear to jump to the top.
+      // Room is already subscribed — no network round-trip needed.
+      // Re-sending modifyRoomSubscriptions would cause the server to reply with
+      // limited=true, which fires SDK TimelineRefresh and resets the virtual
+      // paginator, making the room appear to jump to the top.
       return;
     }
 
     subs.add(roomId);
-
-    // Encrypted rooms fall through to the default (encrypted) subscription.
-    // Default to safety for unknown rooms (e.g. hard refresh before room data arrives).
-    if (this.isRoomEncrypted(roomId) === false) {
-      this.slidingSync.useCustomSubscription(roomId, UNENCRYPTED_SUBSCRIPTION_NAME);
-    }
-
     this.slidingSync.modifyRoomSubscriptions(subs);
   }
 
   private applyTimelineLimit(timelineLimit: number): void {
-    // Update both the default (encrypted) subscription and the named unencrypted custom
-    // subscription so that the adaptive limit takes effect on the next resend.
-    // List entries intentionally stay at LIST_TIMELINE_LIMIT (1).
-    this.slidingSync.modifyRoomSubscriptionInfo(buildEncryptedSubscription(timelineLimit));
-    this.slidingSync.addCustomSubscription(
-      UNENCRYPTED_SUBSCRIPTION_NAME,
-      buildUnencryptedSubscription(timelineLimit)
-    );
+    // Update the default subscription so the adaptive limit takes effect on resend.
+    this.slidingSync.modifyRoomSubscriptionInfo(buildDefaultSubscription(timelineLimit));
     // Resend updated subscriptions to all currently-subscribed rooms
     const subs = this.slidingSync.getRoomSubscriptions();
     if (subs.size > 0) {

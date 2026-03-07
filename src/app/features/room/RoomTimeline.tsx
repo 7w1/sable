@@ -705,6 +705,16 @@ export function RoomTimeline({
   //     (it always coincides with a setTimeline update which already re-renders)
   //   • the ResizeObserver closure can read it without stale-capture problems
   const isSettlingRef = useRef(true);
+  // Always-fresh reference to the current linkedTimelines array.
+  // Used by useLiveTimelineRefresh to detect live-TL replacement without
+  // listing the full array as a useCallback dep (which would re-register
+  // the EventEmitter listener on every render).
+  const linkedTimelinesRef = useRef<EventTimeline[]>([]);
+  // Stores the back-anchor DOM element so that observeBackAnchor can be
+  // called with the real element once settling completes. React only calls
+  // ref callbacks on mount/unmount or identity change; since settledObserveBackAnchor
+  // is stable and the element stays mounted, we need to re-register manually.
+  const backAnchorElementRef = useRef<HTMLElement | null>(null);
 
   const linkifyOpts = useMemo<LinkifyOpts>(
     () => ({
@@ -738,6 +748,7 @@ export function RoomTimeline({
     eventId ? getEmptyTimeline() : getInitialTimeline(room)
   );
   const eventsLength = getTimelinesEventsCount(timeline.linkedTimelines);
+  linkedTimelinesRef.current = timeline.linkedTimelines;
   const liveTimelineLinked =
     timeline.linkedTimelines[timeline.linkedTimelines.length - 1] === getLiveTimeline(room);
   const canPaginateBack =
@@ -908,45 +919,42 @@ export function RoomTimeline({
     useCallback(() => {
       // Use the always-fresh ref so this callback never captures a stale
       // linkedTimelines snapshot and never needs to be re-registered due to
-      // timeline state changes. Re-registering the listener on every render
-      // has two costs: (a) the old listener is torn down and the new one is
-      // set up between renders, creating a brief window where a TimelineRefresh
-      // could be missed; (b) React's closure captures a stale liveTimelineLinked
-      // value, causing the wrong branch to execute.
+      // timeline state changes.
       const currentLinkedTimelines = linkedTimelinesRef.current;
       const currentLive = getLiveTimeline(room);
       const ourLast = currentLinkedTimelines[currentLinkedTimelines.length - 1];
       const liveTimelineReplaced = ourLast !== undefined && ourLast !== currentLive;
 
+      // Capture before clearing — wasSettling = true on the first subscription
+      // response. We must scroll to bottom unconditionally on initial load
+      // (atLiveEndRef may be stale if an intermediate render updated
+      // linkedTimelinesRef before this callback ran).
+      const wasSettling = isSettlingRef.current;
+      isSettlingRef.current = false;
+      // Re-register the back anchor now that settling is complete.
+      // The ref callback is stable so React won't re-call it; we do it manually.
+      observeBackAnchor(backAnchorElementRef.current);
+
       if (liveTimelineReplaced || currentLinkedTimelines.length === 0) {
-        // Initial subscription landing or empty timeline: reset to the full
-        // event window and scroll to the live end.
-        // We never auto-scroll to the unread position here — the user always
-        // lands at the bottom; "Jump to Unread" is the explicit navigation.
-        // We do re-evaluate unreadInfo so the divider renders at the correct
-        // position now that the subscription has delivered the full event set
-        // (the mount-time 5-event cache may not have had the read marker).
+        // Initial subscription landing or reset: rebuild the range from the new
+        // live timeline and scroll to the live end.
         setTimeline(getInitialTimeline(room));
-        isSettlingRef.current = false;
         const freshUnread = getRoomUnreadInfo(room);
         if (freshUnread) setUnreadInfo({ ...freshUnread, scrollTo: false });
         scrollToBottomRef.current.count += 1;
         scrollToBottomRef.current.smooth = false;
-      } else if (atLiveEndRef.current) {
-        // User is at the live end — safe to reset the range so new limited=true
-        // events are included in the window. Also trigger a bottom scroll so
-        // the user isn't left stranded above the newly-appended events.
+      } else if (wasSettling || atLiveEndRef.current) {
+        // wasSettling: first subscription response on a non-replaced timeline
+        //   (limited=false path, or intermediate render already advanced the ref)
+        //   — always land at the bottom on initial open.
+        // atLiveEndRef: user is at the live end during a subsequent refresh
+        //   — follow new events down.
         setTimeline(getInitialTimeline(room));
-        // Subscription has responded — clear the settling flag so the
-        // ResizeObserver forceScroll can maintain bottom position as images load.
-        isSettlingRef.current = false;
         scrollToBottomRef.current.count += 1;
         scrollToBottomRef.current.smooth = false;
       }
-      // !atLiveEndRef.current: user has scrolled up into history.
-      // Do nothing — preserve their scroll position. The new events
-      // will become visible when they next scroll to the live end.
-    }, [room]) // linkedTimelinesRef and atLiveEndRef are refs — stable, no dep needed
+      // else: user has scrolled up into history — preserve their position.
+    }, [room, observeBackAnchor]) // backAnchorElementRef is a ref — stable, no dep needed
   );
 
   // Safety net for non-limited subscription responses (limited=false): the SDK
@@ -956,9 +964,11 @@ export function RoomTimeline({
   useSubscriptionBackfill(
     room,
     useCallback(() => {
-      // Non-limited response has settled — stop suppressing the back-pagination
-      // indicator now that real events are present.
+      // Non-limited response has settled.
+      const wasSettling = isSettlingRef.current;
       isSettlingRef.current = false;
+      // Re-register back anchor now that settling is done.
+      observeBackAnchor(backAnchorElementRef.current);
       setTimeline((ct) => {
         const newEnd = getTimelinesEventsCount(ct.linkedTimelines);
         if (newEnd <= ct.range.end) return ct; // no growth, nothing to do
@@ -970,12 +980,13 @@ export function RoomTimeline({
           },
         };
       });
-      // If the user was scrolled to the bottom before backfill, keep them there.
-      if (atBottomRef.current) {
+      // Always scroll to bottom on the initial room open (wasSettling).
+      // After that, only follow if the user was already at the bottom.
+      if (wasSettling || atBottomRef.current) {
         scrollToBottomRef.current.count += 1;
         scrollToBottomRef.current.smooth = false;
       }
-    }, []) // setTimeline is a stable setter, intentionally omitted
+    }, [observeBackAnchor]) // setTimeline/atBottomRef are stable; backAnchorElementRef is a ref
   );
 
   // Re-render when non-live Replace relations arrive (bundled/historical edits
@@ -2144,12 +2155,14 @@ export function RoomTimeline({
   };
 
   // During the initial settling window (before the subscription delivers its
-  // first batch), suppress the back-anchor observer so it doesn't trigger a
-  // backward pagination on the single list-preview event. Once the subscription
-  // lands (isSettlingRef.current = false) the null→real-ref swap causes the
-  // IntersectionObserver to observe the anchor and back-pagination works normally.
+  // first batch), suppress the back-anchor observer so it doesn't trigger
+  // backward pagination prematurely. We store the element in backAnchorElementRef
+  // so that useLiveTimelineRefresh / useSubscriptionBackfill can re-register it
+  // with observeBackAnchor once settling is complete (the ref callback won't
+  // fire again since settledObserveBackAnchor's identity is stable).
   const settledObserveBackAnchor = useCallback<(el: HTMLElement | null) => void>(
     (el) => {
+      backAnchorElementRef.current = el;
       observeBackAnchor(isSettlingRef.current ? null : el);
     },
     [observeBackAnchor]
