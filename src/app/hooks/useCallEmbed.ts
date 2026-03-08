@@ -2,6 +2,8 @@ import { createContext, RefObject, useCallback, useContext, useEffect, useState 
 import { MatrixRTCSession } from 'matrix-js-sdk/lib/matrixrtc/MatrixRTCSession';
 import { MatrixClient, Room } from 'matrix-js-sdk';
 import { useSetAtom } from 'jotai';
+import { settingsAtom } from '$state/settings';
+import { useSetting } from '$state/hooks/settings';
 import {
   CallEmbed,
   ElementCallThemeKind,
@@ -77,6 +79,19 @@ export const useCallStart = (dm = false) => {
 
 export const useCallJoined = (embed?: CallEmbed): boolean => {
   const [joined, setJoined] = useState(embed?.joined ?? false);
+  const [allowPip] = useSetting(settingsAtom, 'allowPipVideos');
+
+  if (embed && allowPip) {
+    const removeDisablePictureInPicture = (mutated: any) => {
+      mutated.forEach((event: any) => {
+        Array.from(event.target.getElementsByTagName('video')).forEach((video: any) => {
+          video.removeAttribute('disablepictureinpicture');
+        });
+      });
+    };
+    const pipObserver = new MutationObserver(removeDisablePictureInPicture);
+    pipObserver.observe(embed.iframe.contentDocument!, { subtree: true, childList: true });
+  }
 
   useClientWidgetApiEvent(
     embed?.call,
