@@ -518,11 +518,15 @@ export const logoutClient = async (mx: MatrixClient, session?: Session) => {
 };
 
 export const clearLoginData = async () => {
-  const dbs = await window.indexedDB.databases();
-  dbs.forEach((idbInfo) => {
-    const { name } = idbInfo;
-    if (name) window.indexedDB.deleteDatabase(name);
-  });
+  try {
+    const dbs = await window.indexedDB.databases();
+    dbs.forEach((idbInfo) => {
+      const { name } = idbInfo;
+      if (name) window.indexedDB.deleteDatabase(name);
+    });
+  } catch {
+    // indexedDB.databases() not available in all browsers/WebViews
+  }
   window.localStorage.clear();
   window.location.reload();
 };

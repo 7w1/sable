@@ -508,7 +508,7 @@ function SyncNotificationSettingsWithServiceWorker() {
   const [clearNotificationsOnRead] = useSetting(settingsAtom, 'clearNotificationsOnRead');
 
   useEffect(() => {
-    if (!('serviceWorker' in navigator)) return undefined;
+    if (!('serviceWorker' in navigator) || isTauri()) return undefined;
 
     const postVisibility = () => {
       const visible = document.visibilityState === 'visible';
