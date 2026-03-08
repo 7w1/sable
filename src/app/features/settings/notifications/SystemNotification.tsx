@@ -22,6 +22,19 @@ import {
   disablePushNotifications,
 } from './PushNotifications';
 import { DeregisterAllPushersSetting } from './DeregisterPushNotifications';
+import {
+  isUnifiedPushAvailable,
+  isUnifiedPushActive,
+  enableUnifiedPush,
+  disableUnifiedPush,
+  listDistributors,
+  selectDistributor,
+  getSelectedDistributor,
+  watchEndpointChanges,
+  enableFcmPush,
+  disableFcmPush,
+  isFcmPushActive,
+} from './UnifiedPushNotifications';
 
 function EmailNotification() {
   const mx = useMatrixClient();
@@ -91,6 +104,168 @@ function EmailNotification() {
             <Spinner variant="Secondary" />
           )}
         </>
+      }
+    />
+  );
+}
+
+function UnifiedPushSetting() {
+  const mx = useMatrixClient();
+  const [isLoading, setIsLoading] = useState(true);
+  const [upActive, setUpActive] = useState(false);
+  const [fcmActive, setFcmActive] = useState(false);
+  const [distributors, setDistributors] = useState<string[]>([]);
+  const [selectedDist, setSelectedDist] = useState<string | null>(null);
+
+  const hasDistributors = distributors.length > 0;
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const [isUpActive, isFcmActive2, dists, sel] = await Promise.all([
+          isUnifiedPushActive(mx),
+          isFcmPushActive(mx),
+          listDistributors(),
+          getSelectedDistributor(),
+        ]);
+        if (cancelled) return;
+        setUpActive(isUpActive);
+        setFcmActive(isFcmActive2);
+        setDistributors(dists);
+        setSelectedDist(sel);
+      } catch {
+        // ignore
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [mx]);
+
+  useEffect(() => {
+    if (!upActive) return undefined;
+    let unlisten: (() => void) | undefined;
+    watchEndpointChanges(mx).then((l) => {
+      unlisten = () => l.unregister();
+    });
+    return () => unlisten?.();
+  }, [mx, upActive]);
+
+  const handleUpToggle = async (wantsPush: boolean) => {
+    setIsLoading(true);
+    try {
+      if (wantsPush) {
+        if (hasDistributors && !selectedDist) {
+          await selectDistributor(distributors[0]);
+          setSelectedDist(distributors[0]);
+        }
+        await enableUnifiedPush(mx);
+        setUpActive(true);
+      } else {
+        await disableUnifiedPush(mx);
+        setUpActive(false);
+      }
+    } catch {
+      // toggle failed
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleFcmToggle = async (wantsPush: boolean) => {
+    setIsLoading(true);
+    try {
+      if (wantsPush) {
+        await enableFcmPush(mx);
+        setFcmActive(true);
+      } else {
+        await disableFcmPush(mx);
+        setFcmActive(false);
+      }
+    } catch {
+      // toggle failed
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDistributorChange = async (dist: string) => {
+    setIsLoading(true);
+    try {
+      if (upActive) await disableUnifiedPush(mx);
+      await selectDistributor(dist);
+      setSelectedDist(dist);
+      await enableUnifiedPush(mx);
+      setUpActive(true);
+    } catch {
+      // distributor change failed
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (hasDistributors) {
+    return (
+      <>
+        <SettingTile
+          title="Background Push Notifications"
+          description="Receive notifications via UnifiedPush when the app is closed."
+          after={
+            isLoading ? (
+              <Spinner variant="Secondary" />
+            ) : (
+              <Switch value={upActive} onChange={handleUpToggle} />
+            )
+          }
+        />
+        {distributors.length > 1 && (
+          <SettingTile
+            title="Push Distributor"
+            description={selectedDist ?? 'None selected'}
+            after={
+              isLoading ? (
+                <Spinner variant="Secondary" />
+              ) : (
+                <select
+                  value={selectedDist ?? ''}
+                  onChange={(e) => handleDistributorChange(e.target.value)}
+                  style={{
+                    background: 'var(--mx-c-surface)',
+                    color: 'var(--mx-c-on-surface)',
+                    border: '1px solid var(--mx-c-outline)',
+                    borderRadius: '6px',
+                    padding: '4px 8px',
+                    fontSize: '14px',
+                  }}
+                >
+                  {distributors.map((d) => (
+                    <option key={d} value={d}>
+                      {d.split('.').pop() ?? d}
+                    </option>
+                  ))}
+                </select>
+              )
+            }
+          />
+        )}
+      </>
+    );
+  }
+
+  // No UP distributor — fall back to FCM
+  return (
+    <SettingTile
+      title="Background Push Notifications"
+      description="Receive notifications via Google Cloud Messaging when the app is closed."
+      after={
+        isLoading ? (
+          <Spinner variant="Secondary" />
+        ) : (
+          <Switch value={fcmActive} onChange={handleFcmToggle} />
+        )
       }
     />
   );
@@ -237,7 +412,7 @@ export function SystemNotification() {
           direction="Column"
           gap="400"
         >
-          <WebPushNotificationSetting />
+          {isUnifiedPushAvailable() ? <UnifiedPushSetting /> : <WebPushNotificationSetting />}
         </SequenceCard>
       )}
       {!mobileOrTablet() && (

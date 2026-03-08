@@ -198,14 +198,18 @@ export default defineConfig({
         type: 'module',
       },
     }),
-    cloudflare({
-      config: {
-        compatibility_date: '2026-03-03',
-        assets: {
-          not_found_handling: 'single-page-application',
-        },
-      },
-    }),
+    ...(process.env.TAURI_ENV_PLATFORM
+      ? []
+      : [
+          cloudflare({
+            config: {
+              compatibility_date: '2026-03-03',
+              assets: {
+                not_found_handling: 'single-page-application',
+              },
+            },
+          }),
+        ]),
   ],
   optimizeDeps: {
     // Include service worker entry so worker-only imports are discovered during startup.

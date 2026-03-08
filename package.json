@@ -30,6 +30,7 @@
     "@atlaskit/pragmatic-drag-and-drop": "^1.7.7",
     "@atlaskit/pragmatic-drag-and-drop-auto-scroll": "^1.4.0",
     "@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.1.0",
+    "@choochmeque/tauri-plugin-notifications-api": "file:../tauri-plugin-notifications",
     "@fontsource-variable/nunito": "5.2.7",
     "@fontsource/space-mono": "5.2.9",
     "@tanstack/react-query": "^5.90.21",

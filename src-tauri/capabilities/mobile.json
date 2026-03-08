@@ -1,0 +1,15 @@
+{
+  "identifier": "mobile",
+  "description": "permissions for mobile platforms",
+  "windows": ["main"],
+  "platforms": ["android", "iOS"],
+  "permissions": [
+    "notifications:default",
+    "notifications:allow-register-for-unified-push",
+    "notifications:allow-unregister-from-unified-push",
+    "notifications:allow-get-unified-push-distributors",
+    "notifications:allow-save-unified-push-distributor",
+    "notifications:allow-get-unified-push-distributor"
+  ]
+}
+
