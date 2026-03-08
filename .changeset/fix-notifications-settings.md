@@ -21,5 +21,7 @@ Overhaul notification settings UX and fix several notification bugs.
 - Fix "System Notifications" description removing the incorrect claim that mobile uses the in-app banner instead.
 - Add a notification levels info button (ⓘ) to the All Messages, Special Messages, and Keyword Messages section headings explaining Disable / Notify Silent / Notify Loud.
 - Add descriptive text under each notification section heading.
-- Clarify `@room` push rule labels: "Mention @room" now notes it uses the `m.mentions` field (MSC3952) and that it only fires if the sender has room-notify permission; "Contains @room" is now labelled "Contains @room (legacy)" to distinguish the older pattern-match fallback.
+- Collapse the two `@room` push rules into a single "Mention @room" control. On servers with MSC3952 support (`m.intentional_mentions`) it targets `IsRoomMention`; on older servers it falls back to `AtRoomNotification`. Synapse mirrors the two rules so displaying both produced an apparent sync loop where setting one immediately reset the other.
 - Add a "Follows your global notification rules" subtitle to the "Default" option in the per-room notification switcher.
+- Default "In-App Notifications" to off for all platforms. Users can opt in per-device in Notifications settings.
+- Default "Show Message Counts" (badge numbers) to off — badges show a number only for direct mentions by default, matching Discord-style behaviour.

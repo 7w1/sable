@@ -129,7 +129,7 @@ const defaultSettings: Settings = {
   // In-app pill banner: default on for mobile (primary foreground alert), opt-in on desktop.
   // System (OS) notifications: desktop-only; hidden and disabled on mobile.
   usePushNotifications: mobileOrTablet(),
-  useInAppNotifications: mobileOrTablet(),
+  useInAppNotifications: false,
   useSystemNotifications: !mobileOrTablet(),
   isNotificationSounds: true,
   showMessageContentInNotifications: false,
@@ -157,7 +157,7 @@ const defaultSettings: Settings = {
   rightSwipeAction: RightSwipeAction.Reply,
   hideMembershipInReadOnly: true,
   useRightBubbles: false,
-  showUnreadCounts: true,
+  showUnreadCounts: false,
   badgeCountDMsOnly: false,
   showPingCounts: true,
   hideReads: false,
