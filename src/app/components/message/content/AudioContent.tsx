@@ -51,9 +51,14 @@ export function AudioContent({
     useCallback(async () => {
       const mediaUrl = mxcUrlToHttp(mx, url, useAuthentication);
       if (!mediaUrl) throw new Error('Invalid media URL');
+      const token = mx.getAccessToken() ?? undefined;
       const fileContent = encInfo
-        ? await downloadEncryptedMedia(mediaUrl, (encBuf) => decryptFile(encBuf, mimeType, encInfo))
-        : await downloadMedia(mediaUrl);
+        ? await downloadEncryptedMedia(
+            mediaUrl,
+            (encBuf) => decryptFile(encBuf, mimeType, encInfo),
+            token
+          )
+        : await downloadMedia(mediaUrl, token);
       return URL.createObjectURL(fileContent);
     }, [mx, url, useAuthentication, mimeType, encInfo])
   );

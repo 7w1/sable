@@ -2,6 +2,7 @@ import { AvatarFallback, AvatarImage, color } from 'folds';
 import { ReactEventHandler, ReactNode, useState } from 'react';
 import classNames from 'classnames';
 import colorMXID from '$utils/colorMXID';
+import { useAuthMedia } from '$hooks/useAuthMedia';
 import * as css from './UserAvatar.css';
 
 type UserAvatarProps = {
@@ -13,12 +14,13 @@ type UserAvatarProps = {
 };
 export function UserAvatar({ className, userId, src, alt, renderFallback }: UserAvatarProps) {
   const [error, setError] = useState(false);
+  const resolvedSrc = useAuthMedia(src);
 
   const handleLoad: ReactEventHandler<HTMLImageElement> = (evt) => {
     evt.currentTarget.setAttribute('data-image-loaded', 'true');
   };
 
-  if (!src || error) {
+  if (!resolvedSrc || error) {
     return (
       <AvatarFallback
         style={{ backgroundColor: colorMXID(userId), color: color.Surface.Container }}
@@ -32,7 +34,7 @@ export function UserAvatar({ className, userId, src, alt, renderFallback }: User
   return (
     <AvatarImage
       className={classNames(css.UserAvatar, className)}
-      src={src}
+      src={resolvedSrc}
       alt={alt}
       onError={() => setError(true)}
       onLoad={handleLoad}

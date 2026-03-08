@@ -349,7 +349,7 @@ function MessageInternal(
     return mxc ? mxcUrlToHttp(mx, mxc, useAuthentication, 48, 48, 'crop') : undefined;
   }, [collapse, profile.avatarUrl, senderId, mx, room, useAuthentication]);
 
-  const cachedAvatar = useBlobCache(avatarUrl ?? undefined);
+  const cachedAvatar = useBlobCache(avatarUrl ?? undefined, mx.getAccessToken() ?? undefined);
 
   // UI State
   const [isDesktopHover, setIsDesktopHover] = useState(false);

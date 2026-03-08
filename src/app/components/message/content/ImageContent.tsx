@@ -26,8 +26,9 @@ import { useMatrixClient } from '$hooks/useMatrixClient';
 import { bytesToSize } from '$utils/common';
 import { FALLBACK_MIMETYPE } from '$utils/mimeTypes';
 import { stopPropagation } from '$utils/keyboard';
-import { decryptFile, downloadEncryptedMedia, mxcUrlToHttp } from '$utils/matrix';
+import { decryptFile, downloadEncryptedMedia, downloadMedia, mxcUrlToHttp } from '$utils/matrix';
 import { useMediaAuthentication } from '$hooks/useMediaAuthentication';
+import { needsManualMediaAuth } from '$utils/tauriMediaCache';
 import { ModalWide } from '$styles/Modal.css';
 import { validBlurHash } from '$utils/blurHash';
 import * as css from './style.css';
@@ -91,11 +92,19 @@ export const ImageContent = as<'div', ImageContentProps>(
 
         const mediaUrl = mxcUrlToHttp(mx, url, useAuthentication);
         if (!mediaUrl) throw new Error('Invalid media URL');
+        const token = mx.getAccessToken() ?? undefined;
         if (encInfo) {
-          const fileContent = await downloadEncryptedMedia(mediaUrl, (encBuf) =>
-            decryptFile(encBuf, mimeType ?? FALLBACK_MIMETYPE, encInfo)
+          const fileContent = await downloadEncryptedMedia(
+            mediaUrl,
+            (encBuf) => decryptFile(encBuf, mimeType ?? FALLBACK_MIMETYPE, encInfo),
+            token
           );
           return URL.createObjectURL(fileContent);
+        }
+        // On Tauri (no service worker) we must fetch with auth and use a blob URL
+        if (needsManualMediaAuth() && token) {
+          const blob = await downloadMedia(mediaUrl, token);
+          return URL.createObjectURL(blob);
         }
         return mediaUrl;
       }, [mx, url, useAuthentication, mimeType, encInfo])

@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
+import { fetchAuthenticatedMedia, needsManualMediaAuth } from '$utils/tauriMediaCache';
 
 const imageBlobCache = new Map<string, string>();
 const inflightRequests = new Map<string, Promise<string>>();
 
-export function useBlobCache(url?: string): string | undefined {
+export function useBlobCache(url?: string, accessToken?: string): string | undefined {
   const [cacheState, setCacheState] = useState<{ sourceUrl?: string; blobUrl?: string }>({
     sourceUrl: url,
     blobUrl: url ? imageBlobCache.get(url) : undefined,
@@ -30,6 +31,12 @@ export function useBlobCache(url?: string): string | undefined {
 
       const requestPromise = (async () => {
         try {
+          if (needsManualMediaAuth() && accessToken) {
+            const objectUrl = await fetchAuthenticatedMedia(url, accessToken);
+            imageBlobCache.set(url, objectUrl);
+            return objectUrl;
+          }
+
           const res = await fetch(url, { mode: 'cors' });
           if (!res.ok) throw new Error();
           const blob = await res.blob();
@@ -62,7 +69,7 @@ export function useBlobCache(url?: string): string | undefined {
     return () => {
       isMounted = false;
     };
-  }, [url]);
+  }, [url, accessToken]);
 
   return cacheState.blobUrl || url;
 }

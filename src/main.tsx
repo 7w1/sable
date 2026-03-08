@@ -117,9 +117,7 @@ const injectIOSMetaTags = () => {
 };
 
 export const mountApp = (root: Root) => {
-  // Service workers are not supported in Android WebView (Tauri mobile).
-  // Attempting to register one would cause navigator.serviceWorker.ready to
-  // hang forever, blocking initialization.
+  // Service workers are unavailable in Tauri mobile WebView.
   if (!isTauri()) {
     initServiceWorker();
   }

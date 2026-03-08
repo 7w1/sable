@@ -3,6 +3,7 @@ import {
   decryptAttachment,
   encryptAttachment,
 } from 'browser-encrypt-attachment';
+import { needsManualMediaAuth } from '$utils/tauriMediaCache';
 import {
   EventTimeline,
   MatrixClient,
@@ -305,18 +306,38 @@ export const mxcUrlToHttp = (
     useAuthentication
   );
 
-export const downloadMedia = async (src: string): Promise<Blob> => {
-  // this request is authenticated by service worker
-  const res = await fetch(src, { method: 'GET' });
+const resolveMediaAccessToken = (explicitToken?: string): string | undefined => {
+  if (explicitToken) return explicitToken;
+  if (!needsManualMediaAuth()) return undefined;
+  try {
+    const raw = localStorage.getItem('matrixSessions');
+    if (!raw) return undefined;
+    const sessions = JSON.parse(raw) as Array<{ accessToken?: string; userId?: string }>;
+    const activeId = localStorage.getItem('matrixActiveSession') ?? undefined;
+    const active = sessions.find((s) => s.userId === activeId) ?? sessions[0];
+    return active?.accessToken;
+  } catch {
+    return undefined;
+  }
+};
+
+export const downloadMedia = async (src: string, accessToken?: string): Promise<Blob> => {
+  const token = resolveMediaAccessToken(accessToken);
+  const headers: HeadersInit = {};
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+  const res = await fetch(src, { method: 'GET', headers });
   const blob = await res.blob();
   return blob;
 };
 
 export const downloadEncryptedMedia = async (
   src: string,
-  decryptContent: (buf: ArrayBuffer) => Promise<Blob>
+  decryptContent: (buf: ArrayBuffer) => Promise<Blob>,
+  accessToken?: string
 ): Promise<Blob> => {
-  const encryptedContent = await downloadMedia(src);
+  const encryptedContent = await downloadMedia(src, accessToken);
   const decryptedContent = await decryptContent(await encryptedContent.arrayBuffer());
 
   return decryptedContent;

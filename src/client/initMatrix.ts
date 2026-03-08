@@ -525,7 +525,7 @@ export const clearLoginData = async () => {
       if (name) window.indexedDB.deleteDatabase(name);
     });
   } catch {
-    // indexedDB.databases() not available in all browsers/WebViews
+    // databases() not available in all browsers/WebViews
   }
   window.localStorage.clear();
   window.location.reload();

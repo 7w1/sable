@@ -24,6 +24,7 @@ import { useRoom } from '$hooks/useRoom';
 import { useSableCosmetics } from '$hooks/useSableCosmetics';
 import { useNickname } from '$hooks/useNickname';
 import { useBlobCache } from '$hooks/useBlobCache';
+import { useMatrixClient } from '$hooks/useMatrixClient';
 import { ImageViewer } from '$components/image-viewer';
 import { AvatarPresence, PresenceBadge } from '$components/presence';
 import { UserAvatar } from '$components/user-avatar';
@@ -38,11 +39,13 @@ type UserHeroProps = {
   autoplayGifs?: boolean;
 };
 export function UserHero({ userId, avatarUrl, bannerUrl, presence, autoplayGifs }: UserHeroProps) {
+  const mx = useMatrixClient();
   const [viewAvatar, setViewAvatar] = useState<string>();
   const [isFullStatus, setIsFullStatus] = useState(false);
 
-  const cachedBannerUrl = useBlobCache(bannerUrl);
-  const cachedAvatarUrl = useBlobCache(avatarUrl);
+  const accessToken = mx.getAccessToken() ?? undefined;
+  const cachedBannerUrl = useBlobCache(bannerUrl, accessToken);
+  const cachedAvatarUrl = useBlobCache(avatarUrl, accessToken);
 
   const coverUrl = cachedBannerUrl || cachedAvatarUrl;
   const isFallbackCover = !cachedBannerUrl && !!cachedAvatarUrl;
