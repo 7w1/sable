@@ -1,11 +1,17 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
-  "entry": ["src/sw.ts", "scripts/normalize-imports.js"],
+  "entry": ["src/sw.ts", "scripts/**/*.js"],
   "ignoreExportsUsedInFile": {
     "interface": true,
     "type": true
   },
-  "ignoreDependencies": ["buffer", "@element-hq/element-call-embedded", "workbox-precaching"],
+  "ignoreFiles": ["crates/**/*"],
+  "ignoreDependencies": [
+    "buffer",
+    "@element-hq/element-call-embedded",
+    "workbox-precaching",
+    "tauri-plugin-splashscreen-api"
+  ],
   "ignoreBinaries": ["knope"],
   "rules": {
     "exports": "off",
