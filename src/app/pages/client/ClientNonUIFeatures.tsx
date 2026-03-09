@@ -41,6 +41,19 @@ import { mobileOrTablet } from '$utils/user-agent';
 import { getInboxInvitesPath } from '../pathUtils';
 import { BackgroundNotifications } from './BackgroundNotifications';
 
+function clearMediaSessionQuickly(): void {
+  if (!('mediaSession' in navigator)) return;
+  // iOS registers the lock screen media player as a side-effect of
+  // HTMLAudioElement.play(). We delay slightly so iOS has finished updating
+  // the media session before we clear it — clearing too early is a no-op.
+  // We only clear if no real in-app media (video/audio in a room) has since
+  // registered meaningful metadata; if it has, leave it alone.
+  setTimeout(() => {
+    if (navigator.mediaSession.metadata !== null) return;
+    navigator.mediaSession.playbackState = 'none';
+  }, 500);
+}
+
 function SystemEmojiFeature() {
   const [twitterEmoji] = useSetting(settingsAtom, 'twitterEmoji');
 
@@ -158,6 +171,7 @@ function InviteNotifications() {
   const playSound = useCallback(() => {
     const audioElement = audioRef.current;
     audioElement?.play();
+    clearMediaSessionQuickly();
   }, []);
 
   useEffect(() => {
@@ -230,6 +244,7 @@ function MessageNotifications() {
   const playSound = useCallback(() => {
     const audioElement = audioRef.current;
     audioElement?.play();
+    clearMediaSessionQuickly();
   }, []);
 
   useEffect(() => {
@@ -292,8 +307,13 @@ function MessageNotifications() {
       // If neither a loud nor a highlight rule matches, and it's not a DM, nothing to show.
       if (!isHighlightByRule && !loudByRule && !isDM) return;
 
-      // Page hidden: SW (push) handles the OS notification. Nothing to do in-app.
-      if (document.visibilityState !== 'visible') return;
+      // With sliding sync we only load m.room.member/$ME in required_state, so
+      // PushProcessor cannot evaluate the room_member_count == 2 condition on
+      // .m.rule.room_one_to_one.  That rule therefore fails to match, and DM
+      // messages fall through to .m.rule.message which carries no sound tweak —
+      // leaving loudByRule=false.  Treat known DMs as inherently loud so that
+      // the OS notification and badge are consistent with the DM context.
+      const isLoud = loudByRule || isDM;
 
       // Record as notified to prevent duplicate banners (e.g. re-emitted decrypted events).
       notifiedEventsRef.current.add(eventId);
@@ -302,11 +322,60 @@ function MessageNotifications() {
         if (first) notifiedEventsRef.current.delete(first);
       }
 
-      // Page is visible — show the themed in-app notification banner for any
-      // highlighted message (mention / keyword) or loud push rule.
-      // okay fast patch because that showNotifications setting atom is not getting set correctly or something
-      if (mobileOrTablet() && showNotifications && (isHighlightByRule || loudByRule || isDM)) {
-        const isEncryptedRoom = !!getStateEvent(room, StateEvent.RoomEncryption);
+      // On desktop: fire an OS notification when the window is not focused so
+      // the user is alerted while the browser is minimised or the tab is in the
+      // background.  When the window IS focused the in-app banner (below) is the
+      // appropriate alert — we skip the OS notification to avoid a duplicate.
+      // The whole block is wrapped in try/catch: window.Notification() can throw
+      // in sandboxed environments, browsers with DnD active, or Electron — and
+      // an uncaught exception here would abort the handler before setInAppBanner
+      // is reached, causing in-app notifications to silently vanish too.
+      if (
+        !mobileOrTablet() &&
+        !document.hasFocus() &&
+        showSystemNotifications &&
+        notificationPermission('granted')
+      ) {
+        try {
+          const isEncryptedRoom = !!getStateEvent(room, StateEvent.RoomEncryption);
+          const avatarMxc =
+            room.getAvatarFallbackMember()?.getMxcAvatarUrl() ?? room.getMxcAvatarUrl();
+          const osPayload = buildRoomMessageNotification({
+            roomName: room.name ?? 'Unknown',
+            roomAvatar: avatarMxc
+              ? (mxcUrlToHttp(mx, avatarMxc, useAuthentication, 96, 96, 'crop') ?? undefined)
+              : undefined,
+            username:
+              getMemberDisplayName(room, sender, nicknamesRef.current) ??
+              getMxIdLocalPart(sender) ??
+              sender,
+            previewText: resolveNotificationPreviewText({
+              content: mEvent.getContent(),
+              eventType: mEvent.getType(),
+              isEncryptedRoom,
+              showMessageContent,
+              showEncryptedMessageContent,
+            }),
+            silent: !notificationSound || !isLoud,
+            eventId,
+          });
+          const noti = new window.Notification(osPayload.title, osPayload.options);
+          const { roomId } = room;
+          noti.onclick = () => {
+            window.focus();
+            setPending({ roomId, eventId, targetSessionId: mx.getUserId() ?? undefined });
+            noti.close();
+          };
+        } catch {
+          // window.Notification unavailable or blocked (sandboxed context, DnD, etc.)
+        }
+      }
+
+      // Everything below requires the page to be visible (in-app UI + audio).
+      if (document.visibilityState !== 'visible') return;
+
+      // Page is visible — show the themed in-app notification banner.
+      if (showNotifications && (isHighlightByRule || loudByRule || isDM)) {
         const avatarMxc =
           room.getAvatarFallbackMember()?.getMxcAvatarUrl() ?? room.getMxcAvatarUrl();
         const roomAvatar = avatarMxc
@@ -317,21 +386,22 @@ function MessageNotifications() {
           getMxIdLocalPart(sender) ??
           sender;
         const content = mEvent.getContent();
+        // Events reaching here are already decrypted (m.room.encrypted is skipped
+        // above). Pass isEncryptedRoom:false so the preview always shows the actual
+        // message body when showMessageContent is enabled.
         const previewText = resolveNotificationPreviewText({
           content: mEvent.getContent(),
           eventType: mEvent.getType(),
-          isEncryptedRoom,
+          isEncryptedRoom: false,
           showMessageContent,
           showEncryptedMessageContent,
         });
 
         // Build a rich ReactNode body using the same HTML parser as the room
-        // timeline — this gives full mxc image transforms, mention pills,
-        // linkify, spoilers, code blocks, etc.
+        // timeline — mxc images, mention pills, linkify, spoilers, code blocks.
         let bodyNode: ReactNode;
         if (
           showMessageContent &&
-          (!isEncryptedRoom || showEncryptedMessageContent) &&
           content.format === 'org.matrix.custom.html' &&
           content.formatted_body
         ) {
@@ -348,7 +418,7 @@ function MessageNotifications() {
           roomAvatar,
           username: resolvedSenderName,
           previewText,
-          silent: !notificationSound,
+          silent: !notificationSound || !isLoud,
           eventId,
         });
         const { roomId } = room;
@@ -372,45 +442,8 @@ function MessageNotifications() {
         });
       }
 
-      // On desktop: also fire an OS notification so the user is alerted even
-      // if the browser window is minimised (respects System Notifications toggle).
-      if (!mobileOrTablet() && showSystemNotifications && notificationPermission('granted')) {
-        const isEncryptedRoom = !!getStateEvent(room, StateEvent.RoomEncryption);
-        const avatarMxc =
-          room.getAvatarFallbackMember()?.getMxcAvatarUrl() ?? room.getMxcAvatarUrl();
-        const osPayload = buildRoomMessageNotification({
-          roomName: room.name ?? 'Unknown',
-          roomAvatar: avatarMxc
-            ? (mxcUrlToHttp(mx, avatarMxc, useAuthentication, 96, 96, 'crop') ?? undefined)
-            : undefined,
-          username:
-            getMemberDisplayName(room, sender, nicknamesRef.current) ??
-            getMxIdLocalPart(sender) ??
-            sender,
-          previewText: resolveNotificationPreviewText({
-            content: mEvent.getContent(),
-            eventType: mEvent.getType(),
-            isEncryptedRoom,
-            showMessageContent,
-            showEncryptedMessageContent,
-          }),
-          // Play sound only if the push rule requests it and the user has sounds enabled.
-          silent: !notificationSound || !loudByRule,
-          eventId,
-        });
-        const noti = new window.Notification(osPayload.title, osPayload.options);
-        const { roomId } = room;
-        noti.onclick = () => {
-          window.focus();
-          setPending({ roomId, eventId, targetSessionId: mx.getUserId() ?? undefined });
-          noti.close();
-        };
-      }
-
       // In-app audio: play whenever notification sounds are enabled.
-      // Not gated on loudByRule — that only controls the OS-level silent flag.
-      // Audio API requires a visible, focused document; skip when hidden.
-      if (document.visibilityState === 'visible' && notificationSound) {
+      if (notificationSound) {
         playSound();
       }
     };
@@ -498,8 +531,6 @@ export function HandleNotificationClick() {
 }
 
 function SyncNotificationSettingsWithServiceWorker() {
-  const [notificationSound] = useSetting(settingsAtom, 'isNotificationSounds');
-  const [usePushNotifications] = useSetting(settingsAtom, 'usePushNotifications');
   const [showMessageContent] = useSetting(settingsAtom, 'showMessageContentInNotifications');
   const [showEncryptedMessageContent] = useSetting(
     settingsAtom,
@@ -525,9 +556,11 @@ function SyncNotificationSettingsWithServiceWorker() {
 
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return;
+    // notificationSoundEnabled is intentionally excluded: push notification sound
+    // is governed by the push rule's tweakSound alone (OS/Sygnal handles it).
+    // The in-app sound setting only controls the in-page <audio> playback above.
     const payload = {
       type: 'setNotificationSettings' as const,
-      notificationSoundEnabled: notificationSound,
       showMessageContent,
       showEncryptedMessageContent,
       clearNotificationsOnRead,
@@ -537,13 +570,7 @@ function SyncNotificationSettingsWithServiceWorker() {
     navigator.serviceWorker.ready.then((registration) => {
       registration.active?.postMessage(payload);
     });
-  }, [
-    notificationSound,
-    usePushNotifications,
-    showMessageContent,
-    showEncryptedMessageContent,
-    clearNotificationsOnRead,
-  ]);
+  }, [showMessageContent, showEncryptedMessageContent, clearNotificationsOnRead]);
 
   return null;
 }
