@@ -1,4 +1,12 @@
-import { MouseEventHandler, forwardRef, useCallback, useMemo, useRef, useState } from 'react';
+import {
+  MouseEventHandler,
+  forwardRef,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { useAtom, useAtomValue } from 'jotai';
 import {
   Avatar,
@@ -20,7 +28,7 @@ import {
 } from 'folds';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import FocusTrap from 'focus-trap-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { JoinRule, Room, RoomJoinRulesEventContent } from '$types/matrix-sdk';
 import { useMatrixClient } from '$hooks/useMatrixClient';
 import { mDirectAtom } from '$state/mDirectList';
@@ -68,10 +76,15 @@ import { ContainerColor } from '$styles/ContainerColor.css';
 import { AsyncStatus, useAsyncCallback } from '$hooks/useAsyncCallback';
 import { BreakWord } from '$styles/Text.css';
 import { InviteUserPrompt } from '$components/invite-user-prompt';
-import { mobileOrTablet } from '$utils/user-agent';
-import { lastVisitedRoomIdAtom } from '$state/room/lastRoom';
-import { SwipeableOverlayWrapper } from '$components/SwipeableOverlayWrapper';
 import { useCallEmbed } from '$hooks/useCallEmbed';
+import { mobileOrTablet } from '$utils/user-agent';
+import { useLastFocusedRoom } from '$hooks/useLastFocusedRooms';
+import { SwipeableOverlayWrapper } from '$components/SwipeableOverlayWrapper';
+import { BACK_ROOM_PARAM } from '$hooks/useBackRoute';
+import { createLogger } from '$utils/debug';
+import { resolveSwipeTargetRoom } from '$utils/resolveSwipeTargetRoom';
+
+const log = createLogger('Space');
 
 type SpaceMenuProps = {
   room: Room;
@@ -376,7 +389,24 @@ export function Space() {
   const notificationPreferences = useRoomsNotificationPreferencesContext();
 
   const tombstoneEvent = useStateEvent(space, StateEvent.RoomTombstone);
-  const selectedRoomId = useSelectedRoom();
+  const [searchParams] = useSearchParams();
+  const routeSelectedRoomId = useSelectedRoom();
+  const backRoomParam = searchParams.get(BACK_ROOM_PARAM);
+  const selectedRoomId = routeSelectedRoomId ?? backRoomParam ?? undefined;
+  const lastRoomId = useLastFocusedRoom({ spaceId: spaceIdOrAlias });
+
+  useEffect(() => {
+    log.log(
+      'selectedRoomId:',
+      selectedRoomId,
+      '| routeSelectedRoomId:',
+      routeSelectedRoomId,
+      '| backRoomParam:',
+      backRoomParam,
+      '| searchParams:',
+      Object.fromEntries(searchParams.entries())
+    );
+  }, [selectedRoomId, routeSelectedRoomId, backRoomParam, searchParams]);
   const lobbySelected = useSpaceLobbySelected(spaceIdOrAlias);
   const searchSelected = useSpaceSearchSelected(spaceIdOrAlias);
   const callEmbed = useCallEmbed();
@@ -430,14 +460,31 @@ export function Space() {
     getSpaceRoomPath(spaceIdOrAlias, getCanonicalAliasOrRoomId(mx, roomId));
 
   const navigate = useNavigate();
-  const lastRoomId = useAtomValue(lastVisitedRoomIdAtom);
+  const firstRoomId = useMemo(() => {
+    const firstRoom = hierarchy.find((item) => {
+      const room = mx.getRoom(item.roomId);
+      return room && !room.isSpaceRoom();
+    });
+    return firstRoom?.roomId;
+  }, [hierarchy, mx]);
+
+  const hierarchyRoomIds = useMemo(
+    () => new Set(hierarchy.map((item) => item.roomId)),
+    [hierarchy]
+  );
 
   const handleSwipeToRoom = useCallback(() => {
-    if (mobileOrTablet() && lastRoomId) {
-      const roomAliasOrId = getCanonicalAliasOrRoomId(mx, lastRoomId);
-      navigate(getSpaceRoomPath(spaceIdOrAlias, roomAliasOrId));
-    }
-  }, [lastRoomId, spaceIdOrAlias, mx, navigate]);
+    if (!mobileOrTablet()) return;
+    const targetRoomId = resolveSwipeTargetRoom(
+      mx,
+      hierarchyRoomIds,
+      selectedRoomId,
+      lastRoomId,
+      firstRoomId
+    );
+    if (!targetRoomId) return;
+    navigate(getSpaceRoomPath(spaceIdOrAlias, getCanonicalAliasOrRoomId(mx, targetRoomId)));
+  }, [selectedRoomId, lastRoomId, hierarchyRoomIds, firstRoomId, spaceIdOrAlias, mx, navigate]);
 
   return (
     <PageNav>

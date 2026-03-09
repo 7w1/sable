@@ -18,7 +18,6 @@ import {
 import {
   MouseEventHandler,
   MouseEvent,
-  PointerEvent,
   ReactNode,
   memo,
   useCallback,
@@ -68,7 +67,7 @@ import { PowerIcon } from '$components/power';
 import { getPowerTagIconSrc } from '$hooks/useMemberPowerTag';
 import { useSableCosmetics } from '$hooks/useSableCosmetics';
 import { SwipeableMessageWrapper } from '$components/SwipeableMessageWrapper';
-import { mobileOrTablet } from '$utils/user-agent';
+import { useIsMobile } from '$hooks/useIsMobile';
 import { useUserProfile } from '$hooks/useUserProfile';
 import { useSetting } from '$state/hooks/settings';
 import { useBlobCache } from '$hooks/useBlobCache';
@@ -245,26 +244,51 @@ export type MessageProps = {
   messageForwardedProps?: ForwardedMessageProps;
 };
 
-function useMobileDoubleTap(callback: () => void, delay = 300) {
-  const lastTapRef = useRef<number>(0);
+function useLongPress(
+  onLongPress: () => void,
+  isMobile: boolean,
+  { delay = 500, moveThreshold = 8 }: { delay?: number; moveThreshold?: number } = {}
+) {
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const startPosRef = useRef<{ x: number; y: number } | null>(null);
 
-  return useCallback(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    (e: PointerEvent<HTMLElement>) => {
-      if (!mobileOrTablet()) return;
+  const cancel = useCallback(() => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = null;
+    startPosRef.current = null;
+  }, []);
 
-      const now = Date.now();
-      const timeSinceLastTap = now - lastTapRef.current;
+  const onPointerDown = useCallback(
+    (e: React.PointerEvent<HTMLElement>) => {
+      if (!isMobile) return;
+      if (e.pointerType === 'mouse') return;
 
-      if (timeSinceLastTap < delay && timeSinceLastTap > 0) {
-        callback();
-        lastTapRef.current = 0;
-      } else {
-        lastTapRef.current = now;
-      }
+      startPosRef.current = { x: e.clientX, y: e.clientY };
+      timerRef.current = setTimeout(() => {
+        onLongPress();
+        cancel();
+      }, delay);
     },
-    [callback, delay]
+    [isMobile, delay, onLongPress, cancel]
   );
+
+  const onPointerMove = useCallback(
+    (e: React.PointerEvent<HTMLElement>) => {
+      if (!startPosRef.current) return;
+      const dx = e.clientX - startPosRef.current.x;
+      const dy = e.clientY - startPosRef.current.y;
+      if (Math.sqrt(dx * dx + dy * dy) > moveThreshold) cancel();
+    },
+    [cancel, moveThreshold]
+  );
+
+  return {
+    onPointerDown,
+    onPointerMove,
+    onPointerUp: cancel,
+    onPointerLeave: cancel,
+    onPointerCancel: cancel,
+  };
 }
 
 const Pronouns = as<
@@ -272,8 +296,9 @@ const Pronouns = as<
   {
     pronouns?: any[];
     tagColor: string;
+    isMobile?: boolean;
   }
->(({ as: AsPronouns = 'span', pronouns, tagColor, ...props }, ref) => {
+>(({ as: AsPronouns = 'span', pronouns, tagColor, isMobile, ...props }, ref) => {
   if (!pronouns || pronouns.length === 0) return null;
 
   const languageFilterEnabled = Boolean(getSettings().filterPronounsBasedOnLanguage ?? false);
@@ -289,7 +314,7 @@ const Pronouns = as<
   );
 
   const clamp = (str: string, len: number) => (str.length > len ? `${str.slice(0, len)}...` : str);
-  const limit = mobileOrTablet() ? 1 : 3;
+  const limit = isMobile ? 1 : 3;
 
   // if language specific pronouns can't be found matching the filter return unfiltered
   if (visiblePronouns.length === 0) {
@@ -385,14 +410,15 @@ function MessageInternal(
 
   // UI State
   const [isDesktopHover, setIsDesktopHover] = useState(false);
+  const isMobile = useIsMobile();
   const { hoverProps } = useHover({
     onHoverChange: (h) => {
-      if (!mobileOrTablet()) setIsDesktopHover(h);
+      if (!isMobile) setIsDesktopHover(h);
     },
   });
   const { focusWithinProps } = useFocusWithin({
     onFocusWithinChange: (f) => {
-      if (!mobileOrTablet()) setIsDesktopHover(f);
+      if (!isMobile) setIsDesktopHover(f);
     },
   });
 
@@ -447,7 +473,11 @@ function MessageInternal(
           </Text>
         </Username>
         {showPronouns && (
-          <Pronouns pronouns={profile.pronouns} tagColor={usernameColor ?? 'currentColor'} />
+          <Pronouns
+            pronouns={profile.pronouns}
+            tagColor={usernameColor ?? 'currentColor'}
+            isMobile={isMobile}
+          />
         )}
         {tagIconSrc && <PowerIcon size="100" iconSrc={tagIconSrc} />}
       </Box>
@@ -606,7 +636,7 @@ function MessageInternal(
   );
 
   const handleContextMenu: MouseEventHandler<HTMLDivElement> = (evt) => {
-    if (mobileOrTablet()) {
+    if (isMobile) {
       evt.preventDefault();
       return;
     }
@@ -663,9 +693,9 @@ function MessageInternal(
     onReplyClick(mockEvent);
   };
 
-  const onDoubleTap = useMobileDoubleTap(() => {
+  const longPressHandlers = useLongPress(() => {
     setMobileOptionsOpen(true);
-  });
+  }, isMobile);
 
   const isThreadedMessage = mEvent.threadRootId !== undefined;
 
@@ -997,7 +1027,7 @@ function MessageInternal(
       {messageLayout === MessageLayout.Compact && (
         <SwipeableMessageWrapper onReply={handleSwipeReply}>
           <CompactLayout before={headerJSX} onContextMenu={handleContextMenu}>
-            <div onPointerDown={onDoubleTap}>{msgContentJSX}</div>
+            <div {...longPressHandlers}>{msgContentJSX}</div>
           </CompactLayout>
         </SwipeableMessageWrapper>
       )}
@@ -1009,14 +1039,14 @@ function MessageInternal(
             onContextMenu={handleContextMenu}
             align={useRightBubbles && senderId === mx.getUserId() ? 'right' : 'left'}
           >
-            <div onPointerDown={onDoubleTap}>{msgContentJSX}</div>
+            <div {...longPressHandlers}>{msgContentJSX}</div>
           </BubbleLayout>
         </SwipeableMessageWrapper>
       )}
       {messageLayout !== MessageLayout.Compact && messageLayout !== MessageLayout.Bubble && (
         <SwipeableMessageWrapper onReply={handleSwipeReply}>
           <ModernLayout before={avatarJSX} onContextMenu={handleContextMenu}>
-            <div onPointerDown={onDoubleTap}>
+            <div {...longPressHandlers}>
               {headerJSX}
               {msgContentJSX}
             </div>
@@ -1063,13 +1093,18 @@ export const Event = as<'div', EventProps>(
     ref
   ) => {
     const mx = useMatrixClient();
+    const isMobile = useIsMobile();
     const stateEvent = typeof mEvent.getStateKey() === 'string';
 
     const [menuAnchor, setMenuAnchor] = useState<RectCords>();
     const [mobileOptionsOpen, setMobileOptionsOpen] = useState(false);
 
+    const longPressHandlers = useLongPress(() => {
+      setMobileOptionsOpen(true);
+    }, isMobile);
+
     const handleContextMenu: MouseEventHandler<HTMLDivElement> = (evt) => {
-      if (mobileOrTablet()) {
+      if (isMobile) {
         evt.preventDefault();
         return;
       }
@@ -1103,12 +1138,12 @@ export const Event = as<'div', EventProps>(
     const [isDesktopHover, setIsDesktopHover] = useState(false);
     const { hoverProps } = useHover({
       onHoverChange: (h) => {
-        if (!mobileOrTablet()) setIsDesktopHover(h);
+        if (!isMobile) setIsDesktopHover(h);
       },
     });
     const { focusWithinProps } = useFocusWithin({
       onFocusWithinChange: (f) => {
-        if (!mobileOrTablet()) setIsDesktopHover(f);
+        if (!isMobile) setIsDesktopHover(f);
       },
     });
 
@@ -1124,10 +1159,6 @@ export const Event = as<'div', EventProps>(
       document.addEventListener('pointerdown', handleClick, { capture: true });
       return () => document.removeEventListener('pointerdown', handleClick, { capture: true });
     }, [mobileOptionsOpen]);
-
-    const onDoubleTap = useMobileDoubleTap(() => {
-      setMobileOptionsOpen(true);
-    });
 
     return (
       <MessageBase
@@ -1147,7 +1178,7 @@ export const Event = as<'div', EventProps>(
           <div className={css.MessageOptionsBase} ref={optionsRef}>
             <Menu className={css.MessageOptionsBar} variant="SurfaceVariant">
               <Box gap="100">
-                {!mobileOrTablet() && (
+                {!isMobile && (
                   <PopOut
                     anchor={menuAnchor}
                     position="Bottom"
@@ -1217,7 +1248,7 @@ export const Event = as<'div', EventProps>(
             </Menu>
           </div>
         )}
-        <div onContextMenu={handleContextMenu} onPointerDown={onDoubleTap}>
+        <div onContextMenu={handleContextMenu} {...longPressHandlers}>
           {children}
         </div>
       </MessageBase>

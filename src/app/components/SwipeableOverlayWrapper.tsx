@@ -1,9 +1,15 @@
 import { ReactNode } from 'react';
-import { motion, useMotionValue, useSpring } from 'framer-motion';
-import { useDrag } from '@use-gesture/react';
 import { useAtomValue } from 'jotai';
 import { settingsAtom } from '$state/settings';
-import { mobileOrTablet } from '$utils/user-agent';
+import { useIsMobile } from '$hooks/useIsMobile';
+import { useDrag } from '@use-gesture/react';
+import { createLogger } from '$utils/debug';
+
+const log = createLogger('SwipeableOverlayWrapper');
+
+const SWIPE_DISTANCE = 60;
+const SWIPE_VELOCITY = 0.3;
+const AXIS_LOCK_RATIO = 1.5;
 
 interface SwipeableOverlayWrapperProps {
   children: ReactNode;
@@ -17,93 +23,47 @@ export function SwipeableOverlayWrapper({
   direction,
 }: SwipeableOverlayWrapperProps) {
   const settings = useAtomValue(settingsAtom);
-  const x = useMotionValue(0);
-  const springX = useSpring(x, { stiffness: 400, damping: 40 });
+  const isMobile = useIsMobile();
+  const gesturesEnabled = settings.mobileGestures && isMobile;
 
   const bind = useDrag(
-    ({ active, movement: [mx], velocity: [vx], direction: [dx], event, event: e }) => {
-      if (e && 'target' in e && e.target instanceof HTMLElement) {
-        if (e.target.closest('[data-gestures="ignore"]')) {
-          return;
-        }
-      }
+    ({ active, movement: [mx, my], velocity: [vx], direction: [dx] }) => {
+      if (active) return;
 
-      if (!settings.mobileGestures || !mobileOrTablet()) return;
+      const axisBlocked = Math.abs(my) * AXIS_LOCK_RATIO > Math.abs(mx);
+      if (axisBlocked) return;
 
-      event.stopPropagation();
+      const thresholdMet =
+        direction === 'left'
+          ? mx < -SWIPE_DISTANCE || (vx > SWIPE_VELOCITY && dx < 0 && mx < 0)
+          : mx > SWIPE_DISTANCE || (vx > SWIPE_VELOCITY && dx > 0 && mx > 0);
 
-      let val = mx;
-
-      if (direction === 'left' && val > 0) val = 0;
-      if (direction === 'right' && val < 0) val = 0;
-
-      if (active) {
-        x.set(val);
-      } else {
-        const swipeThreshold = 100;
-        const velocityThreshold = 0.5;
-
-        const swipedLeft =
-          direction === 'left' && (val < -swipeThreshold || (vx > velocityThreshold && dx < 0));
-        const swipedRight =
-          direction === 'right' && (val > swipeThreshold || (vx > velocityThreshold && dx > 0));
-
-        if (swipedLeft || swipedRight) {
-          onClose();
-        }
-
-        x.set(0);
+      if (thresholdMet) {
+        log.log('swipe detected — calling onClose');
+        onClose();
       }
     },
     {
       axis: 'x',
-      bounds: direction === 'left' ? { left: -300, right: 0 } : { left: 0, right: 300 },
-      rubberband: true,
       filterTaps: true,
-      pointer: { capture: true },
+      pointer: { capture: false },
+      enabled: gesturesEnabled,
     }
   );
 
-  if (!settings.mobileGestures || !mobileOrTablet()) {
-    return (
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          flexGrow: 1,
-          height: '100%',
-          width: '100%',
-        }}
-      >
-        {children}
-      </div>
-    );
-  }
-
   return (
     <div
-      {...bind()}
+      {...(gesturesEnabled ? bind() : {})}
       style={{
-        touchAction: 'pan-y',
-        overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
         flexGrow: 1,
         height: '100%',
         width: '100%',
+        touchAction: 'pan-y',
       }}
     >
-      <motion.div
-        style={{
-          x: springX,
-          display: 'flex',
-          flexDirection: 'column',
-          flexGrow: 1,
-          height: '100%',
-        }}
-      >
-        {children}
-      </motion.div>
+      {children}
     </div>
   );
 }
