@@ -1,5 +1,31 @@
-import { useCallback } from 'react';
-import { Box, Text, IconButton, Icon, Icons, Scroll, Switch } from 'folds';
+import {
+  ChangeEventHandler,
+  FormEventHandler,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
+import {
+  Box,
+  Text,
+  IconButton,
+  Icon,
+  Icons,
+  Scroll,
+  Switch,
+  Avatar,
+  Input,
+  config,
+  Button,
+  Spinner,
+  OverlayBackdrop,
+  Overlay,
+  OverlayCenter,
+  Modal,
+  Dialog,
+  Header,
+} from 'folds';
 import { Page, PageContent, PageHeader } from '$components/page';
 import { SequenceCard } from '$components/sequence-card';
 import { SettingTile } from '$components/setting-tile';
@@ -11,17 +37,285 @@ import { useRoomCreators } from '$hooks/useRoomCreators';
 import { useRoomPermissions } from '$hooks/useRoomPermissions';
 import { createLogger } from '$utils/debug';
 import { SequenceCardStyle } from '$features/common-settings/styles.css';
+import { UserAvatar } from '$components/user-avatar';
+import { nameInitials } from '$utils/common';
+import { useMediaAuthentication } from '$hooks/useMediaAuthentication';
+import { UserProfile, useUserProfile } from '$hooks/useUserProfile';
+import { getMxIdLocalPart, mxcUrlToHttp } from '$utils/matrix';
+import { AsyncStatus, useAsyncCallback } from '$hooks/useAsyncCallback';
+import { Room, RoomMember } from '$types/matrix-sdk';
+import { Command, useCommands } from '$hooks/useCommands';
+import { useCapabilities } from '$hooks/useCapabilities';
+import { useObjectURL } from '$hooks/useObjectURL';
+import { createUploadAtom, UploadSuccess } from '$state/upload';
+import { useFilePicker } from '$hooks/useFilePicker';
+import { CompactUploadCardRenderer } from '$components/upload-card';
+import FocusTrap from 'focus-trap-react';
+import { ImageEditor } from '$components/image-editor';
+import { stopPropagation } from '$utils/keyboard';
+import { ModalWide } from '$styles/Modal.css';
+
+const log = createLogger('Cosmetics');
+
+type CosmeticsSettingProps = {
+  profile: UserProfile;
+  member: RoomMember;
+  userId: string;
+  room: Room;
+};
+export function CosmeticsAvatar({ profile, member, userId, room }: CosmeticsSettingProps) {
+  const mx = useMatrixClient();
+  const useAuthentication = useMediaAuthentication();
+  const capabilities = useCapabilities();
+  const [alertRemove, setAlertRemove] = useState(false);
+  const disableSetAvatar = capabilities['m.set_avatar_url']?.enabled === false;
+
+  const avatarMxc = member.getMxcAvatarUrl();
+  const avatarUrl =
+    avatarMxc && (mxcUrlToHttp(mx, avatarMxc, useAuthentication, 96, 96, 'crop') ?? undefined);
+
+  const [imageFile, setImageFile] = useState<File>();
+  const imageFileURL = useObjectURL(imageFile);
+  const uploadAtom = useMemo(() => {
+    if (imageFile) return createUploadAtom(imageFile);
+    return undefined;
+  }, [imageFile]);
+
+  const pickFile = useFilePicker(setImageFile, false);
+
+  const handleRemoveUpload = useCallback(() => {
+    setImageFile(undefined);
+  }, []);
+
+  const myRoomAvatar = useCommands(mx, room)[Command.MyRoomAvatar];
+  const handleUploaded = useCallback(
+    (upload: UploadSuccess) => {
+      const { mxc } = upload;
+      myRoomAvatar.exe(mxc);
+      handleRemoveUpload();
+    },
+    [myRoomAvatar, handleRemoveUpload]
+  );
+
+  const handleRemoveAvatar = () => {
+    myRoomAvatar.exe('');
+    setAlertRemove(false);
+  };
+
+  return (
+    <SettingTile
+      title="Room Avatar"
+      after={
+        <Avatar size="500" radii="300">
+          <UserAvatar
+            userId={userId}
+            src={avatarUrl}
+            renderFallback={() => (
+              <Text size="H4">{nameInitials(room.getMember(userId)!.rawDisplayName)}</Text>
+            )}
+          />
+        </Avatar>
+      }
+    >
+      {uploadAtom ? (
+        <Box gap="200" direction="Column">
+          <CompactUploadCardRenderer
+            uploadAtom={uploadAtom}
+            onRemove={handleRemoveUpload}
+            onComplete={handleUploaded}
+          />
+        </Box>
+      ) : (
+        <Box gap="200">
+          <Button
+            onClick={() => pickFile('image/*')}
+            size="300"
+            variant="Secondary"
+            fill="Soft"
+            outlined
+            radii="300"
+            disabled={disableSetAvatar}
+          >
+            <Text size="B300">Upload</Text>
+          </Button>
+          {avatarUrl &&
+            avatarUrl !==
+              mxcUrlToHttp(mx, profile.avatarUrl ?? '', useAuthentication, 96, 96, 'crop') && (
+              <Button
+                size="300"
+                variant="Critical"
+                fill="None"
+                radii="300"
+                disabled={disableSetAvatar}
+                onClick={() => setAlertRemove(true)}
+              >
+                <Text size="B300">Remove</Text>
+              </Button>
+            )}
+        </Box>
+      )}
+
+      {imageFileURL && (
+        <Overlay open={false} backdrop={<OverlayBackdrop />}>
+          <OverlayCenter>
+            <FocusTrap
+              focusTrapOptions={{
+                initialFocus: false,
+                onDeactivate: handleRemoveUpload,
+                clickOutsideDeactivates: true,
+                escapeDeactivates: stopPropagation,
+              }}
+            >
+              <Modal className={ModalWide} variant="Surface" size="500">
+                <ImageEditor
+                  name={imageFile?.name ?? 'Unnamed'}
+                  url={imageFileURL}
+                  requestClose={handleRemoveUpload}
+                />
+              </Modal>
+            </FocusTrap>
+          </OverlayCenter>
+        </Overlay>
+      )}
+
+      <Overlay open={alertRemove} backdrop={<OverlayBackdrop />}>
+        <OverlayCenter>
+          <FocusTrap
+            focusTrapOptions={{
+              initialFocus: false,
+              onDeactivate: () => setAlertRemove(false),
+              clickOutsideDeactivates: true,
+              escapeDeactivates: stopPropagation,
+            }}
+          >
+            <Dialog variant="Surface">
+              <Header
+                style={{
+                  padding: `0 ${config.space.S200} 0 ${config.space.S400}`,
+                  borderBottomWidth: config.borderWidth.B300,
+                }}
+                variant="Surface"
+                size="500"
+              >
+                <Box grow="Yes">
+                  <Text size="H4">Remove Room Avatar</Text>
+                </Box>
+                <IconButton size="300" onClick={() => setAlertRemove(false)} radii="300">
+                  <Icon src={Icons.Cross} />
+                </IconButton>
+              </Header>
+              <Box style={{ padding: config.space.S400 }} direction="Column" gap="400">
+                <Box direction="Column" gap="200">
+                  <Text priority="400">Are you sure you want to remove room avatar?</Text>
+                </Box>
+                <Button variant="Critical" onClick={handleRemoveAvatar}>
+                  <Text size="B400">Remove</Text>
+                </Button>
+              </Box>
+            </Dialog>
+          </FocusTrap>
+        </OverlayCenter>
+      </Overlay>
+    </SettingTile>
+  );
+}
+
+export function CosmeticsNickname({ profile, member, userId, room }: CosmeticsSettingProps) {
+  const mx = useMatrixClient();
+
+  const defaultDisplayName = member.rawDisplayName;
+  const [displayName, setDisplayName] = useState<string>(defaultDisplayName);
+  const hasChanges = displayName !== defaultDisplayName;
+
+  const myRoomNick = useCommands(mx, room)[Command.MyRoomNick];
+  const [changeState, changeDisplayName] = useAsyncCallback((name: string) => myRoomNick.exe(name));
+  const changingDisplayName = changeState.status === AsyncStatus.Loading;
+
+  useEffect(() => {
+    setDisplayName(defaultDisplayName);
+  }, [defaultDisplayName]);
+
+  const handleChange: ChangeEventHandler<HTMLInputElement> = (evt) => {
+    const name = evt.currentTarget.value;
+    setDisplayName(name);
+  };
+
+  const handleReset = () => {
+    if (hasChanges) {
+      setDisplayName(defaultDisplayName);
+    } else {
+      setDisplayName(profile.displayName ?? getMxIdLocalPart(userId) ?? userId);
+    }
+  };
+
+  const handleSubmit: FormEventHandler<HTMLFormElement> = (evt) => {
+    evt.preventDefault();
+    if (changingDisplayName) return;
+
+    const target = evt.target as HTMLFormElement | undefined;
+    const displayNameInput = target?.displayNameInput as HTMLInputElement | undefined;
+    const name = displayNameInput?.value;
+
+    changeDisplayName(name ?? '');
+  };
+
+  return (
+    <SettingTile title="Room Display Name">
+      <Box direction="Column" grow="Yes" gap="100">
+        <Box as="form" onSubmit={handleSubmit} gap="200">
+          <Box grow="Yes" direction="Column">
+            <Input
+              name="displayNameInput"
+              value={displayName}
+              onChange={handleChange}
+              variant="Secondary"
+              radii="300"
+              style={{ paddingRight: config.space.S200 }}
+              readOnly={changingDisplayName}
+              after={
+                displayName !== (profile.displayName ?? getMxIdLocalPart(userId) ?? userId) &&
+                !changingDisplayName && (
+                  <IconButton
+                    type="reset"
+                    onClick={handleReset}
+                    size="300"
+                    radii="300"
+                    variant="Secondary"
+                  >
+                    <Icon src={Icons.Cross} size="100" />
+                  </IconButton>
+                )
+              }
+            />
+          </Box>
+          <Button
+            size="400"
+            variant={hasChanges ? 'Success' : 'Secondary'}
+            fill={hasChanges ? 'Solid' : 'Soft'}
+            outlined
+            radii="300"
+            disabled={!hasChanges || changingDisplayName}
+            type="submit"
+          >
+            {changingDisplayName && <Spinner variant="Success" fill="Solid" size="300" />}
+            <Text size="B400">Save</Text>
+          </Button>
+        </Box>
+      </Box>
+    </SettingTile>
+  );
+}
 
 type CosmeticsProps = {
   requestClose: () => void;
 };
-
-const log = createLogger('Cosmetics');
-
 export function Cosmetics({ requestClose }: CosmeticsProps) {
   const mx = useMatrixClient();
+  const userId = mx.getUserId()!;
+  const profile = useUserProfile(userId);
   const room = useRoom();
   const creators = useRoomCreators(room);
+  const member = room.getMember(userId)!;
   const powerLevels = usePowerLevels(room);
   const isSpace = room.isSpaceRoom();
 
@@ -71,8 +365,73 @@ export function Cosmetics({ requestClose }: CosmeticsProps) {
           <PageContent>
             <Box direction="Column" gap="700">
               <Box direction="Column" gap="100">
+                <Text size="L400">Profile</Text>
+                {!isSpace && (
+                  <SequenceCard
+                    className={SequenceCardStyle}
+                    variant="SurfaceVariant"
+                    direction="Column"
+                    gap="400"
+                  >
+                    <CosmeticsAvatar
+                      profile={profile}
+                      member={member}
+                      userId={userId}
+                      room={room}
+                    />
+                  </SequenceCard>
+                )}
+                {!isSpace && (
+                  <SequenceCard
+                    className={SequenceCardStyle}
+                    variant="SurfaceVariant"
+                    direction="Column"
+                    gap="400"
+                  >
+                    <CosmeticsNickname
+                      profile={profile}
+                      member={member}
+                      userId={userId}
+                      room={room}
+                    />
+                  </SequenceCard>
+                )}
+                <SequenceCard
+                  className={SequenceCardStyle}
+                  variant="SurfaceVariant"
+                  direction="Column"
+                  gap="400"
+                >
+                  <SettingTile
+                    title="Color"
+                    description="Placeholder. This is a work in progress still!"
+                  />
+                </SequenceCard>
+                <SequenceCard
+                  className={SequenceCardStyle}
+                  variant="SurfaceVariant"
+                  direction="Column"
+                  gap="400"
+                >
+                  <SettingTile
+                    title="Pronouns"
+                    description="Placeholder. This is a work in progress still!"
+                  />
+                </SequenceCard>
+                <SequenceCard
+                  className={SequenceCardStyle}
+                  variant="SurfaceVariant"
+                  direction="Column"
+                  gap="400"
+                >
+                  <SettingTile
+                    title="Font"
+                    description="Placeholder. This is a work in progress still!"
+                  />
+                </SequenceCard>
+              </Box>
+              <Box direction="Column" gap="100">
                 <Text size="L400">Settings</Text>
-
                 <SequenceCard
                   className={SequenceCardStyle}
                   variant="SurfaceVariant"
@@ -81,11 +440,7 @@ export function Cosmetics({ requestClose }: CosmeticsProps) {
                 >
                   <SettingTile
                     title={isSpace ? 'Space-Wide Colors' : 'Room Colors'}
-                    description={
-                      isSpace
-                        ? 'Allow everyone to use /scolor in this space.'
-                        : 'Allow everyone to use /color in this room.'
-                    }
+                    description={`Allow everyone to set a color that applies in ${isSpace ? "all the space's rooms" : 'this room'}.`}
                     after={
                       <Switch
                         variant="Primary"
@@ -96,7 +451,6 @@ export function Cosmetics({ requestClose }: CosmeticsProps) {
                     }
                   />
                 </SequenceCard>
-
                 <SequenceCard
                   className={SequenceCardStyle}
                   variant="SurfaceVariant"
@@ -105,11 +459,7 @@ export function Cosmetics({ requestClose }: CosmeticsProps) {
                 >
                   <SettingTile
                     title={isSpace ? 'Space-Wide Fonts' : 'Room Fonts'}
-                    description={
-                      isSpace
-                        ? 'Allow everyone to use /sfont in this space.'
-                        : 'Allow everyone to use /font in this room.'
-                    }
+                    description={`Allow everyone to set a font that applies in ${isSpace ? "all the space's rooms" : 'this room'}.`}
                     after={
                       <Switch
                         variant="Primary"
@@ -120,7 +470,6 @@ export function Cosmetics({ requestClose }: CosmeticsProps) {
                     }
                   />
                 </SequenceCard>
-
                 <SequenceCard
                   className={SequenceCardStyle}
                   variant="SurfaceVariant"
@@ -129,11 +478,7 @@ export function Cosmetics({ requestClose }: CosmeticsProps) {
                 >
                   <SettingTile
                     title={isSpace ? 'Space-Wide Pronouns' : 'Room Pronouns'}
-                    description={
-                      isSpace
-                        ? 'Allow everyone to use /spronoun in this space.'
-                        : 'Allow everyone to use /pronoun in this room.'
-                    }
+                    description={`Allow everyone to set pronouns that apply in ${isSpace ? "all the space's rooms" : 'this room'}.`}
                     after={
                       <Switch
                         variant="Primary"
@@ -144,55 +489,6 @@ export function Cosmetics({ requestClose }: CosmeticsProps) {
                         disabled={!canEditPermissions}
                       />
                     }
-                  />
-                </SequenceCard>
-              </Box>
-
-              {/* --- COMMAND REFERENCE SECTION --- */}
-              <Box direction="Column" gap="100">
-                <Text size="L400">Commands</Text>
-                <SequenceCard
-                  className={SequenceCardStyle}
-                  variant="SurfaceVariant"
-                  direction="Column"
-                  gap="400"
-                >
-                  <SettingTile
-                    title="/color [hex]"
-                    description="Set room-specific name color. (e.g. /color #ff00ff)"
-                  />
-                </SequenceCard>
-                <SequenceCard
-                  className={SequenceCardStyle}
-                  variant="SurfaceVariant"
-                  direction="Column"
-                  gap="400"
-                >
-                  <SettingTile
-                    title="/font [name]"
-                    description="Set room-specific name font. (e.g. /font monospace)"
-                  />
-                </SequenceCard>
-                <SequenceCard
-                  className={SequenceCardStyle}
-                  variant="SurfaceVariant"
-                  direction="Column"
-                  gap="400"
-                >
-                  <SettingTile
-                    title="/pronoun [pronouns]"
-                    description='Set room-specific pronoun set. (e.g. /pronoun "they\them, it\its")'
-                  />
-                </SequenceCard>
-                <SequenceCard
-                  className={SequenceCardStyle}
-                  variant="SurfaceVariant"
-                  direction="Column"
-                  gap="400"
-                >
-                  <SettingTile
-                    title="/scolor | /sfont | /spronoun"
-                    description="Apply colors/fonts/pronouns to the entire space."
                   />
                 </SequenceCard>
               </Box>
