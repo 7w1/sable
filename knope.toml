@@ -42,7 +42,7 @@ repo = "sable"
 
 [bot.releases]
 enabled = true
-pull_request.title = "$version changelog"
+#pull_request.title = "$version changelog"
 
 [bot.checks]
 skip_labels = ["internal"]
