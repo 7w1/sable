@@ -1,5 +1,17 @@
 # Sable Client Changelog
 
+## 1.6.0 (2026-03-09)
+
+### Features
+
+* Messages that trigger a push rule with `highlight: true` (e.g. @mentions, keyword matches) now receive a full-width background highlight in the room timeline. Notifications with a sound tweak ("Notify Loud") use a warning-amber colour; silent highlights use the secondary-surface colour. Both colours adapt automatically to the active theme.
+
+* feat: notification settings page improvements
+
+### Fixes
+
+* Enhance UnsupportedContent and BrokenContent to display message body
+
 ## 1.5.3 (2026-03-08)
 
 ### Fixes
